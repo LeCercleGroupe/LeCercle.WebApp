@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "contact": "Contact Us",
+    "lang": "En"
+  },
+  "hero": {
+    "description": "Le Circle brings together services created for memorable events, each with its own atmosphere, aesthetic, and energy. Choose the experience that suits your moment."
+  },
+  "venues": {
+    "bureau": {
+      "tagline": "Cigar lounge with retro and classic flair.",
+      "cta": "Discover the Service"
+    },
+    "maison": {
+      "tagline": "French dessert served as a live moment.",
+      "cta": "Discover the Service"
+    },
+    "perle": {
+      "tagline": "Tuk-tuk with Italian gelato for events.",
+      "cta": "Discover the Service"
+    }
+  }
+}

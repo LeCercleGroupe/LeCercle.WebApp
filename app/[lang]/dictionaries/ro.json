@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "contact": "Contactează-ne",
+    "lang": "Ro"
+  },
+  "hero": {
+    "description": "Le Circle reunește servicii create pentru evenimente memorabile, fiecare cu propria atmosferă, estetică și energie. Alege experiența care se potrivește momentului tău."
+  },
+  "venues": {
+    "bureau": {
+      "tagline": "Cigar lounge cu aer retro și clasic.",
+      "cta": "Descoperă Serviciul"
+    },
+    "maison": {
+      "tagline": "Desert francez servit ca moment live.",
+      "cta": "Descoperă Serviciul"
+    },
+    "perle": {
+      "tagline": "Tuktuk cu gelato italian pentru evenimente.",
+      "cta": "Descoperă Serviciul"
+    }
+  }
+}
