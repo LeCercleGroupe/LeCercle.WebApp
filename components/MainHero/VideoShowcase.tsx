@@ -239,6 +239,7 @@ export default function VideoShowcase({
   ]);
   const videoAspectsRef = useRef<number[]>([1, 1, 1]);
   const activeIdxRef = useRef(initIdx);
+  const inProgressIdxRef = useRef<number | null>(null);
   const isTransRef = useRef(false);
   const planeAspectRef = useRef(1);
   const sizeRef = useRef({ w: 0, h: 0, a: 1 });
@@ -523,9 +524,21 @@ export default function VideoShowcase({
 
   useEffect(() => {
     const newIdx = Math.max(0, Math.min(2, (defaultActive || 1) - 1));
-    if (newIdx === activeIdxRef.current || isTransRef.current) return;
+    // No-op if we're already at or transitioning to this index
+    if (newIdx === (inProgressIdxRef.current ?? activeIdxRef.current)) return;
     const m = materialRef.current;
     if (!m) return;
+    // Interrupt any running transition: snap to its destination, then start fresh
+    if (isTransRef.current && tweenRef.current) {
+      tweenRef.current.kill();
+      const snappedIdx = inProgressIdxRef.current ?? activeIdxRef.current;
+      activeIdxRef.current = snappedIdx;
+      m.uniforms.texture1.value = videoTexsRef.current[snappedIdx] ?? null;
+      m.uniforms.dispFactor.value = 0;
+      m.needsUpdate = true;
+      isTransRef.current = false;
+      inProgressIdxRef.current = null;
+    }
     const fromTex = videoTexsRef.current[activeIdxRef.current] ?? null;
     const toTex = videoTexsRef.current[newIdx] ?? null;
     m.uniforms.texture1.value = fromTex;
@@ -533,6 +546,7 @@ export default function VideoShowcase({
     m.uniforms.dispFactor.value = 0;
     m.needsUpdate = true;
     isTransRef.current = true;
+    inProgressIdxRef.current = newIdx;
     setActiveIdx(newIdx);
     if (tweenRef.current) tweenRef.current.kill();
     tweenRef.current = gsap.to(m.uniforms.dispFactor, {
@@ -544,6 +558,7 @@ export default function VideoShowcase({
         m.uniforms.dispFactor.value = 0;
         m.needsUpdate = true;
         activeIdxRef.current = newIdx;
+        inProgressIdxRef.current = null;
         if (videoAspectsRef.current[newIdx]) updateUvTransform();
         isTransRef.current = false;
       },
