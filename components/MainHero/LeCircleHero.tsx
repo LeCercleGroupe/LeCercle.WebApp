@@ -2,6 +2,7 @@
 
 import VideoShowcase from "@/components/MainHero/VideoShowcase";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -41,10 +42,10 @@ interface LeCircleHeroProps {
 
 const LOCALES = ["ro", "en", "ru"] as const;
 
-const VENUES: { key: VenueKey; logo: string }[] = [
-  { key: "bureau", logo: "/logos/LeBureau.svg" },
-  { key: "maison", logo: "/logos/MaisonDuFeu.svg" },
-  { key: "perle", logo: "/logos/LaPerle.svg" },
+const VENUES: { key: VenueKey; logo: string; href: string }[] = [
+  { key: "bureau", logo: "/logos/LeBureau.svg", href: "/lebureau" },
+  { key: "maison", logo: "/logos/MaisonDuFeu.svg", href: "/maisondufeu" },
+  { key: "perle", logo: "/logos/LaPerle.svg", href: "/laperle" },
 ];
 
 export default function LeCircleHero({
@@ -98,7 +99,7 @@ export default function LeCircleHero({
         <div className="relative">
           <button
             onClick={() => setLangOpen((o) => !o)}
-            className="bg-transparent border-0 text-white/78 text-[13px] tracking-widest cursor-pointer flex items-center gap-1.25 uppercase"
+            className="bg-transparent border-0 text-gray-100 text-[13px] tracking-widest cursor-pointer flex items-center gap-1.25 uppercase"
           >
             {dict.nav.lang}
             <span
@@ -124,26 +125,26 @@ export default function LeCircleHero({
         </div>
 
         {/* Contact CTA */}
-        <button className="group border-0 bg-transparent text-white/85 text-[12px] tracking-[0.12em] cursor-pointer px-4 py-2 sm:px-5.5 sm:py-2.25 transition-all duration-250 relative hover:bg-white/[0.07] hover:text-white">
-          <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-white/42 group-hover:border-white/88 transition-[border-color] duration-250" />
-          <span className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-white/42 group-hover:border-white/88 transition-[border-color] duration-250" />
-          <span className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-white/42 group-hover:border-white/88 transition-[border-color] duration-250" />
-          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-white/42 group-hover:border-white/88 transition-[border-color] duration-250" />
+        <button className="group border-0 bg-transparent text-gray-100 text-[12px] tracking-[0.12em] cursor-pointer px-4 py-2 sm:px-5.5 sm:py-2.25 transition-all duration-250 relative hover:bg-white/[0.07] hover:text-white">
+          <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-gray-100/42 group-hover:border-white/88 transition-[border-color] duration-250" />
+          <span className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-gray-100/42 group-hover:border-white/88 transition-[border-color] duration-250" />
+          <span className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-gray-100/42 group-hover:border-white/88 transition-[border-color] duration-250" />
+          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-gray-100/42 group-hover:border-white/88 transition-[border-color] duration-250" />
           {dict.nav.contact}
         </button>
       </nav>
 
       {/* ── Centre hero text ─────────────────────────────────────────────── */}
-      <div className="flex-1 min-h-0 flex flex-col justify-center items-center px-7 text-center pointer-events-none z-5 sm:flex-none sm:block sm:absolute sm:top-[17%] sm:left-1/2 sm:-translate-x-1/2 sm:translate-y-[-56%] sm:w-full sm:px-5">
+      <div className="flex-1 min-h-0 flex flex-col justify-center items-center text-center pointer-events-none z-5 sm:flex-none sm:block sm:absolute sm:top-[17%] sm:left-1/2 sm:-translate-x-1/2 sm:translate-y-[-56%] sm:w-full sm:px-5">
         <Image
           src="/logos/LeCercle.svg"
           alt="Le Circle"
           width={300}
           height={109}
           priority
-          className="w-[clamp(160px,52vw,220px)] sm:w-[clamp(160px,22vw,300px)] h-auto block mx-auto drop-shadow-[0_2px_40px_rgba(0,0,0,0.4)]"
+          className="w-40 sm:w-60 h-auto block mx-auto drop-shadow-[0_2px_40px_rgba(0,0,0,0.4)]"
         />
-        <p className="mt-3.5 sm:mt-5.5 text-[clamp(13px,3.8vw,15px)] sm:text-[clamp(12px,1.25vw,15px)] text-white/76 leading-[1.75] sm:leading-[1.8] max-w-[88vw] sm:max-w-122.5 mx-auto not-italic tracking-[0.02em]">
+        <p className="mt-3.5 sm:mt-5.5 text-[15px] font-normal sm:text-[16px] text-[#E2E2E2] leading-[1.75] max-w-[98vw] sm:leading-[1.8] sm:max-w-140 mx-auto not-italic tracking-[0.02em]">
           {dict.hero.description}
         </p>
       </div>
@@ -179,32 +180,36 @@ export default function LeCircleHero({
                 className={`absolute top-3.5 left-4 right-4 bottom-3.5 bg-black/40 pointer-events-none z-0 transition-opacity duration-350 sm:hidden ${isActive ? "opacity-100" : "opacity-0"}`}
               />
 
-              {/* Venue name SVG */}
-              <Image
-                src={venue.logo}
-                alt={venue.key}
-                width={240}
-                height={72}
-                className="w-[clamp(100px,32vw,150px)] sm:w-[clamp(100px,12vw,170px)] h-auto block mx-auto mb-1.25 sm:mb-2.5 drop-shadow-[0_1px_20px_rgba(0,0,0,0.55)]"
-              />
+              {/* Content — z-[1] keeps it above the black fill overlay (z-0) */}
+              <div className="relative z-[1]">
+                {/* Venue name SVG */}
+                <Image
+                  src={venue.logo}
+                  alt={venue.key}
+                  width={240}
+                  height={72}
+                  className="w-[clamp(140px,32vw,150px)] sm:w-[clamp(100px,12vw,170px)] h-auto block mx-auto mb-1.25 sm:mb-2.5 drop-shadow-[0_1px_20px_rgba(0,0,0,0.55)]"
+                />
 
-              {/* Tagline */}
-              <p
-                className={`text-[clamp(10px,2.4vw,11px)] sm:text-[clamp(11px,1vw,13px)] text-white/62 not-italic leading-[1.55] tracking-[0.01em] sm:mb-5 ${isActive ? "mb-2" : "mb-0"}`}
-              >
-                {venueDict.tagline}
-              </p>
+                {/* Tagline */}
+                <p
+                  className={`text-[12px] sm:text-[14px] text-white not-italic leading-[1.55] tracking-[0.01em] sm:mb-5 ${isActive ? "mb-2" : "mb-0"}`}
+                >
+                  {venueDict.tagline}
+                </p>
 
-              {/* CTA — hidden on mobile when inactive, invisible on desktop when inactive */}
-              <button
-                className={`backdrop-blur-[10px] bg-white/10 border-0 text-white/82 text-[10px] sm:text-[11px] tracking-widest py-1.75 px-4 sm:py-2 sm:px-4.5 uppercase relative hover:text-white sm:inline-block mt-2 sm:mt-0 [transition:opacity_0.35s_ease,color_0.25s] ${isActive ? "inline-block opacity-100 pointer-events-auto cursor-pointer" : "hidden opacity-0 pointer-events-none cursor-default"}`}
-              >
-                <span className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white/[0.55]" />
-                <span className="absolute top-0 right-0 w-2 h-2 border-t border-r border-white/[0.55]" />
-                <span className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-white/[0.55]" />
-                <span className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-white/[0.55]" />
-                {venueDict.cta}
-              </button>
+                {/* CTA — hidden on mobile when inactive, invisible on desktop when inactive */}
+                <Link
+                  href={venue.href}
+                  className={`backdrop-blur-[10px] bg-white/10 border-0 font-medium text-white text-[10px] sm:text-[12px] tracking-widest py-1.75 px-4 sm:py-2 sm:px-4.5 uppercase relative hover:text-white sm:inline-block mt-2 sm:mt-0 [transition:opacity_0.35s_ease,color_0.25s] ${isActive ? "inline-block opacity-100 pointer-events-auto cursor-pointer" : "hidden opacity-0 pointer-events-none cursor-default"}`}
+                >
+                  <span className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white/[0.55]" />
+                  <span className="absolute top-0 right-0 w-2 h-2 border-t border-r border-white/[0.55]" />
+                  <span className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-white/[0.55]" />
+                  <span className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-white/[0.55]" />
+                  {venueDict.cta}
+                </Link>
+              </div>
             </div>
           );
         })}
