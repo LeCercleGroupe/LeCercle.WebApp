@@ -369,7 +369,7 @@ export default function VideoShowcase({
     rendererRef.current = renderer;
     const canvas = renderer.domElement;
     canvas.style.cssText =
-      "position:absolute;inset:0;width:100%;height:100%;display:block;";
+      "position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;";
     el.appendChild(canvas);
     const dispTex = makeDispTexture(dispKind, 256);
     dispRef.current = dispTex;
