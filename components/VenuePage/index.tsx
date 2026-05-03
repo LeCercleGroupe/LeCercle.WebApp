@@ -80,7 +80,7 @@ export default function VenuePage({
                   />
                   <div className="relative">
                     {/* Sticky panel — pins for exactly one FeaturesSection height of scroll */}
-                    <div className="sticky top-0 min-h-dvh flex items-center overflow-hidden bg-black">
+                    <div className="sticky top-0 min-h-lvh flex items-center overflow-hidden bg-black">
                       <div className="w-full">
                         <SceneOutro
                           screen={lastScreen}

@@ -125,12 +125,12 @@ function PackageCard({
           {/* CTA — corner-bracket style */}
           <Link
             href={pkg.cta.href}
-            className="relative w-full py-3 font-figtree text-[10px] tracking-widest uppercase text-(--card-color) hover:opacity-70 transition-opacity duration-200 cursor-pointer"
+            className="group relative w-full py-3 font-figtree text-[10px] tracking-widest uppercase text-(--card-color) bg-(--card-color)/10 hover:bg-(--card-color)/30 transition-all duration-200 cursor-pointer"
           >
-            <span className="absolute top-0 left-0 size-3 border-t-2 border-l-2 border-(--card-color)" />
-            <span className="absolute top-0 right-0 size-3 border-t-2 border-r-2 border-(--card-color)" />
-            <span className="absolute bottom-0 left-0 size-3 border-b-2 border-l-2 border-(--card-color)" />
-            <span className="absolute bottom-0 right-0 size-3 border-b-2 border-r-2 border-(--card-color)" />
+            <span className="absolute top-0 left-0 size-3 border-t-2 border-l-2 border-(--card-color)/70" />
+            <span className="absolute top-0 right-0 size-3 border-t-2 border-r-2 border-(--card-color)/70" />
+            <span className="absolute bottom-0 left-0 size-3 border-b-2 border-l-2 border-(--card-color)/70" />
+            <span className="absolute bottom-0 right-0 size-3 border-b-2 border-r-2 border-(--card-color)/70" />
             {pkg.cta.label}
           </Link>
         </div>

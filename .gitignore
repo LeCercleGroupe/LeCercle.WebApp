@@ -43,3 +43,11 @@ next-env.d.ts
 
 #claude 
 .claude/
+
+#ignore sitemaps, they are generated on build
+public/sitemap*.xml
+sitemap*.xml
+
+# Claude Code
+.claude/settings.local.json
+.claude/hooks/node_modules/

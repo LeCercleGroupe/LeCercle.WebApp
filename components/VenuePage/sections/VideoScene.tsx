@@ -40,7 +40,7 @@ export default function VideoScene({ video, screens, accentColor }: Props) {
       style={{ height: `${(count + 2) * 100}dvh` }}
     >
       {/* ── Sticky video ─────────────────────────────────────────────────── */}
-      <div className="sticky top-0 h-dvh overflow-hidden">
+      <div className="sticky top-0 h-lvh overflow-hidden">
         <video
           src={video}
           autoPlay
@@ -54,12 +54,17 @@ export default function VideoScene({ video, screens, accentColor }: Props) {
       </div>
 
       {/* ── Text screens — scroll over the sticky video ───────────────── */}
-      <div className="mt-[-100dvh] relative z-10">
+      <div className="mt-[-100lvh] relative z-10">
+        {/* Fade mask: pins to viewport top, dissolves text before it exits */}
+        <div className="sticky top-0 h-0 overflow-visible z-10 pointer-events-none">
+          <div className="h-[20vh] sm:h-[30vh] bg-linear-to-b from-[#08060a] to-transparent" />
+        </div>
+
         {/* Empty landing screen — full video visible, no text */}
-        <div className="h-dvh" />
+        <div className="h-lvh" />
 
         {screens.map((screen, i) => (
-          <div key={i} className="h-dvh relative pointer-events-none">
+          <div key={i} className="h-lvh relative pointer-events-none">
             {/* Per-screen section heading (mid-section titles) */}
             {screen.sectionHeading && (
               <div className="absolute top-[13%] left-1/2 -translate-x-1/2 w-full text-center px-6">

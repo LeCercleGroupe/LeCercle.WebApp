@@ -59,27 +59,15 @@ export default function ClosingCtaSection({
 
         <Link
           href={cta.href}
-          className="group relative inline-flex items-center px-8 py-3.5 text-[11px] tracking-[0.18em] uppercase font-figtree transition-colors duration-250 cursor-pointer"
+          className="group relative inline-flex items-center px-8 py-3.5 text-[11px] tracking-[0.18em] uppercase font-figtree bg-(--accent)/10 hover:bg-(--accent)/30 transition-all duration-250 cursor-pointer"
           style={{
             color: isDark ? "rgba(255,255,255,0.75)" : accentColor,
           }}
         >
-          <span
-            className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l transition-[border-color] duration-250"
-            style={{ borderColor: `${accentColor}70` }}
-          />
-          <span
-            className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r transition-[border-color] duration-250"
-            style={{ borderColor: `${accentColor}70` }}
-          />
-          <span
-            className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l transition-[border-color] duration-250"
-            style={{ borderColor: `${accentColor}70` }}
-          />
-          <span
-            className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r transition-[border-color] duration-250"
-            style={{ borderColor: `${accentColor}70` }}
-          />
+          <span className="absolute top-0 left-0 w-3.5 h-2.5 border-t border-l border-(--accent)/70" />
+          <span className="absolute top-0 right-0 w-3.5 h-2.5 border-t border-r border-(--accent)/70" />
+          <span className="absolute bottom-0 left-0 w-3.5 h-2.5 border-b border-l border-(--accent)/70" />
+          <span className="absolute bottom-0 right-0 w-3.5 h-2.5 border-b border-r border-(--accent)/70" />
           {cta.label}
         </Link>
       </div>

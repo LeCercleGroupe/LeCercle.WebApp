@@ -89,7 +89,7 @@ export default function FeaturesSection({
 
   return (
     <section
-      className="bg-white py-20 h-full sm:h-dvh"
+      className="bg-white py-20 h-full sm:h-lvh"
       style={{ "--accent": accentColor } as React.CSSProperties}
     >
       <div className="max-w-7xl mx-auto">

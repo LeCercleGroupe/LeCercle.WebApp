@@ -17,7 +17,7 @@ export default function VenueHero({
   contactLabel,
 }: VenueHeroProps) {
   return (
-    <section className="relative h-dvh overflow-hidden bg-[#08060a]">
+    <section className="relative h-lvh overflow-hidden bg-[#08060a]">
       <video
         src={hero.video}
         autoPlay
@@ -44,11 +44,11 @@ export default function VenueHero({
           {hero.tagline}
         </p>
         {/* Contact CTA only for mobile */}
-        <button className="group border-0 bg-transparent text-gray-100 text-[11px] tracking-[0.14em] cursor-pointer px-4 py-2 transition-all duration-250 relative hover:bg-white/6 hover:text-white font-figtree block sm:hidden">
-          <span className="absolute top-0 left-0 w-2 h-2 border-t border-l border-gray-100/35 group-hover:border-white/70 transition-[border-color] duration-250" />
-          <span className="absolute top-0 right-0 w-2 h-2 border-t border-r border-gray-100/35 group-hover:border-white/70 transition-[border-color] duration-250" />
-          <span className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-gray-100/35 group-hover:border-white/70 transition-[border-color] duration-250" />
-          <span className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-gray-100/35 group-hover:border-white/70 transition-[border-color] duration-250" />
+        <button className="group border-0 bg-gray-100/10 text-gray-100 text-[11px] tracking-[0.14em] cursor-pointer px-4 py-2 transition-all duration-250 relative hover:bg-gray-100/30 hover:text-white font-figtree block sm:hidden">
+          <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-gray-100/70" />
+          <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-gray-100/70" />
+          <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-gray-100/70" />
+          <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-gray-100/70" />
           {contactLabel}
         </button>
       </div>

@@ -70,11 +70,11 @@ export default function LeCircleHero({ dict, locale }: LeCircleHeroProps) {
     setLangOpen(false);
     const segments = pathname.split("/");
     segments[1] = next;
-    router.push(segments.join("/"));
+    router.push(segments.join("/"), { scroll: false });
   }
 
   return (
-    <div className="relative w-full h-dvh min-h-150 bg-[#08060a] overflow-hidden text-white font-figtree flex flex-col sm:block">
+    <div className="relative w-full h-lvh min-h-150 bg-[#08060a] overflow-hidden text-white font-figtree flex flex-col sm:block">
       {/* ── Full-screen video background ─────────────────────────────────── */}
       <div className="absolute inset-0 z-0">
         <VideoShowcase
@@ -140,11 +140,11 @@ export default function LeCircleHero({ dict, locale }: LeCircleHeroProps) {
         </div>
 
         {/* Contact CTA — desktop only */}
-        <button className="hidden sm:block group border-0 bg-transparent text-gray-100 text-[12px] tracking-[0.12em] cursor-pointer px-5.5 py-2.25 transition-all duration-250 relative hover:bg-white/[0.07] hover:text-white">
-          <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-gray-100/42 group-hover:border-white/88 transition-[border-color] duration-250" />
-          <span className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-gray-100/42 group-hover:border-white/88 transition-[border-color] duration-250" />
-          <span className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-gray-100/42 group-hover:border-white/88 transition-[border-color] duration-250" />
-          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-gray-100/42 group-hover:border-white/88 transition-[border-color] duration-250" />
+        <button className="hidden sm:block group border-0 bg-gray-100/20 text-gray-100 text-[12px] tracking-[0.12em] cursor-pointer px-5.5 py-2.25 transition-all duration-250 relative hover:bg-gray-100/40 hover:text-white">
+          <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
+          <span className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
+          <span className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
+          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
           {dict.nav.contact}
         </button>
       </nav>
@@ -163,11 +163,11 @@ export default function LeCircleHero({ dict, locale }: LeCircleHeroProps) {
           {dict.hero.description}
         </p>
         {/* Contact CTA — mobile only, under description */}
-        <button className="sm:hidden group border-0 bg-transparent text-gray-100 text-[12px] tracking-[0.12em] cursor-pointer px-4 py-2 mt-6 transition-all duration-250 relative hover:bg-white/[0.07] hover:text-white">
-          <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-gray-100/42 group-hover:border-white/88 transition-[border-color] duration-250" />
-          <span className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-gray-100/42 group-hover:border-white/88 transition-[border-color] duration-250" />
-          <span className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-gray-100/42 group-hover:border-white/88 transition-[border-color] duration-250" />
-          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-gray-100/42 group-hover:border-white/88 transition-[border-color] duration-250" />
+        <button className="sm:hidden group border-0 bg-gray-100/20 text-gray-100 text-[12px] tracking-[0.12em] cursor-pointer px-4 py-2 mt-6 transition-all duration-250 relative hover:bg-gray-100/40 hover:text-white">
+          <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
+          <span className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
+          <span className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
+          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
           {dict.nav.contact}
         </button>
       </div>
