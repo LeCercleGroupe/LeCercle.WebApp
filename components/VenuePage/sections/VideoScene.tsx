@@ -37,7 +37,7 @@ export default function VideoScene({ video, screens, accentColor }: Props) {
      */
     <div
       className="relative bg-[#08060a]"
-      style={{ height: `${(count + 2) * 100}dvh` }}
+      style={{ height: `${(count + 2) * 100}lvh` }}
     >
       {/* ── Sticky video ─────────────────────────────────────────────────── */}
       <div className="sticky top-0 h-lvh overflow-hidden">

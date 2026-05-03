@@ -58,7 +58,7 @@ export default function VenueFooter({ locale, activeSlug }: VenueFooterProps) {
               href={`/${locale}/${venue.slug}`}
               className={`flex flex-col items-center text-center py-5 px-3 border transition-colors duration-250 cursor-pointer ${
                 isActive
-                  ? "border-white/20 bg-white/[0.05]"
+                  ? "border-white/20 bg-white/5"
                   : "border-transparent hover:border-white/10"
               }`}
             >
@@ -69,7 +69,7 @@ export default function VenueFooter({ locale, activeSlug }: VenueFooterProps) {
                 height={30}
                 className="w-20 h-auto mb-2.5 opacity-90"
               />
-              <p className="text-white/40 text-[11px] leading-[1.5] font-figtree">
+              <p className="text-white/40 text-[11px] leading-normal font-figtree">
                 {venue.tagline}
               </p>
             </Link>
@@ -78,7 +78,7 @@ export default function VenueFooter({ locale, activeSlug }: VenueFooterProps) {
       </div>
 
       {/* Legal bar */}
-      <div className="border-t border-white/[0.06] pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 max-w-6xl mx-auto">
+      <div className="border-t border-white/6 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 max-w-6xl mx-auto">
         <p className="text-white/25 text-[12px] font-figtree">
           © 2026 Le Cercle. All rights reserved.
         </p>
