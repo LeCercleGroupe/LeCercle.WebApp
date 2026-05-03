@@ -65,19 +65,19 @@ const ro: VenuePageData = {
       subtitle: "Maison du Feu nu este doar despre deserturi, ci despre felul în care acestea prind viață în fața invitaților. Fiecare opțiune este gândită ca un moment în sine — simplu, cald și ușor de împărțit cu ceilalți.",
       items: [
         {
-          image: "/projectFeatures/MaisonDuFeu/feature-1.png",
+          image: "/projectFeatures/maisonDuFeu/feature-1.png",
           imageAlt: "Feature 1",
           heading: "S’mores",
           body: "Biscuiți crocanți, ciocolată topită și marshmallow încălzit direct la foc — o combinație clasică, care aduce imediat un sentiment de familiar și apropiere. Este genul de desert care adună oamenii în jurul lui și creează momente naturale de interacțiune.",
         },
         {
-          image: "/projectFeatures/MaisonDuFeu/feature-2.png",
+          image: "/projectFeatures/maisonDuFeu/feature-2.png",
           imageAlt: "Feature 2",
           heading: "Bezea la Foc Viu",
           body: "Bezeaua prinde o textură aurie la exterior și rămâne moale în interior, fiind pregătită chiar în fața invitaților. Este un moment simplu, dar captivant, care atrage priviri și creează acea senzație caldă și ușor nostalgică.",
         },
         {
-          image: "/projectFeatures/MaisonDuFeu/feature-3.png",
+          image: "/projectFeatures/maisonDuFeu/feature-3.png",
           imageAlt: "Feature 3",
           heading: "Fântâna de Ciocolată",
           body: "Ciocolata curge continuu, devenind punctul central al experienței. Invitații pot combina gusturi, pot experimenta și pot reveni de mai multe ori — un detaliu care adaugă energie și un ritm relaxat întregului eveniment.",
@@ -255,19 +255,19 @@ const en: VenuePageData = {
       subtitle: "Maison du Feu is not just about desserts, but about the way they come to life in front of guests. Each option is designed as a moment in itself — simple, warm, and easy to share with others.",
       items: [
         {
-          image: "/projectFeatures/MaisonDuFeu/feature-1.png",
+          image: "/projectFeatures/maisonDuFeu/feature-1.png",
           imageAlt: "Feature 1",
           heading: "S'mores",
           body: "Crispy biscuits, melted chocolate, and marshmallow warmed directly over the flame — a classic combination that instantly evokes a sense of familiarity and closeness. It's the kind of dessert that gathers people around it and creates natural moments of interaction.",
         },
         {
-          image: "/projectFeatures/MaisonDuFeu/feature-2.png",
+          image: "/projectFeatures/maisonDuFeu/feature-2.png",
           imageAlt: "Feature 2",
           heading: "Open-Flame Meringue",
           body: "The meringue develops a golden crust on the outside while staying soft inside, prepared right in front of guests. It's a simple but captivating moment that draws eyes and creates that warm, subtly nostalgic sensation.",
         },
         {
-          image: "/projectFeatures/MaisonDuFeu/feature-3.png",
+          image: "/projectFeatures/maisonDuFeu/feature-3.png",
           imageAlt: "Feature 3",
           heading: "Chocolate Fountain",
           body: "The chocolate flows continuously, becoming the centrepiece of the experience. Guests can mix flavours, experiment, and come back again — a detail that adds energy and a relaxed rhythm to the whole event.",
@@ -443,19 +443,19 @@ const ru: VenuePageData = {
       subtitle: "Maison du Feu — это не просто десерты, а то, как они оживают перед гостями. Каждый вариант задуман как самостоятельный момент — простой, тёплый и легко разделяемый с окружающими.",
       items: [
         {
-          image: "/projectFeatures/MaisonDuFeu/feature-1.png",
+          image: "/projectFeatures/maisonDuFeu/feature-1.png",
           imageAlt: "Feature 1",
           heading: "S'mores",
           body: "Хрустящее печенье, растопленный шоколад и маршмэллоу, нагретый прямо на огне — классическое сочетание, мгновенно вызывающее чувство уюта и близости. Это тот вид десерта, который собирает людей вокруг себя и создаёт естественные моменты общения.",
         },
         {
-          image: "/projectFeatures/MaisonDuFeu/feature-2.png",
+          image: "/projectFeatures/maisonDuFeu/feature-2.png",
           imageAlt: "Feature 2",
           heading: "Меренга на Живом Огне",
           body: "Меренга приобретает золотистую корочку снаружи, оставаясь мягкой внутри — её готовят прямо на глазах у гостей. Это простой, но захватывающий момент, притягивающий взгляды и создающий то тёплое, слегка ностальгическое ощущение.",
         },
         {
-          image: "/projectFeatures/MaisonDuFeu/feature-3.png",
+          image: "/projectFeatures/maisonDuFeu/feature-3.png",
           imageAlt: "Feature 3",
           heading: "Шоколадный Фонтан",
           body: "Шоколад течёт непрерывно, становясь центральным элементом опыта. Гости могут сочетать вкусы, экспериментировать и возвращаться снова — деталь, которая добавляет энергию и расслабленный ритм всему мероприятию.",
