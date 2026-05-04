@@ -4,6 +4,7 @@ import type {
   TextPart,
   VideoScene as VideoSceneProps,
 } from "@/components/VenuePage/types";
+import { useEffect, useState } from "react";
 
 function renderBody(parts: TextPart[], accentColor: string) {
   return parts.map((part, i) =>
@@ -27,7 +28,17 @@ interface Props extends VideoSceneProps {
   accentColor: string;
 }
 
-export default function VideoScene({ video, screens, accentColor }: Props) {
+export default function VideoScene({ video, videoMobile, screens, accentColor }: Props) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 639);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  const activeSrc = isMobile && videoMobile ? videoMobile : video;
   const count = screens.length;
 
   return (
@@ -42,7 +53,7 @@ export default function VideoScene({ video, screens, accentColor }: Props) {
       {/* ── Sticky video ─────────────────────────────────────────────────── */}
       <div className="sticky top-0 h-lvh overflow-hidden">
         <video
-          src={video}
+          src={activeSrc}
           autoPlay
           muted
           loop

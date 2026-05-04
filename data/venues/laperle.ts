@@ -9,7 +9,8 @@ const ro: VenuePageData = {
 
   hero: {
     video: "/videos/laperle-horizontal.mp4",
-    tagline: "Gelato italian livrat cu stil",
+    videoMobile: "/videos/laperle-vertical.mp4",
+    tagline: "Gelato italian servit dintr-un tuktuk. Un univers mai cald, mai pastelat și mai relaxat, cu un vibe care te duce puțin cu gândul la copilărie.",
   },
 
   sections: [
@@ -199,7 +200,8 @@ const en: VenuePageData = {
 
   hero: {
     video: "/videos/laperle-horizontal.mp4",
-    tagline: "Italian gelato delivered with style",
+    videoMobile: "/videos/laperle-vertical.mp4",
+    tagline: "Italian gelato served from a tuktuk. A warmer, more pastel, and more relaxed universe, with a vibe that takes you back to childhood.",
   },
 
   sections: [
@@ -387,7 +389,8 @@ const ru: VenuePageData = {
 
   hero: {
     video: "/videos/laperle-horizontal.mp4",
-    tagline: "Итальянское джелато, доставленное со стилем",
+    videoMobile: "/videos/laperle-vertical.mp4",
+    tagline: "Итальянское джелато, которое подают из тук-тука. Это более тёплое, пастельное и расслабленное пространство с атмосферой, напоминающей о детстве.",
   },
 
   sections: [

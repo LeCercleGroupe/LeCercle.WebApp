@@ -8,6 +8,7 @@ const ro: VenuePageData = {
 
   hero: {
     video: "/videos/maisondufeu-horizontal.mp4",
+    videoMobile: "/videos/maisondufeu-vertical.mp4",
     tagline: "Desert franțuzesc servit ca experiență live. Un concept despre oameni, emoții și amintiri din tinerețe, unde momentul contează mai mult decât perfecțiunea.",
   },
 
@@ -199,6 +200,7 @@ const en: VenuePageData = {
 
   hero: {
     video: "/videos/maisondufeu-horizontal.mp4",
+    videoMobile: "/videos/maisondufeu-vertical.mp4",
     tagline: "French dessert served as a live experience. A concept about people, emotions, and youthful memories, where the moment matters more than perfection.",
   },
 
@@ -387,6 +389,7 @@ const ru: VenuePageData = {
 
   hero: {
     video: "/videos/maisondufeu-horizontal.mp4",
+    videoMobile: "/videos/maisondufeu-vertical.mp4",
     tagline: "Французский десерт, поданный как живой опыт. Концепция о людях, эмоциях и воспоминаниях юности, где момент важнее совершенства.",
   },
 

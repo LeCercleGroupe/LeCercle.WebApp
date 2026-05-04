@@ -8,6 +8,7 @@ const ro: VenuePageData = {
 
   hero: {
     video: "/videos/lebureau-horizontal.mp4",
+    videoMobile: "/videos/lebureau-vertical.mp4",
     tagline: "Cigar lounge cu aer retro și clasic. Un spațiu matur, elegant și discret, inspirat de ritualuri clasice și de rafinamentul vremurilor trecute.",
   },
 
@@ -265,6 +266,7 @@ const en: VenuePageData = {
 
   hero: {
     video: "/videos/lebureau-horizontal.mp4",
+    videoMobile: "/videos/lebureau-vertical.mp4",
     tagline: "Retro cigar lounge with an elegant, timeless atmosphere. A mature, discreet space inspired by classic rituals and the refinement of bygone eras.",
   },
 
@@ -520,6 +522,7 @@ const ru: VenuePageData = {
 
   hero: {
     video: "/videos/lebureau-horizontal.mp4",
+    videoMobile: "/videos/lebureau-vertical.mp4",
     tagline: "Сигарный лаундж в ретро-стиле с элегантной, вневременной атмосферой. Зрелое, сдержанное пространство, вдохновлённое классическими ритуалами и изысканностью ушедших эпох.",
   },
 

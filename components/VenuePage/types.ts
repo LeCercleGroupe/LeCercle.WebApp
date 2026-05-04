@@ -24,6 +24,8 @@ export interface VideoScreen {
 export interface VideoScene {
   type: "video-scene";
   video: string;
+  /** Optional portrait video used on mobile screens (≤639 px wide) */
+  videoMobile?: string;
   /** Overrides the page-level accentColor for this scene only */
   accentColor?: string;
   /** Persistent heading shown at the top of the sticky video throughout all screens */
@@ -94,6 +96,8 @@ export type VenueSection =
 export interface VenueHeroData {
   /** Full-screen hero video */
   video: string;
+  /** Optional portrait video used on mobile screens (≤639 px wide) */
+  videoMobile?: string;
   /** Short tagline shown beneath the venue logo */
   tagline: string;
 }

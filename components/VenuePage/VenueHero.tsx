@@ -2,6 +2,7 @@
 
 import type { VenueHeroData } from "@/components/VenuePage/types";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 interface VenueHeroProps {
   hero: VenueHeroData;
@@ -16,10 +17,21 @@ export default function VenueHero({
   name,
   contactLabel,
 }: VenueHeroProps) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 639);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  const videoSrc = isMobile && hero.videoMobile ? hero.videoMobile : hero.video;
+
   return (
     <section className="relative h-lvh overflow-hidden bg-[#08060a]">
       <video
-        src={hero.video}
+        src={videoSrc}
         autoPlay
         muted
         loop
