@@ -91,6 +91,75 @@ export type VenueSection =
   | GallerySection
   | ClosingCtaSection;
 
+// ─── Split types for shared (locale-invariant) + locale text ─────────────────
+
+export interface SharedVideoScene {
+  type: "video-scene";
+  video: string;
+  videoMobile?: string;
+  accentColor?: string;
+  screens: Array<{ textPosition?: "left" | "right" | "center"; cta?: { href: string } }>;
+}
+
+export interface SharedFeaturesSection {
+  type: "features";
+  items: { image: string; imageAlt: string }[];
+}
+
+export interface SharedPackagesSection {
+  type: "packages";
+  items: { name: string; price: string; accentColor?: string; cta: { href: string } }[];
+}
+
+export interface SharedGallerySection {
+  type: "gallery";
+  images: { src: string; alt: string }[];
+}
+
+export interface SharedClosingCtaSection {
+  type: "closing-cta";
+  background: "light" | "dark";
+  showLogo?: boolean;
+  cta: { href: string };
+}
+
+export type SharedSection =
+  | SharedVideoScene
+  | SharedFeaturesSection
+  | SharedPackagesSection
+  | SharedGallerySection
+  | SharedClosingCtaSection;
+
+export interface VenueShared {
+  name: string;
+  logo: string;
+  accentColor: string;
+  hero: { video: string; videoMobile?: string };
+  social?: { instagram?: string; facebook?: string };
+  sections: SharedSection[];
+}
+
+export interface SectionText {
+  heading?: string;
+  subheading?: string;
+  subtitle?: string;
+  body?: TextPart[];
+  cta?: { label: string };
+  screens?: Array<{ body?: TextPart[]; cta?: { label: string } }>;
+  items?: Array<{
+    heading?: string;
+    body?: string;
+    subtitle?: string;
+    bullets?: string[];
+    cta?: { label: string };
+  }>;
+}
+
+export interface VenueLocaleText {
+  hero: { tagline: string };
+  sections: SectionText[];
+}
+
 // ─── Page-level data ─────────────────────────────────────────────────────────
 
 export interface VenueHeroData {
