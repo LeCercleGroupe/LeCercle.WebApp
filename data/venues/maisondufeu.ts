@@ -28,9 +28,9 @@ const shared: VenueShared = {
     {
       type: "features",
       items: [
-        { image: "/projectFeatures/maisonDuFeu/feature-1.png", imageAlt: "S'mores" },
-        { image: "/projectFeatures/maisonDuFeu/feature-2.png", imageAlt: "Open-flame meringue" },
-        { image: "/projectFeatures/maisonDuFeu/feature-3.png", imageAlt: "Chocolate fountain" },
+        { image: "/projectFeatures/maisonDuFeu/feature-1.png", imageAlt: "Feature 1" },
+        { image: "/projectFeatures/maisonDuFeu/feature-2.png", imageAlt: "Feature 2" },
+        { image: "/projectFeatures/maisonDuFeu/feature-3.png", imageAlt: "Feature 3" },
       ],
     },
     {
