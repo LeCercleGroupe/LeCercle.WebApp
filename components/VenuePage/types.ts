@@ -108,4 +108,8 @@ export interface VenuePageData {
   accentColor: string;
   hero: VenueHeroData;
   sections: VenueSection[];
+  social?: {
+    instagram?: string;
+    facebook?: string;
+  };
 }

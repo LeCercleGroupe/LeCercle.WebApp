@@ -149,7 +149,7 @@ export default function VenuePage({
         }
       })}
 
-      <VenueFooter locale={locale} activeSlug={SLUG_MAP[logo] ?? ""} />
+      <VenueFooter locale={locale} activeSlug={SLUG_MAP[logo] ?? ""} social={data.social} />
     </div>
   );
 }

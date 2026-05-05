@@ -189,6 +189,10 @@ const ro: VenuePageData = {
       cta: { label: "Primește o ofertă personalizată", href: contact_link },
     },
   ],
+  social: {
+    instagram: "https://www.instagram.com/maisondufeu.lcg?igsh=MWFoYzg4ejRtaHRuNg==",
+    facebook: "#",
+  },
 };
 
 
@@ -380,6 +384,10 @@ const en: VenuePageData = {
       cta: { label: "Get a personalised offer", href: contact_link },
     },
   ],
+  social: {
+    instagram: "https://www.instagram.com/maisondufeu.lcg?igsh=MWFoYzg4ejRtaHRuNg==",
+    facebook: "#",
+  },
 };
 
 const ru: VenuePageData = {
@@ -569,6 +577,10 @@ const ru: VenuePageData = {
       cta: { label: "Получить персональное предложение", href: contact_link },
     },
   ],
+  social: {
+    instagram: "https://www.instagram.com/maisondufeu.lcg?igsh=MWFoYzg4ejRtaHRuNg==",
+    facebook: "#",
+  },
 };
 
 const maisondufeu: Record<string, VenuePageData> = { ro, en, ru };

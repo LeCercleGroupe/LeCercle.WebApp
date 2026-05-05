@@ -1,6 +1,7 @@
 "use client";
 
 import VideoShowcase from "@/components/MainHero/VideoShowcase";
+import { contact_link } from "@/data/venues/constants/links";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -140,13 +141,13 @@ export default function LeCircleHero({ dict, locale }: LeCircleHeroProps) {
         </div>
 
         {/* Contact CTA — desktop only */}
-        <button className="hidden sm:block group border-0 bg-gray-100/20 text-gray-100 text-[12px] tracking-[0.12em] cursor-pointer px-5.5 py-2.25 transition-all duration-250 relative hover:bg-gray-100/40 hover:text-white">
+        <Link href={contact_link} className="hidden sm:flex group border-0 bg-gray-100/20 text-gray-100 text-[12px] tracking-[0.12em] cursor-pointer px-5.5 py-2.25 transition-all duration-250 relative hover:bg-gray-100/40 hover:text-white">
           <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
           <span className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
           <span className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
           <span className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
           {dict.nav.contact}
-        </button>
+        </Link>
       </nav>
 
       {/* ── Centre hero text ─────────────────────────────────────────────── */}
@@ -163,13 +164,13 @@ export default function LeCircleHero({ dict, locale }: LeCircleHeroProps) {
           {dict.hero.description}
         </p>
         {/* Contact CTA — mobile only, under description */}
-        <button className="sm:hidden group border-0 bg-gray-100/20 text-gray-100 text-[12px] tracking-[0.12em] cursor-pointer px-4 py-2 mt-6 transition-all duration-250 relative hover:bg-gray-100/40 hover:text-white">
+        <Link href={contact_link} className="sm:hidden group border-0 bg-gray-100/20 text-gray-100 text-[12px] tracking-[0.12em] cursor-pointer px-4 py-2 mt-6 transition-all duration-250 relative hover:bg-gray-100/40 hover:text-white">
           <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
           <span className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
           <span className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
           <span className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
           {dict.nav.contact}
-        </button>
+        </Link>
       </div>
 
       {/* ── Bottom venue strip ───────────────────────────────────────────── */}
