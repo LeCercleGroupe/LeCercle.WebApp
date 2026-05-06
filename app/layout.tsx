@@ -42,7 +42,7 @@ const cinzelDecorative = Cinzel_Decorative({
 })
 
 export const metadata: Metadata = {
-  title: 'Le Circle',
+  title: 'Le Cercle',
   description: 'Servicii create pentru evenimente memorabile.',
 }
 
