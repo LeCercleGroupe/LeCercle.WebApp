@@ -53,12 +53,7 @@ interface CardProps {
   projectName: string;
 }
 
-function PackageCard({
-  pkg,
-  fallbackColor,
-  logo,
-  projectName,
-}: CardProps) {
+function PackageCard({ pkg, fallbackColor, logo, projectName }: CardProps) {
   const color = pkg.accentColor ?? fallbackColor;
   const initial = pkg.name.charAt(0);
 
@@ -94,7 +89,7 @@ function PackageCard({
           {/* Capacity row with flanking rules */}
           <div className="flex items-center gap-2 w-full mb-6">
             <div className="flex-1 h-px bg-(--card-color) opacity-30" />
-            <span className="font-cinzel text-[10px] tracking-widest uppercase text-(--card-color) whitespace-nowrap">
+            <span className="font-cinzel text-[12px] tracking-widest uppercase text-(--card-color) whitespace-nowrap">
               {pkg.subtitle}
             </span>
             <div className="flex-1 h-px bg-(--card-color) opacity-30" />
@@ -105,7 +100,7 @@ function PackageCard({
             {pkg.bullets.map((bullet) => (
               <li
                 key={bullet}
-                className="font-cinzel text-[11px] leading-relaxed text-(--card-color)"
+                className="font-cinzel text-[13px] leading-relaxed text-(--card-color)"
               >
                 {bullet}
               </li>

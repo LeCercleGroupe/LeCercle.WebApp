@@ -1,4 +1,4 @@
-import type { VenueShared, VenueLocaleText } from "@/components/VenuePage/types";
+import type { VenueLocaleText, VenueShared } from "@/components/VenuePage/types";
 import { contact_link } from "./constants/links";
 import { mergeVenueData } from "./utils/mergeVenueData";
 
@@ -28,9 +28,9 @@ const shared: VenueShared = {
     {
       type: "features",
       items: [
-        { image: "/projectFeatures/laPerle/feature-1.png", imageAlt: "Weddings & daytime receptions" },
-        { image: "/projectFeatures/laPerle/feature-2.png", imageAlt: "Private events & summer parties" },
-        { image: "/projectFeatures/laPerle/feature-3.png", imageAlt: "Brand events & activations" },
+        { image: "/projectFeatures/laPerle/feature-1.jpg", imageAlt: "Weddings & daytime receptions" },
+        { image: "/projectFeatures/laPerle/feature-2.jpg", imageAlt: "Private events & summer parties" },
+        { image: "/projectFeatures/laPerle/feature-3.jpg", imageAlt: "Brand events & activations" },
       ],
     },
     {
@@ -47,27 +47,32 @@ const shared: VenueShared = {
     {
       type: "packages",
       items: [
-        { name: "Piccola", price: "750 €",   accentColor: "#A30912", cta: { href: contact_link } },
-        { name: "Dolce",   price: "950 €",   accentColor: "#1B5A38", cta: { href: contact_link } },
+        { name: "Piccola", price: "750 €", accentColor: "#A30912", cta: { href: contact_link } },
+        { name: "Dolce", price: "950 €", accentColor: "#1B5A38", cta: { href: contact_link } },
         { name: "La Sera", price: "1 350 €", accentColor: "#16447D", cta: { href: contact_link } },
-        { name: "Perla",   price: "1 980 €", accentColor: "#522B73", cta: { href: contact_link } },
+        { name: "Perla", price: "1 980 €", accentColor: "#522B73", cta: { href: contact_link } },
       ],
     },
     {
       type: "gallery",
       images: [
-        { src: "/projectGallery/laPerle/image-1.png",  alt: "Image Gallery 1" },
-        { src: "/projectGallery/laPerle/image-2.png",  alt: "Image Gallery 2" },
-        { src: "/projectGallery/laPerle/image-3.png",  alt: "Image Gallery 3" },
-        { src: "/projectGallery/laPerle/image-4.png",  alt: "Image Gallery 4" },
-        { src: "/projectGallery/laPerle/image-5.png",  alt: "Image Gallery 5" },
-        { src: "/projectGallery/laPerle/image-6.png",  alt: "Image Gallery 6" },
-        { src: "/projectGallery/laPerle/image-7.png",  alt: "Image Gallery 7" },
-        { src: "/projectGallery/laPerle/image-8.png",  alt: "Image Gallery 8" },
-        { src: "/projectGallery/laPerle/image-9.png",  alt: "Image Gallery 9" },
+        { src: "/projectGallery/laPerle/image-1.png", alt: "Image Gallery 1" },
+        { src: "/projectGallery/laPerle/image-2.jpg", alt: "Image Gallery 2" },
+        { src: "/projectGallery/laPerle/image-3.png", alt: "Image Gallery 3" },
+        { src: "/projectGallery/laPerle/image-4.jpg", alt: "Image Gallery 4" },
+        { src: "/projectGallery/laPerle/image-5.jpg", alt: "Image Gallery 5" },
+        { src: "/projectGallery/laPerle/image-6.png", alt: "Image Gallery 6" },
+        { src: "/projectGallery/laPerle/image-7.png", alt: "Image Gallery 7" },
+        { src: "/projectGallery/laPerle/image-8.jpg", alt: "Image Gallery 8" },
+        { src: "/projectGallery/laPerle/image-9.png", alt: "Image Gallery 9" },
         { src: "/projectGallery/laPerle/image-10.png", alt: "Image Gallery 10" },
-        { src: "/projectGallery/laPerle/image-11.png", alt: "Image Gallery 11" },
+        { src: "/projectGallery/laPerle/image-11.jpg", alt: "Image Gallery 11" },
         { src: "/projectGallery/laPerle/image-12.png", alt: "Image Gallery 12" },
+        { src: "/projectGallery/laPerle/image-13.jpg", alt: "Image Gallery 13" },
+        { src: "/projectGallery/laPerle/image-14.jpg", alt: "Image Gallery 14" },
+        { src: "/projectGallery/laPerle/image-15.jpg", alt: "Image Gallery 15" },
+        { src: "/projectGallery/laPerle/image-16.jpg", alt: "Image Gallery 16" },
+        { src: "/projectGallery/laPerle/image-17.jpg", alt: "Image Gallery 17" },
       ],
     },
     {
@@ -81,7 +86,7 @@ const shared: VenueShared = {
 
 const ro: VenueLocaleText = {
   hero: {
-    tagline: "Gelato italian servit dintr-un tuktuk. Un univers mai cald, mai pastelat și mai relaxat, cu un vibe care te duce puțin cu gândul la copilărie.",
+    tagline: "Gelato italian servit dintr-un Piaggio Ape, alături de cocktail-uri răcoritoare. Un univers mai cald, mai pastelat și mai relaxat, cu un vibe care te duce puțin cu gândul la copilărie.",
   },
   sections: [
     {
@@ -90,14 +95,14 @@ const ro: VenueLocaleText = {
       screens: [
         {
           body: [
-            { t: "normal", text: "La Perle aduce la evenimentul tău un tuktuk cu gelato italian, într-o formă care atrage imediat atenția și creează bună dispoziție. Este un concept simplu în aparență, dar foarte expresiv," },
+            { t: "normal", text: "La Perle aduce la evenimentul tău un tuktuk cu gelato italian, într-o formă care atrage imediat atenția și creează bună dispoziție. Este un concept simplu în aparență, dar foarte expresiv, " },
             { t: "italic-accent", text: "construit să aducă zâmbete" },
             { t: "normal", text: " și să dea spațiului o energie caldă și prietenoasă." },
           ],
         },
         {
           body: [
-            { t: "normal", text: "Vibe-ul este mai relaxat și mai luminos, cu o " },
+            { t: "normal", text: "Vibe-ul este mai relaxant și mai luminos, cu o " },
             { t: "italic-accent", text: "estetică pastelată care trimite subtil la copilărie când totul părea mai ușor și mai plăcut. " },
             { t: "normal", text: " Nu încearcă să impresioneze prin solemnitate, ci prin farmec, naturalețe și o formă foarte curată de bucurie." },
           ],
@@ -106,7 +111,7 @@ const ro: VenueLocaleText = {
           body: [
             { t: "normal", text: "Tuktuk-ul devine rapid un punct de interes, dar și un " },
             { t: "italic-accent", text: "pretext bun pentru interacțiune." },
-            { t: "normal", text: " Oamenii se apropie, se opresc, aleg, zâmbesc, povestesc. În jurul lui se creează exact tipul de atmosferă care" },
+            { t: "normal", text: " Oamenii se apropie, se opresc, aleg, zâmbesc, povestesc. În jurul lui se creează exact tipul de atmosferă care " },
             { t: "italic-accent", text: "face un eveniment să pară mai viu și mai prietenos." },
           ],
         },
@@ -130,7 +135,7 @@ const ro: VenueLocaleText = {
         },
         {
           heading: "Evenimente Private & Petreceri de Vară",
-          body: "În contextul unor întâlniri mai relaxate, La Perle aduce exact acel detaliu care face atmosfera mai prietenoasă și mai liberă. Este genul de prezență care se potrivește firesc cu o seară bună, oameni buni și un ritm fără grabă.",
+          body: "În contextul unor întâlniri mai relaxante, La Perle aduce exact acel detaliu care face atmosfera mai prietenoasă și mai liberă. Este genul de prezență care se potrivește firesc cu o seară bună, oameni buni și un ritm fără grabă.",
         },
         {
           heading: "Evenimente de Brand & Activări",
@@ -208,7 +213,7 @@ const ro: VenueLocaleText = {
 
 const en: VenueLocaleText = {
   hero: {
-    tagline: "Italian gelato served from a tuktuk. A warmer, more pastel, and more relaxed universe, with a vibe that takes you back to childhood.",
+    tagline: "Piaggio Ape with Italian gelato and refreshing cocktails. A warmer, more pastel, and more relaxed universe, with a vibe that takes you back to childhood.",
   },
   sections: [
     {
@@ -335,7 +340,7 @@ const en: VenueLocaleText = {
 
 const ru: VenueLocaleText = {
   hero: {
-    tagline: "Итальянское джелато, которое подают из тук-тука. Это более тёплое, пастельное и расслабленное пространство с атмосферой, напоминающей о детстве.",
+    tagline: "Piaggio Ape с итальянским джелато и освежающими коктейлями. Это более тёплое, пастельное и расслабленное пространство с атмосферой, напоминающей о детстве.",
   },
   sections: [
     {

@@ -1,4 +1,4 @@
-import type { VenueShared, VenueLocaleText } from "@/components/VenuePage/types";
+import type { VenueLocaleText, VenueShared } from "@/components/VenuePage/types";
 import { contact_link } from "./constants/links";
 import { mergeVenueData } from "./utils/mergeVenueData";
 
@@ -12,7 +12,7 @@ const shared: VenueShared = {
   },
   social: {
     instagram: "https://www.instagram.com/maisondufeu.lcg?igsh=MWFoYzg4ejRtaHRuNg==",
-    facebook: "#",
+    facebook: "https://www.facebook.com/share/1DkUKStFN7/?mibextid=wwXIfr",
   },
   sections: [
     {
@@ -28,9 +28,9 @@ const shared: VenueShared = {
     {
       type: "features",
       items: [
-        { image: "/projectFeatures/maisonDuFeu/feature-1.png", imageAlt: "Feature 1" },
-        { image: "/projectFeatures/maisonDuFeu/feature-2.png", imageAlt: "Feature 2" },
-        { image: "/projectFeatures/maisonDuFeu/feature-3.png", imageAlt: "Feature 3" },
+        { image: "/projectFeatures/maisonDuFeu/feature-1.jpg", imageAlt: "Feature 1" },
+        { image: "/projectFeatures/maisonDuFeu/feature-2.jpg", imageAlt: "Feature 2" },
+        { image: "/projectFeatures/maisonDuFeu/feature-3.jpg", imageAlt: "Feature 3" },
       ],
     },
     {
@@ -47,10 +47,10 @@ const shared: VenueShared = {
     {
       type: "packages",
       items: [
-        { name: "Éclat",        price: "750 €",  accentColor: "#A30912", cta: { href: contact_link } },
-        { name: "Réminiscence", price: "950 €",  accentColor: "#1B5A38", cta: { href: contact_link } },
-        { name: "Moment",       price: "1 350 €", accentColor: "#16447D", cta: { href: contact_link } },
-        { name: "Signature",    price: "1980 €", accentColor: "#522B73", cta: { href: contact_link } },
+        { name: "Éclat", price: "750 €", accentColor: "#A30912", cta: { href: contact_link } },
+        { name: "Réminiscence", price: "950 €", accentColor: "#1B5A38", cta: { href: contact_link } },
+        { name: "Moment", price: "1 350 €", accentColor: "#16447D", cta: { href: contact_link } },
+        { name: "Signature", price: "1980 €", accentColor: "#522B73", cta: { href: contact_link } },
       ],
     },
     {
@@ -136,7 +136,7 @@ const ro: VenueLocaleText = {
         },
         {
           heading: "Fântâna de Ciocolată",
-          body: "Ciocolata curge continuu, devenind punctul central al experienței. Invitații pot combina gusturi, pot experimenta și pot reveni de mai multe ori — un detaliu care adaugă energie și un ritm relaxat întregului eveniment.",
+          body: "Ciocolata curge continuu, devenind punctul central al experienței. Invitații pot combina gusturi, pot experimenta și pot reveni de mai multe ori — un detaliu care adaugă energie și un ritm relaxant întregului eveniment.",
         },
       ],
     },
@@ -180,22 +180,22 @@ const ro: VenueLocaleText = {
       items: [
         {
           subtitle: "până la 80 de persoane",
-          bullets: ["dessert experience live", "foc și plating pe loc", "prezentare elegantă", "servire pentru invitați", "atmosferă caldă și relaxată"],
+          bullets: ["dessert experience live", "foc și plating pe loc", "prezentare elegantă", "servire pentru invitați", "atmosferă caldă și relaxantă"],
           cta: { label: "Solicită oferta" },
         },
         {
           subtitle: "până la 80 de persoane",
-          bullets: ["dessert experience live", "foc și plating pe loc", "prezentare elegantă", "servire pentru invitați", "recuzită foto", "2 variante de topping / servire", "atmosferă caldă și relaxată"],
+          bullets: ["dessert experience live", "foc și plating pe loc", "prezentare elegantă", "servire pentru invitați", "recuzită foto", "2 variante de topping / servire", "atmosferă caldă și relaxantă"],
           cta: { label: "Solicită oferta" },
         },
         {
           subtitle: "până la 80 de persoane",
-          bullets: ["dessert experience live", "foc și plating pe loc", "prezentare elegantă", "servire pentru invitați", "recuzită foto", "3 variante de topping / servire", "set - up extins pentru eveniment", "atmosferă caldă și relaxată"],
+          bullets: ["dessert experience live", "foc și plating pe loc", "prezentare elegantă", "servire pentru invitați", "recuzită foto", "3 variante de topping / servire", "set - up extins pentru eveniment", "atmosferă caldă și relaxantă"],
           cta: { label: "Solicită oferta" },
         },
         {
           subtitle: "până la 80 de persoane",
-          bullets: ["dessert experience live", "foc și plating pe loc", "prezentare elegantă", "servire pentru invitați", "recuzită foto", "3 variante de topping / servire", "set - up extins pentru eveniment", "atmosferă caldă și relaxată", "personalizare specială", "elemente vizuale suplimentare"],
+          bullets: ["dessert experience live", "foc și plating pe loc", "prezentare elegantă", "servire pentru invitați", "recuzită foto", "3 variante de topping / servire", "set - up extins pentru eveniment", "atmosferă caldă și relaxantă", "personalizare specială", "elemente vizuale suplimentare"],
           cta: { label: "Solicită oferta" },
         },
       ],

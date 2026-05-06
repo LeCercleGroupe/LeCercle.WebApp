@@ -56,7 +56,6 @@ export default function VideoScene({ video, videoMobile, screens, accentColor }:
           src={activeSrc}
           autoPlay
           muted
-          loop
           playsInline
           className="absolute inset-0 w-full h-full object-cover"
         />

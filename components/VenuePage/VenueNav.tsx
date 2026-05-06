@@ -1,9 +1,10 @@
 "use client";
 
+import { contact_link } from "@/data/venues/constants/links";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 
 const LOCALES = ["ro", "en", "ru"] as const;
 
@@ -13,7 +14,11 @@ interface VenueNavProps {
   langLabel: string;
 }
 
-export default function VenueNav({ locale, contactLabel, langLabel }: VenueNavProps) {
+export default function VenueNav({
+  locale,
+  contactLabel,
+  langLabel,
+}: VenueNavProps) {
   const [langOpen, setLangOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -26,7 +31,7 @@ export default function VenueNav({ locale, contactLabel, langLabel }: VenueNavPr
   }
 
   return (
-    <nav className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 py-5 sm:px-9 sm:py-6">
+    <nav className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 py-5 sm:px-9 sm:py-6 mix-blend-difference">
       <Link
         href={`/${locale}`}
         className="opacity-70 hover:opacity-100 transition-opacity duration-200 cursor-pointer"
@@ -71,13 +76,16 @@ export default function VenueNav({ locale, contactLabel, langLabel }: VenueNavPr
         </div>
 
         {/* Contact CTA only for desktop */}
-        <button className="group border-0 bg-gray-100/10 text-gray-100 text-[11px] tracking-[0.14em] cursor-pointer px-4 py-2 transition-all duration-250 relative hover:bg-gray-100/30 hover:text-white font-figtree hidden sm:block">
+        <Link
+          href={contact_link}
+          className="group border-0 bg-gray-100/10 text-gray-100 text-[11px] tracking-[0.14em] cursor-pointer px-4 py-2 transition-all duration-250 relative hover:bg-gray-100/30 hover:text-white font-figtree hidden sm:block"
+        >
           <span className="absolute top-0 left-0 w-3 h-2 border-t border-l border-gray-100/70" />
           <span className="absolute top-0 right-0 w-3 h-2 border-t border-r border-gray-100/70" />
           <span className="absolute bottom-0 left-0 w-3 h-2 border-b border-l border-gray-100/70" />
           <span className="absolute bottom-0 right-0 w-3 h-2 border-b border-r border-gray-100/70" />
           {contactLabel}
-        </button>
+        </Link>
       </div>
     </nav>
   );

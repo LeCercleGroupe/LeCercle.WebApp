@@ -1,4 +1,4 @@
-import type { VenueShared, VenueLocaleText } from "@/components/VenuePage/types";
+import type { VenueLocaleText, VenueShared } from "@/components/VenuePage/types";
 import { contact_link } from "./constants/links";
 import { mergeVenueData } from "./utils/mergeVenueData";
 
@@ -12,7 +12,7 @@ const shared: VenueShared = {
   },
   social: {
     instagram: "https://www.instagram.com/lebureau.lcg?igsh=cjYyeG1oc2duMnVt",
-    facebook: "#",
+    facebook: "https://www.facebook.com/share/1QzwrDDZuW/?mibextid=wwXIfr",
   },
   sections: [
     {
@@ -47,8 +47,8 @@ const shared: VenueShared = {
     {
       type: "packages",
       items: [
-        { name: "Invité",    price: "€750",  accentColor: "#A30912", cta: { href: contact_link } },
-        { name: "Associé",   price: "€950",  accentColor: "#1B5A38", cta: { href: contact_link } },
+        { name: "Invité", price: "€750", accentColor: "#A30912", cta: { href: contact_link } },
+        { name: "Associé", price: "€950", accentColor: "#1B5A38", cta: { href: contact_link } },
         { name: "Directeur", price: "€1350", accentColor: "#16447D", cta: { href: contact_link } },
         { name: "Président", price: "€1950", accentColor: "#522B73", cta: { href: contact_link } },
       ],
@@ -66,15 +66,15 @@ const shared: VenueShared = {
     {
       type: "gallery",
       images: [
-        { src: "/projectGallery/leBureau/photo1.png",  alt: "Le Bureau whiskey detail" },
-        { src: "/projectGallery/leBureau/photo2.jpg",  alt: "Gala guests" },
-        { src: "/projectGallery/leBureau/photo3.jpg",  alt: "Retro atmosphere" },
-        { src: "/projectGallery/leBureau/photo4.jpg",  alt: "Glass detail" },
-        { src: "/projectGallery/leBureau/photo5.jpg",  alt: "Private evening" },
-        { src: "/projectGallery/leBureau/photo6.jpg",  alt: "Le Bureau lounge" },
-        { src: "/projectGallery/leBureau/photo7.png",  alt: "Premium cigars" },
-        { src: "/projectGallery/leBureau/photo8.jpg",  alt: "Vintage decor" },
-        { src: "/projectGallery/leBureau/photo9.jpg",  alt: "Gramophone" },
+        { src: "/projectGallery/leBureau/photo1.png", alt: "Le Bureau whiskey detail" },
+        { src: "/projectGallery/leBureau/photo2.jpg", alt: "Gala guests" },
+        { src: "/projectGallery/leBureau/photo3.jpg", alt: "Retro atmosphere" },
+        { src: "/projectGallery/leBureau/photo4.jpg", alt: "Glass detail" },
+        { src: "/projectGallery/leBureau/photo5.jpg", alt: "Private evening" },
+        { src: "/projectGallery/leBureau/photo6.jpg", alt: "Le Bureau lounge" },
+        { src: "/projectGallery/leBureau/photo7.png", alt: "Premium cigars" },
+        { src: "/projectGallery/leBureau/photo8.jpg", alt: "Vintage decor" },
+        { src: "/projectGallery/leBureau/photo9.jpg", alt: "Gramophone" },
         { src: "/projectGallery/leBureau/photo10.png", alt: "Whiskey experience" },
         { src: "/projectGallery/leBureau/photo11.png", alt: "Wedding with Le Bureau" },
         { src: "/projectGallery/leBureau/photo12.png", alt: "Bottle detail" },
@@ -116,7 +116,7 @@ const ro: VenueLocaleText = {
           body: [
             { t: "normal", text: "Creăm un spațiu viu, unde sunetul vinilului și aroma trabucurilor premium stabilesc un ritm aparte. Fiecare obiect din decorul nostru este ales special pentru a stimula interacțiunea umană, " },
             { t: "italic-accent", text: "oferind invitaților șansa de a trăi momente reale, " },
-            { t: "normal", text: " departe de agomot și agitația cotidiană." },
+            { t: "normal", text: " departe de zgomot și agitația cotidiană." },
           ],
         },
         {
@@ -143,7 +143,7 @@ const ro: VenueLocaleText = {
         },
         {
           heading: "Petreceri Private & Aniversări",
-          body: "Fie că visezi la o noapte tematică în stilul efervescent al anilor '20, o seară Prohibition sau pur și simplu o petrecere elitistă pentru apropiați, noi aducem recuzita, băuturile și atitudinea necesare pentru o noapte legendară.",
+          body: "Fie că visezi la o noapte tematică în stilul efervescent al anilor '20, o seară Prohibition sau pur și simplu o petrecere elitistă pentru apropiați, noi aducem recuzita, băuturile și atitudinea necesară pentru o noapte legendară.",
         },
       ],
     },
