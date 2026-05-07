@@ -15,3 +15,12 @@
 - If the component is not reusable, make it a functional component.
 - Don't abuse the useState, use variables instead.
 - Use one variable per feature, don't create multiple variables for the same feature, even if it is used in different scenarios.
+
+** General best practices ** :
+
+- Always use `typescript` instead of `javascript`.
+- Always use `tailwindcss` for styling.
+- Always use `react` for building components.
+- Always use `next.js` for building applications.
+- Don't change what was already implemented.
+- Don't overengineer. Ask for help if you are not sure about something.

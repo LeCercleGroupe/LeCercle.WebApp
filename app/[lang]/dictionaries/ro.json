@@ -16,8 +16,196 @@
       "cta": "Descoperă Serviciul"
     },
     "perle": {
-      "tagline": "Tuktuk cu gelato italian pentru evenimente.",
+      "tagline": "Piaggio Ape cu gelato italian și cocktail-uri răcoritoare.",
       "cta": "Descoperă Serviciul"
+    }
+  },
+  "booking": {
+    "step_label": "Pasul {current} din {total}",
+    "back": "Pas anterior",
+    "continue": "Continuă",
+    "whatsapp_title": "Ai întrebări despre rezervarea ta?",
+    "whatsapp_sub": "Echipa noastră este disponibilă pe WhatsApp",
+    "step1": {
+      "title": "Când are loc evenimentul?",
+      "subtitle": "Alege o dată și numărul de invitați pentru evenimentul tău.",
+      "guests_label": "Numărul total de invitați *",
+      "months": [
+        "Ianuarie",
+        "Februarie",
+        "Martie",
+        "Aprilie",
+        "Mai",
+        "Iunie",
+        "Iulie",
+        "August",
+        "Septembrie",
+        "Octombrie",
+        "Noiembrie",
+        "Decembrie"
+      ],
+      "days": ["Lu", "Ma", "Mi", "Jo", "Vi", "Sâ", "Du"],
+      "days_full": [
+        "Luni",
+        "Marți",
+        "Miercuri",
+        "Joi",
+        "Vineri",
+        "Sâmbătă",
+        "Duminică"
+      ]
+    },
+    "step2": {
+      "title": "Ce servicii dorești?",
+      "subtitle": "Poți selecta unul sau mai multe servicii pentru evenimentul tău.",
+      "selected_count": "Selectate: {count}"
+    },
+    "step3": {
+      "title": "Alege pachetele",
+      "subtitle": "Selectează un pachet pentru fiecare serviciu ales.",
+      "selected_badge": "Selectat",
+      "progress": "{done} din {total} servicii configurate",
+      "guests_for_service": "Invitați pentru acest serviciu",
+      "guests_hint": "Implicit: numărul total de invitați"
+    },
+    "step4": {
+      "title": "Locația evenimentului",
+      "subtitle": "Completează detaliile despre locul unde va avea loc evenimentul.",
+      "city_label": "Orașul *",
+      "city_placeholder": "Selectează orașul",
+      "address_label": "Adresa *",
+      "address_placeholder": "Strada, numărul",
+      "postal_label": "Codul poștal",
+      "postal_placeholder": "MD-2001",
+      "venue_label": "Numele locației *",
+      "venue_placeholder": "ex. Palatul Național",
+      "time_label": "Ora de start *",
+      "time_placeholder": "ex. 18:00",
+      "notes_label": "Mențiuni suplimentare",
+      "notes_placeholder": "Orice detalii relevante pentru echipa noastră...",
+      "transport_free_title": "Transport gratuit în Chișinău",
+      "transport_free_body": "În Chișinău, transportul și logistica nu se taxează separat. Echipa vine la locația ta fără cost suplimentar de deplasare.",
+      "transport_fee_title": "Locația se află în afara Chișinăului",
+      "transport_fee_body": "Costul deplasării și logisticii echipei noastre până la locație este calculat automat și adăugat la totalul rezervării."
+    },
+    "step5": {
+      "title": "Date de contact",
+      "subtitle": "Vom folosi aceste date pentru a confirma rezervarea ta.",
+      "type_person": "Persoană fizică",
+      "type_company": "Companie",
+      "company_name_label": "Denumirea companiei *",
+      "company_name_placeholder": "SRL Exemplu",
+      "idno_label": "IDNO *",
+      "idno_placeholder": "1234567890123",
+      "first_name_label": "Prenume *",
+      "first_name_placeholder": "Ion",
+      "last_name_label": "Nume *",
+      "last_name_placeholder": "Popescu",
+      "email_label": "Email *",
+      "email_placeholder": "ion@exemplu.md",
+      "phone_label": "Telefon *",
+      "phone_placeholder": "+373 6X XXX XXX",
+      "send_sms": "Trimite SMS",
+      "send_email": "Trimite codul",
+      "send_error": "Nu am putut trimite codul. Verifică datele și încearcă din nou.",
+      "sms_hint": "Introdu codul de 6 cifre trimis pe {phone}",
+      "email_hint": "Introdu codul de 6 cifre trimis pe {email}",
+      "sms_code_placeholder": "XXXXXX",
+      "verify": "Verifică",
+      "verified": "Verificat",
+      "change_number": "Schimbă numărul",
+      "change_email": "Schimbă emailul",
+      "code_error": "Codul introdus este invalid."
+    },
+    "step6": {
+      "title": "Sumar și plată",
+      "subtitle": "Numărul tău a fost confirmat. Verifică detaliile și confirmă rezervarea.",
+      "card_title": "Sumar rezervare",
+      "event_section": "EVENIMENT",
+      "location_section": "LOCAȚIE",
+      "services_section": "SERVICII ({count})",
+      "details_section": "DETALII SUPLIMENTARE",
+      "cost_section": "COST",
+      "date_label": "Data",
+      "guests_label": "Invitați",
+      "guests_unit": "persoane",
+      "location_label": "Locație",
+      "address_label": "Adresă",
+      "time_label": "Ora de începere",
+      "transport_label": "Logistică în afara Chișinăului ({km} km)",
+      "taxes_label": "Taxe incluse",
+      "total_de_plata": "TOTAL DE PLATĂ",
+      "payment_title": "CUM VREI SĂ PLĂTEȘTI?",
+      "payment_subtitle": "Avansul de 10% blochează data și confirmă rezervarea. Restul de 90% se achită în ziua evenimentului.",
+      "pay_now_label": "Plata avansului acum",
+      "pay_now_sub": "Plătești {amount} acum, rezervarea ta este confirmată imediat și data este blocată în calendarul nostru.",
+      "pay_later_label": "Plata avansului mai târziu",
+      "pay_later_sub": "Avansul de {amount} poate fi achitat ulterior online sau printr-o întâlnire cu echipa noastră.",
+      "recommended": "Recomandat",
+      "finalize": "Achită acum",
+      "submit_error": "Ceva nu a mers bine. Te rugăm să încerci din nou."
+    },
+    "step7": {
+      "title": "Rezervare în așteptare",
+      "subtitle": "Cererea ta a fost înregistrată. Achită avansul de {amount} pentru a confirma rezervarea.",
+      "steps_title": "CE URMEAZĂ",
+      "steps": [
+        {
+          "label": "Cerere primită",
+          "sub": "Am primit toate detaliile evenimentului tău."
+        },
+        {
+          "label": "Achită avansul de {amount}",
+          "sub": "Plătește online din profilul tău sau contactează-ne pentru a stabili o metodă alternativă."
+        },
+        {
+          "label": "Contract în profilul tău",
+          "sub": "Odată achitat avansul, contractul este generat automat și disponibil în profilul tău pentru vizualizare și descărcare."
+        },
+        {
+          "label": "Apel de coordonare",
+          "sub": "Un coordonator te va contacta în 2–3 zile lucrătoare pentru a discuta detaliile tehnice și preferințele pentru eveniment."
+        },
+        {
+          "label": "Evenimentul tău",
+          "sub": ""
+        }
+      ],
+      "event_details_title": "DETALII EVENIMENT",
+      "date_label": "Data:",
+      "time_label": "Ora de începere:",
+      "location_label": "Locație:",
+      "address_label": "Adresă:",
+      "back_home": "← Înapoi acasă"
+    },
+    "payment_success": {
+      "title": "Rezervarea confirmată",
+      "subtitle": "Evenimentul tău este rezervat ferm. Te contactăm în curând pentru a discuta detaliile evenimentului.",
+      "steps_title": "CE URMEAZĂ",
+      "steps": [
+        {
+          "label": "Avans achitat",
+          "sub": "Avansul de 10% a fost procesat cu succes."
+        },
+        {
+          "label": "Contract în profilul tău",
+          "sub": "Odată achitat avansul, contractul este generat automat și disponibil în profilul tău pentru vizualizare și descărcare."
+        },
+        {
+          "label": "Apel de coordonare",
+          "sub": "Un coordonator te va contacta în 2–3 zile lucrătoare pentru a discuta detaliile tehnice și preferințele pentru eveniment."
+        },
+        {
+          "label": "Evenimentul tău",
+          "sub": "Ne vedem la eveniment!"
+        }
+      ],
+      "event_details_title": "DETALII EVENIMENT",
+      "date_label": "Data:",
+      "time_label": "Ora de începere:",
+      "location_label": "Locație:",
+      "address_label": "Adresă:",
+      "back_home": "← Înapoi acasă"
     }
   }
 }

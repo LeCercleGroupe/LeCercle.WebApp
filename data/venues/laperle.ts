@@ -12,7 +12,7 @@ const shared: VenueShared = {
   },
   social: {
     instagram: "https://www.instagram.com/laperle.lcg?igsh=MTdraTJwdzh5aGh3OA==",
-    facebook: "#",
+    facebook: "https://www.facebook.com/share/1Mryxr35NN/?mibextid=wwXIfr",
   },
   sections: [
     {

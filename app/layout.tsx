@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import BookingTokenProvider from "@/components/BookingTokenProvider";
 import {
   Cinzel,
   Cinzel_Decorative,
@@ -65,7 +66,9 @@ export default async function RootLayout({
       lang={locale}
       className={`${geistSans.variable} ${geistMono.variable} ${figtree.variable} ${ebGaramond.variable} ${dancingScript.variable} ${cinzel.variable} ${cinzelDecorative.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col select-none">{children}</body>
+      <body className="min-h-full flex flex-col select-none">
+        <BookingTokenProvider>{children}</BookingTokenProvider>
+      </body>
     </html>
   );
 }

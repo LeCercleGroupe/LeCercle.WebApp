@@ -16,8 +16,196 @@
       "cta": "Discover the Service"
     },
     "perle": {
-      "tagline": "Tuk-tuk with Italian gelato for events.",
+      "tagline": "Piaggio Ape with Italian gelato and refreshing cocktails.",
       "cta": "Discover the Service"
+    }
+  },
+  "booking": {
+    "step_label": "Step {current} of {total}",
+    "back": "Previous step",
+    "continue": "Continue",
+    "whatsapp_title": "Questions about your booking?",
+    "whatsapp_sub": "Our team is available on WhatsApp",
+    "step1": {
+      "title": "When is your event?",
+      "subtitle": "Choose a date and number of guests for your event.",
+      "guests_label": "Total number of guests *",
+      "months": [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+      ],
+      "days": ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+      "days_full": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+      ]
+    },
+    "step2": {
+      "title": "What services do you need?",
+      "subtitle": "You can select one or more services for your event.",
+      "selected_count": "Selected: {count}"
+    },
+    "step3": {
+      "title": "Choose packages",
+      "subtitle": "Select a package for each chosen service.",
+      "selected_badge": "Selected",
+      "progress": "{done} of {total} services configured",
+      "guests_for_service": "Guests for this service",
+      "guests_hint": "Default: total number of guests"
+    },
+    "step4": {
+      "title": "Event location",
+      "subtitle": "Fill in the details about where your event will take place.",
+      "city_label": "City *",
+      "city_placeholder": "Select city",
+      "address_label": "Address *",
+      "address_placeholder": "Street, number",
+      "postal_label": "Postal code",
+      "postal_placeholder": "MD-2001",
+      "venue_label": "Venue name *",
+      "venue_placeholder": "e.g. National Palace",
+      "time_label": "Start time *",
+      "time_placeholder": "e.g. 18:00",
+      "notes_label": "Additional notes",
+      "notes_placeholder": "Any details relevant to our team...",
+      "transport_free_title": "Free transport in Chișinău",
+      "transport_free_body": "In Chișinău, transport and logistics are not charged separately. Our team comes to your venue at no extra travel cost.",
+      "transport_fee_title": "Venue is outside Chișinău",
+      "transport_fee_body": "The travel and logistics cost for our team is calculated automatically and added to the total booking amount."
+    },
+    "step5": {
+      "title": "Contact details",
+      "subtitle": "We'll use these details to confirm your booking.",
+      "type_person": "Individual",
+      "type_company": "Company",
+      "company_name_label": "Company name *",
+      "company_name_placeholder": "Example LLC",
+      "idno_label": "IDNO *",
+      "idno_placeholder": "1234567890123",
+      "first_name_label": "First name *",
+      "first_name_placeholder": "John",
+      "last_name_label": "Last name *",
+      "last_name_placeholder": "Smith",
+      "email_label": "Email *",
+      "email_placeholder": "john@example.com",
+      "phone_label": "Phone *",
+      "phone_placeholder": "+373 6X XXX XXX",
+      "send_sms": "Send SMS",
+      "send_email": "Send code",
+      "send_error": "Could not send the code. Check the details and try again.",
+      "sms_hint": "Enter the 6-digit code sent to {phone}",
+      "email_hint": "Enter the 6-digit code sent to {email}",
+      "sms_code_placeholder": "XXXXXX",
+      "verify": "Verify",
+      "verified": "Verified",
+      "change_number": "Change number",
+      "change_email": "Change email",
+      "code_error": "The entered code is invalid."
+    },
+    "step6": {
+      "title": "Summary & payment",
+      "subtitle": "Your number has been confirmed. Review the details and confirm your booking.",
+      "card_title": "Booking summary",
+      "event_section": "EVENT",
+      "location_section": "LOCATION",
+      "services_section": "SERVICES ({count})",
+      "details_section": "ADDITIONAL DETAILS",
+      "cost_section": "COST",
+      "date_label": "Date",
+      "guests_label": "Guests",
+      "guests_unit": "people",
+      "location_label": "Venue",
+      "address_label": "Address",
+      "time_label": "Start time",
+      "transport_label": "Logistics outside Chișinău ({km} km)",
+      "taxes_label": "Taxes included",
+      "total_de_plata": "TOTAL DUE",
+      "payment_title": "HOW WOULD YOU LIKE TO PAY?",
+      "payment_subtitle": "The 10% advance locks your date and confirms the booking. The remaining 90% is paid on the day of the event.",
+      "pay_now_label": "Pay advance now",
+      "pay_now_sub": "Pay {amount} now and your booking is confirmed immediately, with the date locked in our calendar.",
+      "pay_later_label": "Pay advance later",
+      "pay_later_sub": "The {amount} advance can be paid later online or arranged in a meeting with our team.",
+      "recommended": "Recommended",
+      "finalize": "Confirm now",
+      "submit_error": "Something went wrong. Please try again."
+    },
+    "step7": {
+      "title": "Booking pending",
+      "subtitle": "Your request has been received. Pay the advance of {amount} to confirm your booking.",
+      "steps_title": "WHAT'S NEXT",
+      "steps": [
+        {
+          "label": "Request received",
+          "sub": "We've received all the details of your event."
+        },
+        {
+          "label": "Pay advance of {amount}",
+          "sub": "Pay online from your profile or contact us to arrange an alternative payment method."
+        },
+        {
+          "label": "Contract in your profile",
+          "sub": "Once the advance is paid, the contract is automatically generated and available in your profile for viewing and download."
+        },
+        {
+          "label": "Coordination call",
+          "sub": "A coordinator will contact you within 2–3 business days to discuss technical details and event preferences."
+        },
+        {
+          "label": "Your event",
+          "sub": ""
+        }
+      ],
+      "event_details_title": "EVENT DETAILS",
+      "date_label": "Date:",
+      "time_label": "Start time:",
+      "location_label": "Location:",
+      "address_label": "Address:",
+      "back_home": "← Back to homepage"
+    },
+    "payment_success": {
+      "title": "Booking confirmed",
+      "subtitle": "Your event is firmly booked. We'll be in touch soon to discuss the details.",
+      "steps_title": "WHAT'S NEXT",
+      "steps": [
+        {
+          "label": "Advance paid",
+          "sub": "Your 10% advance has been successfully processed."
+        },
+        {
+          "label": "Contract in your profile",
+          "sub": "Once the advance is paid, the contract is automatically generated and available in your profile for viewing and download."
+        },
+        {
+          "label": "Coordination call",
+          "sub": "A coordinator will contact you within 2–3 business days to discuss technical details and event preferences."
+        },
+        {
+          "label": "Your event",
+          "sub": "See you at the event!"
+        }
+      ],
+      "event_details_title": "EVENT DETAILS",
+      "date_label": "Date:",
+      "time_label": "Start time:",
+      "location_label": "Location:",
+      "address_label": "Address:",
+      "back_home": "← Back to homepage"
     }
   }
 }
