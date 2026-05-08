@@ -1,7 +1,9 @@
 "use client";
 
 import type { VenueHeroData } from "@/components/VenuePage/types";
+import { contact_link } from "@/data/venues/constants/links";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 interface VenueHeroProps {
@@ -43,7 +45,7 @@ export default function VenueHero({
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.35)_0%,rgba(0,0,0,0.05)_40%,rgba(0,0,0,0.72)_100%)]" />
 
       {/* Venue logo + tagline — centered */}
-      <div className="absolute inset-0 flex flex-col justify-end items-center sm:justify-center text-center px-6 pb-24 sm:pb-0 pointer-events-none">
+      <div className="absolute inset-0 flex flex-col justify-end items-center sm:justify-center text-center px-6 pb-24 sm:pb-0">
         <Image
           src={logo}
           alt={name}
@@ -56,13 +58,16 @@ export default function VenueHero({
           {hero.tagline}
         </p>
         {/* Contact CTA only for mobile */}
-        <button className="group border-0 bg-gray-100/10 text-gray-100 text-[11px] tracking-[0.14em] cursor-pointer px-4 py-2 transition-all duration-250 relative hover:bg-gray-100/30 hover:text-white font-figtree block sm:hidden">
+        <Link
+          href={contact_link}
+          className="group border-0 bg-gray-100/10 text-gray-100 text-[11px] tracking-[0.14em] cursor-pointer px-4 py-2 transition-all duration-250 relative hover:bg-gray-100/30 hover:text-white font-figtree block sm:hidden"
+        >
           <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-gray-100/70" />
           <span className="absolute top-0 right-0 w-3 h-3 border-t border-r border-gray-100/70" />
           <span className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-gray-100/70" />
           <span className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-gray-100/70" />
           {contactLabel}
-        </button>
+        </Link>
       </div>
 
       {/* Scroll indicator */}
