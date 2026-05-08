@@ -17,7 +17,8 @@ export async function POST(request: Request) {
       headers: { "Content-Type": "application/json", Authorization: auth },
       body: JSON.stringify(body),
     });
-  } catch (err) {
+  } catch (error) {
+    console.error("Upstream unreachable", error);
     return Response.json({ error: "Upstream unreachable" }, { status: 502 });
   }
 

@@ -3,6 +3,7 @@
 import type { RefObject } from "react";
 import { BookingState, ContactType } from "../types";
 import type { BookingDict } from "../dict";
+import { saveAuth } from "../utils/auth";
 import BookingStepper from "../shared/BookingStepper";
 import BackButton from "../shared/BackButton";
 import BookingInput from "../shared/BookingInput";
@@ -35,7 +36,7 @@ export default function Step5Contact({ state, onChange, onNext, onBack, dict, st
     state.lastName.trim() !== "" &&
     state.email.trim() !== "" &&
     phoneFilled &&
-    (!isCompany || (state.companyName.trim() !== "" && state.idno.trim() !== ""));
+    (!isCompany || (state.companyName.trim() !== "" && state.idno.trim().length === 13));
 
   const canProceed = formFilled && state.emailVerified;
 
@@ -79,12 +80,28 @@ export default function Step5Contact({ state, onChange, onNext, onBack, dict, st
     });
     if (!res.ok) throw new Error(`${res.status}`);
     const data = await res.json();
+    const userId = data.user?.userId ?? data.userId ?? "";
+    const customerId = data.user?.customerId ?? data.customerId ?? "";
     onChange({
       smsVerified: true,
       userAccessToken: data.accessToken,
       userRefreshToken: data.refreshToken,
-      userId: data.user?.userId ?? "",
-      customerId: data.user?.customerId ?? "",
+      userId,
+      customerId,
+    });
+    saveAuth({
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+      expiresIn: data.expiresIn ?? 3600,
+      userId,
+      customerId,
+      email: state.email,
+      phone: state.phone,
+      firstName: state.firstName,
+      lastName: state.lastName,
+      companyName: state.companyName,
+      idno: state.idno,
+      isCompany,
     });
   }
 
@@ -119,10 +136,24 @@ export default function Step5Contact({ state, onChange, onNext, onBack, dict, st
       data.userId ?? data.userID ?? data.user?.userId ?? data.user?.userID ?? "";
     onChange({
       emailVerified: true,
-      userAccessToken: data.accessToken ?? data.accessToken ?? "",
+      userAccessToken: data.accessToken ?? "",
       userRefreshToken: data.refreshToken ?? "",
       userId,
       customerId,
+    });
+    saveAuth({
+      accessToken: data.accessToken ?? "",
+      refreshToken: data.refreshToken ?? "",
+      expiresIn: data.expiresIn ?? 3600,
+      userId,
+      customerId,
+      email: state.email,
+      phone: state.phone,
+      firstName: state.firstName,
+      lastName: state.lastName,
+      companyName: state.companyName,
+      idno: state.idno,
+      isCompany,
     });
   }
 
@@ -157,7 +188,15 @@ export default function Step5Contact({ state, onChange, onNext, onBack, dict, st
         {isCompany && (
           <>
             <BookingInput label={d.company_name_label} value={state.companyName} onChange={(v) => onChange({ companyName: v })} placeholder={d.company_name_placeholder} />
-            <BookingInput label={d.idno_label} value={state.idno} onChange={(v) => onChange({ idno: v })} placeholder={d.idno_placeholder} />
+            <BookingInput
+              label={d.idno_label}
+              value={state.idno}
+              onChange={(v) => {
+                const digits = v.replace(/\D/g, "").slice(0, 13);
+                onChange({ idno: digits });
+              }}
+              placeholder={d.idno_placeholder}
+            />
           </>
         )}
 

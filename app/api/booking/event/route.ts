@@ -14,7 +14,8 @@ export async function POST(request: Request) {
       headers: { "Content-Type": "application/json", Authorization: auth },
       body: JSON.stringify(body),
     });
-  } catch (err) {
+  } catch (error) {
+    console.error("[api/booking/event] fetch failed:", error);
     return Response.json({ error: "Upstream unreachable" }, { status: 502 });
   }
 

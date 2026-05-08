@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { BookingDict } from "../dict";
+import BackButton from "../shared/BackButton";
 import CornerBrackets from "../shared/CornerBrackets";
 import { BookingState } from "../types";
 
@@ -7,6 +8,7 @@ interface Props {
   state: BookingState;
   dict: BookingDict;
   locale: string;
+  onBack: () => void;
 }
 
 function formatMDL(amount: number): string {
@@ -46,7 +48,7 @@ function StepIcon({ state }: { state: StepState }) {
   );
 }
 
-export default function Step7Confirmation({ state, dict, locale }: Props) {
+export default function Step7Confirmation({ state, dict, locale, onBack }: Props) {
   const d = dict.step7;
   const months = dict.step1.months;
   const daysFull = dict.step1.days_full;
@@ -69,6 +71,10 @@ export default function Step7Confirmation({ state, dict, locale }: Props) {
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex justify-start">
+        <BackButton label={dict.back} onClick={onBack} />
+      </div>
+
       <div className="relative flex flex-col gap-4 items-center bg-[#2a1d14] px-4 py-6 w-full">
         <CornerBrackets color="#daa17f" size={10} />
 

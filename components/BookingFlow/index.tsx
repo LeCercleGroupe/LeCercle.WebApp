@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BookingState } from "./types";
 import type { BookingDict } from "./dict";
+import { loadAuth } from "./utils/auth";
 import { useBookingToken } from "@/components/BookingTokenProvider";
 import BookingNavbar from "./shared/BookingNavbar";
 import Step1DateGuests from "./steps/Step1DateGuests";
@@ -17,6 +18,8 @@ interface BookingFlowProps {
   locale: string;
   dict: BookingDict;
 }
+
+const STORAGE_KEY = "lecercle_booking_flow";
 
 const INITIAL_STATE: BookingState = {
   date: null,
@@ -51,6 +54,81 @@ const INITIAL_STATE: BookingState = {
   bookingRef: "",
 };
 
+function loadSaved(): { step: number; state: BookingState } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    // Step 7 = pay-later confirmed — user finished, start fresh next time
+    if (parsed.step === 7) return null;
+    const d = parsed.state?.date;
+    return {
+      step: parsed.step ?? 1,
+      state: {
+        ...INITIAL_STATE,
+        ...parsed.state,
+        date: d ? new Date(d.y, d.m, d.d) : null,
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+function getInitialFlow(): { step: number; state: BookingState } {
+  // In-progress flow (language switch, failed payment retry, etc.) takes priority
+  const saved = loadSaved();
+  if (saved) return saved;
+
+  // Returning user — pre-fill contact data from previous session
+  const result = loadAuth();
+  if (result) {
+    const { auth, tokensValid } = result;
+    return {
+      step: 1,
+      state: {
+        ...INITIAL_STATE,
+        // Only restore API tokens if they haven't expired yet
+        ...(tokensValid && {
+          userAccessToken: auth.accessToken,
+          userRefreshToken: auth.refreshToken,
+          userId: auth.user.userId,
+          customerId: auth.user.customerId,
+          emailVerified: !!auth.user.email,
+          smsVerified: !!auth.user.phoneNumber,
+        }),
+        // Always pre-fill form fields (30-day profile TTL)
+        email: auth.user.email ?? "",
+        phone: auth.user.phoneNumber ?? "+373",
+        firstName: auth.user.firstName,
+        lastName: auth.user.lastName,
+        companyName: auth.user.companyName ?? "",
+        idno: auth.user.idno ?? "",
+        contactType: auth.user.isCompany ? "company" : "person",
+      },
+    };
+  }
+
+  return { step: 1, state: INITIAL_STATE };
+}
+
+function saveFlow(step: number, state: BookingState) {
+  try {
+    const d = state.date;
+    sessionStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        step,
+        state: {
+          ...state,
+          date: d ? { y: d.getFullYear(), m: d.getMonth(), d: d.getDate() } : null,
+        },
+      })
+    );
+  } catch {}
+}
+
 function stepLabel(dict: BookingDict, current: number, total = 6): string {
   return dict.step_label
     .replace("{current}", String(current))
@@ -58,9 +136,13 @@ function stepLabel(dict: BookingDict, current: number, total = 6): string {
 }
 
 export default function BookingFlow({ locale, dict }: BookingFlowProps) {
-  const [step, setStep] = useState(1);
-  const [state, setState] = useState<BookingState>(INITIAL_STATE);
+  const [step, setStep] = useState(() => getInitialFlow().step);
+  const [state, setState] = useState<BookingState>(() => getInitialFlow().state);
   const { tokenRef, error: tokenError } = useBookingToken();
+
+  useEffect(() => {
+    saveFlow(step, state);
+  }, [step, state]);
 
   function patch(update: Partial<BookingState>) {
     setState((prev) => ({ ...prev, ...update }));
@@ -130,7 +212,14 @@ export default function BookingFlow({ locale, dict }: BookingFlowProps) {
               stepLabel={stepLabel(dict, 6)}
             />
           )}
-          {step === 7 && <Step7Confirmation state={state} dict={dict} locale={locale} />}
+          {step === 7 && (
+            <Step7Confirmation
+              state={state}
+              dict={dict}
+              locale={locale}
+              onBack={goBack}
+            />
+          )}
         </div>
       </main>
     </div>

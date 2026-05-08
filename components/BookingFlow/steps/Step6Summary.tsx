@@ -95,49 +95,55 @@ export default function Step6Summary({
     const auth = `Bearer ${state.userAccessToken}`;
 
     try {
-      const eventRes = await fetch("/api/booking/event", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: auth },
-        body: JSON.stringify({
-          eventDate: state.date
-            ? `${state.date.getFullYear()}-${String(state.date.getMonth() + 1).padStart(2, "0")}-${String(state.date.getDate()).padStart(2, "0")}`
-            : undefined,
-          venueTitle: state.venueName,
-          venueAddress: state.address,
-          city: state.city,
-          eventStartTime: normalizeTime(state.startTime),
-          guestCount: state.guests,
-          notes: state.notes,
-          latitude: state.latitude ?? 0,
-          longitude: state.longitude ?? 0,
-          distanceKm: state.distanceKm ?? 0,
-          customerId: state.customerId,
-        }),
-      });
-      if (!eventRes.ok) throw new Error(`event ${eventRes.status}`);
-      const { id: eventId } = await eventRes.json();
+      // If returning from step 7 (order already exists), skip event/order creation
+      let orderId = state.bookingRef;
 
-      const items = state.selectedServices
-        .filter((sid) => state.selectedPackages[sid])
-        .map((sid) => ({
-          packageId: state.selectedPackages[sid]!.id,
-          serviceId: sid,
-          quantity: 1,
-        }));
+      if (!orderId) {
+        const eventRes = await fetch("/api/booking/event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: auth },
+          body: JSON.stringify({
+            eventDate: state.date
+              ? `${state.date.getFullYear()}-${String(state.date.getMonth() + 1).padStart(2, "0")}-${String(state.date.getDate()).padStart(2, "0")}`
+              : undefined,
+            venueTitle: state.venueName,
+            venueAddress: state.address,
+            city: state.city,
+            eventStartTime: normalizeTime(state.startTime),
+            guestCount: state.guests,
+            notes: state.notes,
+            latitude: state.latitude ?? 0,
+            longitude: state.longitude ?? 0,
+            distanceKm: state.distanceKm ?? 0,
+            customerId: state.customerId,
+          }),
+        });
+        if (!eventRes.ok) throw new Error(`event ${eventRes.status}`);
+        const { id: eventId } = await eventRes.json();
 
-      const orderRes = await fetch("/api/booking/order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: auth },
-        body: JSON.stringify({
-          eventId,
-          contactEmail: state.email,
-          contactPhone: state.phone,
-          items,
-          customerId: state.customerId,
-        }),
-      });
-      if (!orderRes.ok) throw new Error(`order ${orderRes.status}`);
-      const { id: orderId } = await orderRes.json();
+        const items = state.selectedServices
+          .filter((sid) => state.selectedPackages[sid])
+          .map((sid) => ({
+            packageId: state.selectedPackages[sid]!.id,
+            serviceId: sid,
+            quantity: 1,
+          }));
+
+        const orderRes = await fetch("/api/booking/order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: auth },
+          body: JSON.stringify({
+            eventId,
+            contactEmail: state.email,
+            contactPhone: state.phone,
+            items,
+            customerId: state.customerId,
+          }),
+        });
+        if (!orderRes.ok) throw new Error(`order ${orderRes.status}`);
+        const { id: newOrderId } = await orderRes.json();
+        orderId = newOrderId;
+      }
 
       if (state.paymentOption === "now") {
         const payRes = await fetch("/api/booking/payment", {
@@ -153,6 +159,7 @@ export default function Step6Summary({
         if (!payRes.ok) throw new Error(`payment ${payRes.status}`);
         const { paymentUrl } = await payRes.json();
         try {
+          // Save event details for the payment-success page to display
           sessionStorage.setItem(
             "lecercle_booking_summary",
             JSON.stringify({
@@ -165,6 +172,15 @@ export default function Step6Summary({
               city: state.city,
             })
           );
+          // Stamp orderId into the flow state synchronously so that if the
+          // bank payment fails/cancels and the user comes back, handleFinalize
+          // skips re-creating the event/order and just retries payment.
+          const flowRaw = sessionStorage.getItem("lecercle_booking_flow");
+          if (flowRaw) {
+            const flow = JSON.parse(flowRaw);
+            if (flow.state) flow.state.bookingRef = orderId;
+            sessionStorage.setItem("lecercle_booking_flow", JSON.stringify(flow));
+          }
         } catch {}
         window.location.href = paymentUrl;
         return;

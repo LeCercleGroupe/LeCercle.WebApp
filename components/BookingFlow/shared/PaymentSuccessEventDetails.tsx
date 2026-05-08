@@ -36,6 +36,8 @@ export default function PaymentSuccessEventDetails({ labels, months, daysFull }:
   const [summary, setSummary] = useState<BookingSummary | null>(null);
 
   useEffect(() => {
+    // Payment confirmed — clear the booking flow so a new booking starts fresh
+    try { sessionStorage.removeItem("lecercle_booking_flow"); } catch {}
     try {
       const raw = sessionStorage.getItem("lecercle_booking_summary");
       if (raw) setSummary(JSON.parse(raw));

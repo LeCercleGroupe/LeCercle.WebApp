@@ -77,7 +77,7 @@ export default async function PaymentSuccessPage({ params, searchParams }: Props
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 bg-gradient-to-b from-[#252525] to-[#1b1b1b] border border-[#303030] px-4 py-6 w-full">
+        <div className="flex flex-col gap-4 bg-linear-to-b from-[#252525] to-[#1b1b1b] border border-[#303030] px-4 py-6 w-full">
           <p className="text-sm font-bold text-[#a8a8a8] font-figtree uppercase tracking-widest">
             {d.steps_title}
           </p>
