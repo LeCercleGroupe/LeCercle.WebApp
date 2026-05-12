@@ -93,7 +93,7 @@ export default function ContractsPage({ locale, dict }: Props) {
   const router = useRouter();
   const d = dict.contracts_page;
 
-  const [auth, setAuth] = useState<StoredAuth | null>(null);
+  const [auth] = useState<StoredAuth | null>(() => loadAuth()?.auth ?? null);
   const [contracts, setContracts] = useState<Contract[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -101,12 +101,10 @@ export default function ContractsPage({ locale, dict }: Props) {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    const result = loadAuth();
-    if (!result) {
+    if (!auth) {
       router.replace(`/${locale}/account/login`);
       return;
     }
-    setAuth(result.auth);
 
     fetchWithRefresh("/api/account/contracts")
       .then(async (r) => {
@@ -125,7 +123,7 @@ export default function ContractsPage({ locale, dict }: Props) {
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, [locale, router]);
+  }, [auth, locale, router]);
 
   const initials = auth
     ? `${auth.user.firstName?.[0] ?? ""}${auth.user.lastName?.[0] ?? ""}`.toUpperCase() || "?"
@@ -178,8 +176,8 @@ export default function ContractsPage({ locale, dict }: Props) {
       />
 
       <main className="flex-1 w-full">
-        <div className="mx-auto max-w-[1728px]">
-          <div className="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8 2xl:px-0 py-14">
+        <div className="mx-auto max-w-432">
+          <div className="mx-auto max-w-295 px-4 sm:px-6 lg:px-8 2xl:px-0 py-14">
 
             {/* Page header */}
             <div className="mb-8">

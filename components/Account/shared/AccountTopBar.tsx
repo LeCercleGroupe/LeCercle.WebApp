@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { clearAuth } from "@/components/BookingFlow/utils/auth";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { clearAuth } from "@/components/BookingFlow/utils/auth";
+import { useEffect, useRef, useState } from "react";
 
 interface NavDict {
   events: string;
@@ -22,14 +23,23 @@ interface Props {
 
 const LOCALES = ["ro", "en", "ru"] as const;
 
-export default function AccountTopBar({ locale, initials, displayName, email, navDict }: Props) {
+export default function AccountTopBar({
+  locale,
+  initials,
+  displayName,
+  email,
+  navDict,
+}: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     }
@@ -53,18 +63,20 @@ export default function AccountTopBar({ locale, initials, displayName, email, na
   }
 
   return (
-    <header className="w-full bg-[#080808] border-b border-[#1a1a1a] h-[72px] flex items-center shrink-0 z-30">
-      <div className="w-full max-w-[1728px] mx-auto px-0 flex items-center">
+    <header className="w-full bg-[#080808] border-b border-[#1a1a1a] h-18 flex items-center shrink-0 z-30">
+      <div className="w-full max-w-432 mx-auto px-0 flex items-center">
         {/* Left spacer to align with content */}
-        <div className="w-[274px] shrink-0" />
+        <div className="w-68.5 shrink-0" />
 
         {/* Inner 1180px area */}
-        <div className="flex-1 flex items-center justify-between px-0 max-w-[1180px]">
-          <Link
-            href={`/`}
-            className="text-[17px] font-medium text-[#f0f0f0] font-figtree tracking-tight hover:text-white transition-colors"
-          >
-            Le Cercle
+        <div className="flex-1 flex items-center justify-between px-0 max-w-295">
+          <Link href={`/${locale}`} className="relative h-10 w-27">
+            <Image
+              src="/logos/LeCercle.svg"
+              alt="Le Cercle"
+              fill
+              className="object-contain object-left"
+            />
           </Link>
 
           {/* Avatar + dropdown */}
@@ -72,7 +84,7 @@ export default function AccountTopBar({ locale, initials, displayName, email, na
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
-              className="size-[34px] rounded-full bg-[#1e1e1e] border border-[#2a2a2a] hover:border-[#444] transition-colors flex items-center justify-center cursor-pointer"
+              className="size-8.5 rounded-full bg-[#1e1e1e] border border-[#2a2a2a] hover:border-[#444] transition-colors flex items-center justify-center cursor-pointer"
             >
               <span className="text-[12px] font-semibold text-[#f0f0f0] font-figtree tracking-tight select-none">
                 {initials}
@@ -80,7 +92,7 @@ export default function AccountTopBar({ locale, initials, displayName, email, na
             </button>
 
             {open && (
-              <div className="absolute right-0 top-[calc(100%+8px)] w-[220px] bg-[#111] border border-[#2a2a2a] shadow-xl z-50 py-1">
+              <div className="absolute right-0 top-[calc(100%+8px)] w-55 bg-[#111] border border-[#2a2a2a] shadow-xl z-50 py-1">
                 {/* User info */}
                 <div className="px-4 py-3 border-b border-[#1e1e1e]">
                   <p className="text-sm font-medium text-[#f0f0f0] font-figtree tracking-tight truncate">
@@ -95,11 +107,13 @@ export default function AccountTopBar({ locale, initials, displayName, email, na
 
                 {/* Navigation */}
                 <div className="py-1">
-                  {([
-                    ["events", `/${locale}/account`],
-                    ["contracts", `/${locale}/account/contracts`],
-                    ["profile", `/${locale}/account/profile`],
-                  ] as [keyof NavDict, string][]).map(([key, href]) => (
+                  {(
+                    [
+                      ["events", `/${locale}/account`],
+                      ["contracts", `/${locale}/account/contracts`],
+                      ["profile", `/${locale}/account/profile`],
+                    ] as [keyof NavDict, string][]
+                  ).map(([key, href]) => (
                     <Link
                       key={key}
                       href={href}
@@ -145,7 +159,7 @@ export default function AccountTopBar({ locale, initials, displayName, email, na
         </div>
 
         {/* Right spacer */}
-        <div className="w-[274px] shrink-0" />
+        <div className="w-68.5 shrink-0" />
       </div>
     </header>
   );

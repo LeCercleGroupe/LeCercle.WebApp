@@ -2,15 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import BookingNavbar from "@/components/BookingFlow/shared/BookingNavbar";
-import BookingInput from "@/components/BookingFlow/shared/BookingInput";
 import PhoneInput from "@/components/BookingFlow/shared/PhoneInput";
 import PrimaryButton from "@/components/BookingFlow/shared/PrimaryButton";
 import { saveAuth, loadAuth } from "@/components/BookingFlow/utils/auth";
 
-type Tab = "login" | "register";
 type ContactType = "person" | "company";
-type OtpState = "idle" | "sending" | "sent" | "verifying" | "done";
+type OtpState = "idle" | "sending" | "verifying" | "done";
+type Step = "phone" | "otp" | "profile";
 
 interface LoginDict {
   tab: string;
@@ -23,6 +23,7 @@ interface LoginDict {
   confirm_title: string;
   confirm_subtitle: string;
   enter_account: string;
+  continue: string;
   no_account: string;
   register_link: string;
   send_error: string;
@@ -37,6 +38,8 @@ interface RegisterDict {
   subtitle: string;
   tab_person: string;
   tab_company: string;
+  section_personal: string;
+  section_company: string;
   first_name_label: string;
   first_name_placeholder: string;
   last_name_label: string;
@@ -72,11 +75,10 @@ interface Props {
   dict: AccountDict;
 }
 
+// ─── Shared sub-components ────────────────────────────────────────────────────
+
 function OtpCodeInput({
-  value,
-  onChange,
-  hasError,
-  placeholder,
+  value, onChange, hasError, placeholder,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -98,20 +100,50 @@ function OtpCodeInput({
   );
 }
 
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <label className="block text-[12px] font-medium text-[#888] font-figtree tracking-tight mb-1.5">
+      {children}
+    </label>
+  );
+}
+
+function ProfileTextInput({
+  value, onChange, placeholder, disabled, type = "text",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  type?: string;
+}) {
+  return (
+    <input
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      disabled={disabled}
+      className="w-full px-3.5 py-3 border border-[#2a2a2a] bg-[#111] text-[14px] text-[#f0f0f0] font-figtree tracking-tight placeholder-[#444] focus:outline-none focus:border-[#4a4a4a] disabled:text-[#555] disabled:cursor-not-allowed transition-colors"
+    />
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export default function AccountLogin({ locale, dict }: Props) {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("login");
+  const d = dict.login;
+  const r = dict.register;
   const tokenRef = useRef<string | null>(null);
 
-  // Fetch service token for OTP API calls
   useEffect(() => {
     fetch("/api/booking/token")
-      .then((r) => r.json())
+      .then((res) => res.json())
       .then(({ access_token }) => { tokenRef.current = access_token; })
       .catch(() => {});
   }, []);
 
-  // Redirect if already logged in
   useEffect(() => {
     const result = loadAuth();
     if (result?.tokensValid) router.replace(`/${locale}/account`);
@@ -121,147 +153,135 @@ export default function AccountLogin({ locale, dict }: Props) {
     return tokenRef.current ? { Authorization: `Bearer ${tokenRef.current}` } : {};
   }
 
-  // ── LOGIN STATE ──────────────────────────────────────────────────────────
-  const [loginPhone, setLoginPhone] = useState("+373");
-  const [loginOtp, setLoginOtp] = useState("");
-  const [loginOtpState, setLoginOtpState] = useState<OtpState>("idle");
-  const [loginSendError, setLoginSendError] = useState(false);
-  const [loginCodeError, setLoginCodeError] = useState(false);
-  const [loginNoAccount, setLoginNoAccount] = useState(false);
+  // ── Unified flow state ────────────────────────────────────────────────────
+  const [step, setStep] = useState<Step>("phone");
+  const [phone, setPhone] = useState("+373");
+  const [otpCode, setOtpCode] = useState("");
+  const [isExistingUser, setIsExistingUser] = useState(true);
+  const [otpState, setOtpState] = useState<OtpState>("idle");
+  const [sendError, setSendError] = useState(false);
+  const [codeError, setCodeError] = useState(false);
 
-  const loginPhoneFilled = /^\+373\d{8}$/.test(loginPhone);
+  // ── Profile form state (new users only) ──────────────────────────────────
+  const [contactType, setContactType] = useState<ContactType>("person");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [idno, setIdno] = useState("");
+  const [profileError, setProfileError] = useState(false);
 
-  async function handleLoginSend() {
-    setLoginSendError(false);
-    setLoginOtpState("sending");
+  const phoneFilled = /^\+373\d{8}$/.test(phone);
+  const isCompany = contactType === "company";
+  const profileFormValid =
+    firstName.trim() !== "" &&
+    lastName.trim() !== "" &&
+    (!isCompany || (companyName.trim() !== "" && idno.trim().length === 13));
+
+  const sending = otpState === "sending";
+  const verifying = otpState === "verifying";
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
+  async function handleSend() {
+    setSendError(false);
+    setOtpState("sending");
     try {
       const res = await fetch("/api/otp/send", {
         method: "POST",
         headers: { ...authHeader(), "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: loginPhone }),
+        body: JSON.stringify({ identifier: phone }),
       });
-      if (!res.ok) throw new Error(`${res.status}`);
-      setLoginOtpState("sent");
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setIsExistingUser(data.isExistingUser !== false);
+      setOtpState("idle");
+      setStep("otp");
     } catch {
-      setLoginSendError(true);
-      setLoginOtpState("idle");
+      setSendError(true);
+      setOtpState("idle");
     }
   }
 
-  async function handleLoginVerify() {
-    if (loginOtp.length !== 6) { setLoginCodeError(true); return; }
-    setLoginCodeError(false);
-    setLoginNoAccount(false);
-    setLoginOtpState("verifying");
+  async function handleResend() {
+    setOtpCode("");
+    setCodeError(false);
+    await handleSend();
+  }
+
+  function handleChangeNumber() {
+    setStep("phone");
+    setOtpCode("");
+    setCodeError(false);
+    setOtpState("idle");
+  }
+
+  async function handleVerifyExisting() {
+    if (otpCode.length !== 6) { setCodeError(true); return; }
+    setCodeError(false);
+    setOtpState("verifying");
     try {
       const res = await fetch("/api/otp/verify", {
         method: "POST",
         headers: { ...authHeader(), "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: loginPhone, code: loginOtp }),
+        body: JSON.stringify({ identifier: phone, code: otpCode }),
       });
-      if (!res.ok) throw new Error(`${res.status}`);
+      if (!res.ok) throw new Error();
       const data = await res.json();
-      // Login mode: if the backend says this is a brand-new user, no account
-      // existed for this phone. Don't save auth — prompt them to sign up.
-      if (data.user?.isNewUser === true) {
-        setLoginNoAccount(true);
-        setLoginOtpState("sent");
-        return;
-      }
       const userId = data.user?.userId ?? data.userId ?? "";
       const customerId = data.user?.customerId ?? data.customerId ?? "";
-      // OTP verify response omits explicit firstName/lastName fields but
-      // includes a `displayName` like "Jane Smith". Split on whitespace to
-      // populate the local profile (`/api/auth/me` is workforce-only, so we
-      // can't fetch the real profile and have to derive it from the JWT
-      // response payload).
-      const existingUser = loadAuth()?.auth.user;
+      const existing = loadAuth()?.auth.user;
       const display = (data.user?.displayName ?? "").trim();
-      const [derivedFirst = "", ...rest] = display.split(/\s+/);
-      const derivedLast = rest.join(" ");
+      const [derivedFirst = "", ...restParts] = display.split(/\s+/);
+      const derivedLast = restParts.join(" ");
       saveAuth({
         accessToken: data.accessToken ?? "",
         refreshToken: data.refreshToken ?? "",
         expiresIn: data.expiresIn ?? 3600,
         userId,
         customerId,
-        email: data.user?.email ?? existingUser?.email ?? "",
-        phone: data.user?.phoneNumber ?? loginPhone,
-        firstName: data.user?.firstName ?? derivedFirst ?? existingUser?.firstName ?? "",
-        lastName: data.user?.lastName ?? derivedLast ?? existingUser?.lastName ?? "",
-        companyName: data.user?.companyName ?? existingUser?.companyName ?? "",
-        idno: data.user?.idno ?? existingUser?.idno ?? "",
-        isCompany: data.user?.isCompany ?? existingUser?.isCompany ?? false,
+        email: data.user?.email ?? existing?.email ?? "",
+        phone: data.user?.phoneNumber ?? phone,
+        firstName: data.user?.firstName ?? derivedFirst ?? existing?.firstName ?? "",
+        lastName: data.user?.lastName ?? derivedLast ?? existing?.lastName ?? "",
+        companyName: data.user?.companyName ?? existing?.companyName ?? "",
+        idno: data.user?.idno ?? existing?.idno ?? "",
+        isCompany: data.user?.isCompany ?? existing?.isCompany ?? false,
       });
-      setLoginOtpState("done");
+      setOtpState("done");
       router.push(`/${locale}/account`);
     } catch {
-      setLoginCodeError(true);
-      setLoginOtpState("sent");
+      setCodeError(true);
+      setOtpState("idle");
     }
   }
 
-  // ── REGISTER STATE ───────────────────────────────────────────────────────
-  const [contactType, setContactType] = useState<ContactType>("person");
-  const [regFirstName, setRegFirstName] = useState("");
-  const [regLastName, setRegLastName] = useState("");
-  const [regEmail, setRegEmail] = useState("");
-  const [regPhone, setRegPhone] = useState("+373");
-  const [regCompany, setRegCompany] = useState("");
-  const [regIdno, setRegIdno] = useState("");
-  const [regOtp, setRegOtp] = useState("");
-  const [regOtpState, setRegOtpState] = useState<OtpState>("idle");
-  const [regSendError, setRegSendError] = useState(false);
-  const [regCodeError, setRegCodeError] = useState(false);
-
-  const isCompany = contactType === "company";
-  const regPhoneFilled = /^\+373\d{8}$/.test(regPhone);
-  const regFormFilled =
-    regFirstName.trim() !== "" &&
-    regLastName.trim() !== "" &&
-    regPhoneFilled &&
-    (!isCompany || (regCompany.trim() !== "" && regIdno.trim().length === 13));
-
-  const d = dict.login;
-  const r = dict.register;
-
-  async function handleRegSend() {
-    setRegSendError(false);
-    setRegOtpState("sending");
-    try {
-      const res = await fetch("/api/otp/send", {
-        method: "POST",
-        headers: { ...authHeader(), "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: regPhone }),
-      });
-      if (!res.ok) throw new Error(`${res.status}`);
-      setRegOtpState("sent");
-    } catch {
-      setRegSendError(true);
-      setRegOtpState("idle");
-    }
+  function handleContinueToProfile() {
+    if (otpCode.length !== 6) { setCodeError(true); return; }
+    setCodeError(false);
+    setStep("profile");
   }
 
-  async function handleRegVerify() {
-    if (regOtp.length !== 6) { setRegCodeError(true); return; }
-    setRegCodeError(false);
-    setRegOtpState("verifying");
+  async function handleSubmitProfile() {
+    if (!profileFormValid) return;
+    setProfileError(false);
+    setOtpState("verifying");
     try {
       const res = await fetch("/api/otp/verify", {
         method: "POST",
         headers: { ...authHeader(), "Content-Type": "application/json" },
         body: JSON.stringify({
-          identifier: regPhone,
-          code: regOtp,
+          identifier: phone,
+          code: otpCode,
           customerType: isCompany ? 1 : 0,
-          firstName: isCompany ? null : regFirstName,
-          lastName: isCompany ? null : regLastName,
-          companyName: isCompany ? regCompany : null,
-          idno: isCompany ? regIdno : null,
-          email: regEmail || null,
+          firstName,
+          lastName,
+          email: email || null,
+          companyName: isCompany ? companyName : null,
+          idno: isCompany ? idno : null,
         }),
       });
-      if (!res.ok) throw new Error(`${res.status}`);
+      if (!res.ok) throw new Error();
       const data = await res.json();
       const userId = data.user?.userId ?? data.userId ?? "";
       const customerId = data.user?.customerId ?? data.customerId ?? "";
@@ -271,298 +291,270 @@ export default function AccountLogin({ locale, dict }: Props) {
         expiresIn: data.expiresIn ?? 3600,
         userId,
         customerId,
-        email: regEmail,
-        phone: regPhone,
-        firstName: regFirstName,
-        lastName: regLastName,
-        companyName: regCompany,
-        idno: regIdno,
-        isCompany,
+        email: data.user?.email ?? email ?? "",
+        phone: data.user?.phoneNumber ?? phone,
+        firstName: data.user?.firstName ?? firstName,
+        lastName: data.user?.lastName ?? lastName,
+        companyName: data.user?.companyName ?? (isCompany ? companyName : ""),
+        idno: data.user?.idno ?? (isCompany ? idno : ""),
+        isCompany: data.user?.isCompany ?? isCompany,
       });
-      setRegOtpState("done");
+      setOtpState("done");
       router.push(`/${locale}/account`);
     } catch {
-      setRegCodeError(true);
-      setRegOtpState("sent");
+      setProfileError(true);
+      setOtpState("idle");
     }
   }
 
-  const loginSending = loginOtpState === "sending";
-  const loginVerifying = loginOtpState === "verifying";
-  const regSending = regOtpState === "sending";
-  const regVerifying = regOtpState === "verifying";
+  // ── Profile form step (new users) ─────────────────────────────────────────
+  if (step === "profile") {
+    return (
+      <div className="min-h-svh bg-[#080808] flex flex-col">
 
-  return (
-    <div className="flex flex-col min-h-svh bg-[#0d0d0d]">
-      <BookingNavbar locale={locale} />
-      <main className="flex-1 flex flex-col items-center px-4 py-8">
-        <div className="w-full max-w-lg flex flex-col gap-6">
-
-          {/* Tabs */}
-          <div className="flex gap-0">
-            {(["login", "register"] as Tab[]).map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setTab(t)}
-                className={`flex-1 py-2.5 text-sm font-medium font-figtree tracking-tight border transition-all duration-200 ${
-                  tab === t
-                    ? "bg-[#1b1b1b] border-[#474747] text-[#f1f1f1]"
-                    : "bg-transparent border-[#303030] text-[#a8a8a8] hover:border-[#474747]"
-                }`}
+        {/* Top bar — matches account page aesthetic */}
+        <header className="w-full bg-[#080808] border-b border-[#1a1a1a] h-[72px] flex items-center shrink-0 z-30">
+          <div className="w-full mx-auto max-w-[1728px]">
+            <div className="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8 2xl:px-0 flex items-center justify-between">
+              <Link
+                href={`/${locale}`}
+                className="text-[17px] font-medium text-[#f0f0f0] font-figtree tracking-tight hover:text-white transition-colors"
               >
-                {t === "login" ? d.tab : d.tab_register}
+                Le Circle
+              </Link>
+              <button
+                type="button"
+                onClick={() => setStep("otp")}
+                className="text-[13px] text-[#666] font-figtree tracking-tight hover:text-[#c0c0c0] transition-colors cursor-pointer"
+              >
+                ← {d.change_number}
               </button>
-            ))}
-          </div>
-
-          {/* ── LOGIN PANEL ─────────────────────────────────────────────── */}
-          {tab === "login" && (
-            <div className="flex flex-col gap-6">
-              {loginOtpState === "idle" || loginOtpState === "sending" ? (
-                <>
-                  <div className="flex flex-col gap-1">
-                    <h2 className="text-2xl font-medium text-[#f1f1f1] font-figtree tracking-tight">{d.title}</h2>
-                    <p className="text-sm text-[#a8a8a8] font-figtree tracking-tight leading-snug">{d.subtitle}</p>
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-[#a8a8a8] font-figtree tracking-tight">{d.phone_label}</label>
-                    <PhoneInput value={loginPhone} onChange={setLoginPhone} disabled={loginSending} />
-                    <div className="flex items-center gap-1.5">
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 text-[#474747]">
-                        <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2" />
-                        <path d="M7 6v4M7 4.5v.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                      </svg>
-                      <p className="text-xs text-[#747474] font-figtree tracking-tight">{d.code_valid}</p>
-                    </div>
-                    {loginSendError && (
-                      <p className="text-xs text-red-400 font-figtree tracking-tight">{d.send_error}</p>
-                    )}
-                  </div>
-
-                  <p className="text-xs text-[#747474] font-figtree tracking-tight text-center">
-                    {d.no_account}{" "}
-                    <button
-                      type="button"
-                      onClick={() => setTab("register")}
-                      className="text-[#a8a8a8] underline hover:text-[#f1f1f1] transition-colors"
-                    >
-                      {d.register_link}
-                    </button>
-                  </p>
-
-                  <PrimaryButton
-                    label={loginSending ? "" : d.send_code}
-                    onClick={handleLoginSend}
-                    disabled={!loginPhoneFilled || loginSending}
-                    loading={loginSending}
-                  />
-                </>
-              ) : (
-                <>
-                  <div className="flex flex-col gap-1">
-                    <h2 className="text-2xl font-medium text-[#f1f1f1] font-figtree tracking-tight">{d.confirm_title}</h2>
-                    <p className="text-sm text-[#a8a8a8] font-figtree tracking-tight leading-snug">
-                      {d.confirm_subtitle.replace("{phone}", loginPhone)}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => { setLoginOtpState("idle"); setLoginOtp(""); setLoginCodeError(false); setLoginNoAccount(false); }}
-                      className="text-xs text-[#747474] underline font-figtree tracking-tight text-left w-fit hover:text-[#f1f1f1] transition-colors mt-1"
-                    >
-                      {d.change_number}
-                    </button>
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <OtpCodeInput
-                      value={loginOtp}
-                      onChange={(v) => { setLoginOtp(v); setLoginCodeError(false); }}
-                      hasError={loginCodeError}
-                      placeholder="000000"
-                    />
-                    {loginCodeError && !loginNoAccount && (
-                      <p className="text-xs text-red-400 font-figtree tracking-tight">{d.code_error}</p>
-                    )}
-                    {loginNoAccount && (
-                      <div className="flex flex-col gap-2 px-3 py-2.5 border border-[#4a3510] bg-[#2a1f07]">
-                        <p className="text-xs text-[#fbbf24] font-figtree tracking-tight leading-snug">
-                          {d.no_account_error}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => { setTab("register"); setLoginNoAccount(false); }}
-                          className="text-xs text-[#fbbf24] underline font-figtree tracking-tight text-left w-fit hover:text-[#fde68a] transition-colors"
-                        >
-                          {d.register_link}
-                        </button>
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => { setLoginOtp(""); setLoginCodeError(false); setLoginNoAccount(false); handleLoginSend(); }}
-                      className="text-xs text-[#747474] underline font-figtree tracking-tight text-left w-fit hover:text-[#f1f1f1] transition-colors"
-                    >
-                      {d.resend}
-                    </button>
-                  </div>
-
-                  <PrimaryButton
-                    label={d.enter_account}
-                    onClick={handleLoginVerify}
-                    disabled={loginOtp.length !== 6 || loginVerifying || loginNoAccount}
-                    loading={loginVerifying}
-                  />
-                </>
-              )}
             </div>
-          )}
+          </div>
+        </header>
 
-          {/* ── REGISTER PANEL ──────────────────────────────────────────── */}
-          {tab === "register" && (
-            <div className="flex flex-col gap-6">
-              <div className="flex flex-col gap-1">
-                <h2 className="text-2xl font-medium text-[#f1f1f1] font-figtree tracking-tight">{r.title}</h2>
-                <p className="text-sm text-[#a8a8a8] font-figtree tracking-tight leading-snug">{r.subtitle}</p>
-              </div>
+        <main className="flex-1 w-full">
+          <div className="mx-auto max-w-[1728px]">
+            <div className="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8 2xl:px-0 py-14">
 
-              {/* Person/Company toggle */}
-              <div className="flex gap-0">
+              {/* Contact type toggle */}
+              <div className="flex gap-0 mb-10 max-w-xs">
                 {(["person", "company"] as ContactType[]).map((t) => (
                   <button
                     key={t}
                     type="button"
                     onClick={() => setContactType(t)}
-                    disabled={regOtpState !== "idle"}
-                    className={`flex-1 py-2.5 text-sm font-medium font-figtree tracking-tight border transition-all duration-200 ${
+                    disabled={verifying}
+                    className={`flex-1 py-2.5 text-sm font-medium font-figtree tracking-tight border transition-all cursor-pointer disabled:opacity-50 ${
                       contactType === t
-                        ? "bg-[#1b1b1b] border-[#474747] text-[#f1f1f1]"
-                        : "bg-transparent border-[#303030] text-[#a8a8a8] hover:border-[#474747]"
-                    } disabled:opacity-50`}
+                        ? "bg-[#1b1b1b] border-[#474747] text-[#f0f0f0]"
+                        : "bg-transparent border-[#2a2a2a] text-[#888] hover:border-[#474747]"
+                    }`}
                   >
                     {t === "person" ? r.tab_person : r.tab_company}
                   </button>
                 ))}
               </div>
 
-              <div className="flex flex-col gap-4">
-                {isCompany && (
-                  <>
-                    <BookingInput
-                      label={r.company_name_label}
-                      value={regCompany}
-                      onChange={(v) => setRegCompany(v)}
-                      placeholder={r.company_name_placeholder}
-                      disabled={regOtpState !== "idle"}
-                    />
-                    <BookingInput
-                      label={r.idno_label}
-                      value={regIdno}
-                      onChange={(v) => setRegIdno(v.replace(/\D/g, "").slice(0, 13))}
-                      placeholder={r.idno_placeholder}
-                      disabled={regOtpState !== "idle"}
-                    />
-                  </>
-                )}
-
-                <div className="grid grid-cols-2 gap-3">
-                  <BookingInput
-                    label={r.first_name_label}
-                    value={regFirstName}
-                    onChange={setRegFirstName}
-                    placeholder={r.first_name_placeholder}
-                    disabled={regOtpState !== "idle"}
-                  />
-                  <BookingInput
-                    label={r.last_name_label}
-                    value={regLastName}
-                    onChange={setRegLastName}
-                    placeholder={r.last_name_placeholder}
-                    disabled={regOtpState !== "idle"}
-                  />
-                </div>
-
-                <BookingInput
-                  label={r.email_label}
-                  value={regEmail}
-                  onChange={setRegEmail}
-                  placeholder={r.email_placeholder}
-                  type="email"
-                  disabled={regOtpState !== "idle"}
-                />
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-[#a8a8a8] font-figtree tracking-tight">{r.phone_label}</label>
-                  <PhoneInput value={regPhone} onChange={(v) => { setRegPhone(v); setRegOtpState("idle"); }} disabled={regOtpState !== "idle"} />
-                  {regOtpState === "idle" && (
-                    <div className="flex items-center gap-1.5">
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 text-[#474747]">
-                        <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2" />
-                        <path d="M7 6v4M7 4.5v.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                      </svg>
-                      <p className="text-xs text-[#747474] font-figtree tracking-tight">{r.code_notice}</p>
-                    </div>
-                  )}
-                  {regSendError && (
-                    <p className="text-xs text-red-400 font-figtree tracking-tight">{r.send_error}</p>
-                  )}
-                </div>
-
-                {/* OTP section after send */}
-                {(regOtpState === "sent" || regOtpState === "verifying") && (
-                  <div className="flex flex-col gap-2">
-                    <p className="text-xs text-[#a8a8a8] font-figtree tracking-tight">
-                      {r.sms_hint.replace("{phone}", regPhone)}
+              {/* Company section */}
+              {isCompany && (
+                <div className="mb-8">
+                  <div className="flex items-center gap-4 mb-1">
+                    <p className="text-[11px] font-medium text-[#555] font-figtree tracking-[0.12em] uppercase shrink-0">
+                      {r.section_company}
                     </p>
-                    <OtpCodeInput
-                      value={regOtp}
-                      onChange={(v) => { setRegOtp(v); setRegCodeError(false); }}
-                      hasError={regCodeError}
-                      placeholder={r.sms_code_placeholder}
-                    />
-                    {regCodeError && (
-                      <p className="text-xs text-red-400 font-figtree tracking-tight">{r.code_error}</p>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => { setRegOtp(""); setRegCodeError(false); setRegOtpState("idle"); }}
-                      className="text-xs text-[#747474] underline font-figtree tracking-tight text-left w-fit hover:text-[#f1f1f1] transition-colors"
-                    >
-                      {r.change_number}
-                    </button>
+                    <div className="flex-1 h-px bg-[#1e1e1e]" />
                   </div>
+                  <div className="border border-[#1e1e1e] p-6 mt-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <FieldLabel>{r.company_name_label}</FieldLabel>
+                        <ProfileTextInput
+                          value={companyName}
+                          onChange={setCompanyName}
+                          placeholder={r.company_name_placeholder}
+                          disabled={verifying}
+                        />
+                      </div>
+                      <div>
+                        <FieldLabel>{r.idno_label}</FieldLabel>
+                        <ProfileTextInput
+                          value={idno}
+                          onChange={(v) => setIdno(v.replace(/\D/g, "").slice(0, 13))}
+                          placeholder={r.idno_placeholder}
+                          disabled={verifying}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Personal section */}
+              <div className="mb-8">
+                <div className="flex items-center gap-4 mb-1">
+                  <p className="text-[11px] font-medium text-[#555] font-figtree tracking-[0.12em] uppercase shrink-0">
+                    {r.section_personal}
+                  </p>
+                  <div className="flex-1 h-px bg-[#1e1e1e]" />
+                </div>
+                <div className="border border-[#1e1e1e] p-6 mt-4">
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <FieldLabel>{r.first_name_label}</FieldLabel>
+                      <ProfileTextInput
+                        value={firstName}
+                        onChange={setFirstName}
+                        placeholder={r.first_name_placeholder}
+                        disabled={verifying}
+                      />
+                    </div>
+                    <div>
+                      <FieldLabel>{r.last_name_label}</FieldLabel>
+                      <ProfileTextInput
+                        value={lastName}
+                        onChange={setLastName}
+                        placeholder={r.last_name_placeholder}
+                        disabled={verifying}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <FieldLabel>{r.email_label}</FieldLabel>
+                      <ProfileTextInput
+                        value={email}
+                        onChange={setEmail}
+                        placeholder={r.email_placeholder}
+                        type="email"
+                        disabled={verifying}
+                      />
+                    </div>
+                    <div>
+                      <FieldLabel>{r.phone_label}</FieldLabel>
+                      <ProfileTextInput
+                        value={phone}
+                        onChange={() => {}}
+                        disabled
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Error */}
+              {profileError && (
+                <p className="text-sm text-red-400 font-figtree tracking-tight mb-6">{r.send_error}</p>
+              )}
+
+              {/* Submit */}
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleSubmitProfile}
+                  disabled={!profileFormValid || verifying}
+                  className="px-6 py-2.5 border border-[#3a3a3a] bg-[#f0f0f0] text-sm font-medium text-[#080808] font-figtree tracking-tight hover:bg-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {verifying ? "…" : r.access_account}
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // ── Phone & OTP steps (narrow card) ──────────────────────────────────────
+  return (
+    <div className="flex flex-col min-h-svh bg-[#0d0d0d]">
+      <BookingNavbar locale={locale} />
+      <main className="flex-1 flex flex-col items-center px-4 py-8">
+        <div className="w-full max-w-lg flex flex-col gap-6">
+
+          {/* ── PHONE STEP ─────────────────────────────────────────────── */}
+          {step === "phone" && (
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-1">
+                <h2 className="text-2xl font-medium text-[#f1f1f1] font-figtree tracking-tight">{d.title}</h2>
+                <p className="text-sm text-[#a8a8a8] font-figtree tracking-tight leading-snug">{d.subtitle}</p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-[#a8a8a8] font-figtree tracking-tight">
+                  {d.phone_label}
+                </label>
+                <PhoneInput value={phone} onChange={setPhone} disabled={sending} />
+                <div className="flex items-center gap-1.5">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 text-[#474747]">
+                    <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2" />
+                    <path d="M7 6v4M7 4.5v.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                  </svg>
+                  <p className="text-xs text-[#747474] font-figtree tracking-tight">{d.code_valid}</p>
+                </div>
+                {sendError && (
+                  <p className="text-xs text-red-400 font-figtree tracking-tight">{d.send_error}</p>
                 )}
               </div>
 
-              <p className="text-xs text-[#747474] font-figtree tracking-tight text-center">
-                {r.has_account}{" "}
-                <button
-                  type="button"
-                  onClick={() => setTab("login")}
-                  className="text-[#a8a8a8] underline hover:text-[#f1f1f1] transition-colors"
-                >
-                  {r.login_link}
-                </button>
-              </p>
-
-              {regOtpState === "idle" || regOtpState === "sending" ? (
-                <PrimaryButton
-                  label={r.send_code}
-                  onClick={handleRegSend}
-                  disabled={!regFormFilled || regSending}
-                  loading={regSending}
-                />
-              ) : (
-                <PrimaryButton
-                  label={r.access_account}
-                  onClick={handleRegVerify}
-                  disabled={regOtp.length !== 6 || regVerifying}
-                  loading={regVerifying}
-                />
-              )}
+              <PrimaryButton
+                label={sending ? "" : d.send_code}
+                onClick={handleSend}
+                disabled={!phoneFilled || sending}
+                loading={sending}
+              />
             </div>
           )}
+
+          {/* ── OTP STEP ───────────────────────────────────────────────── */}
+          {step === "otp" && (
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-1">
+                <h2 className="text-2xl font-medium text-[#f1f1f1] font-figtree tracking-tight">
+                  {d.confirm_title}
+                </h2>
+                <p className="text-sm text-[#a8a8a8] font-figtree tracking-tight leading-snug">
+                  {d.confirm_subtitle.replace("{phone}", phone)}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleChangeNumber}
+                  className="text-xs text-[#747474] underline font-figtree tracking-tight text-left w-fit hover:text-[#f1f1f1] transition-colors mt-1 cursor-pointer"
+                >
+                  {d.change_number}
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <OtpCodeInput
+                  value={otpCode}
+                  onChange={(v) => { setOtpCode(v); setCodeError(false); }}
+                  hasError={codeError}
+                  placeholder="000000"
+                />
+                {codeError && (
+                  <p className="text-xs text-red-400 font-figtree tracking-tight">{d.code_error}</p>
+                )}
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={sending}
+                  className="text-xs text-[#747474] underline font-figtree tracking-tight text-left w-fit hover:text-[#f1f1f1] transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {d.resend}
+                </button>
+              </div>
+
+              <PrimaryButton
+                label={verifying ? "" : (isExistingUser ? d.enter_account : d.continue)}
+                onClick={isExistingUser ? handleVerifyExisting : handleContinueToProfile}
+                disabled={otpCode.length !== 6 || verifying}
+                loading={verifying}
+              />
+            </div>
+          )}
+
         </div>
       </main>
     </div>

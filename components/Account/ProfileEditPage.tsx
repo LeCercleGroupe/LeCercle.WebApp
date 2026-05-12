@@ -77,30 +77,21 @@ export default function ProfileEditPage({ locale, dict }: Props) {
   const router = useRouter();
   const d = dict.profile_edit_page;
 
-  const [auth, setAuth] = useState<StoredAuth | null>(null);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [idno, setIdno] = useState("");
+  const [auth] = useState<StoredAuth | null>(() => loadAuth()?.auth ?? null);
+  const [firstName, setFirstName] = useState(() => auth?.user.firstName ?? "");
+  const [lastName, setLastName] = useState(() => auth?.user.lastName ?? "");
+  const [email, setEmail] = useState(() => auth?.user.email ?? "");
+  const [companyName, setCompanyName] = useState(() => auth?.user.companyName ?? "");
+  const [idno, setIdno] = useState(() => auth?.user.idno ?? "");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
 
   useEffect(() => {
-    const result = loadAuth();
-    if (!result) {
+    if (!auth) {
       router.replace(`/${locale}/account/login`);
-      return;
     }
-    setAuth(result.auth);
-    const u = result.auth.user;
-    setFirstName(u.firstName ?? "");
-    setLastName(u.lastName ?? "");
-    setEmail(u.email ?? "");
-    setCompanyName(u.companyName ?? "");
-    setIdno(u.idno ?? "");
-  }, [locale, router]);
+  }, [auth, locale, router]);
 
   if (!auth) {
     return (
@@ -141,8 +132,8 @@ export default function ProfileEditPage({ locale, dict }: Props) {
       />
 
       <main className="flex-1 w-full">
-        <div className="mx-auto max-w-[1728px]">
-          <div className="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8 2xl:px-0 py-14">
+        <div className="mx-auto max-w-432">
+          <div className="mx-auto max-w-295 px-4 sm:px-6 lg:px-8 2xl:px-0 py-14">
 
             {/* Page header */}
             <div className="flex items-start justify-between gap-4 mb-10">

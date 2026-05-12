@@ -7,6 +7,7 @@ import BackButton from "../shared/BackButton";
 import BookingStepper from "../shared/BookingStepper";
 import PrimaryButton from "../shared/PrimaryButton";
 import { BookingState, PaymentOption, VENUE_INFO } from "../types";
+import { fetchWithRefresh } from "../utils/auth";
 
 const TRANSPORT_RATE_PER_KM = 20 * 2; // round trip
 
@@ -92,16 +93,16 @@ export default function Step6Summary({
     setSubmitting(true);
     setSubmitError(false);
 
-    const auth = `Bearer ${state.userAccessToken}`;
-
     try {
       // If returning from step 7 (order already exists), skip event/order creation
       let orderId = state.bookingRef;
 
       if (!orderId) {
-        const eventRes = await fetch("/api/booking/event", {
+        // Use fetchWithRefresh so the live localStorage token is always used
+        // and auto-refreshed on 401 — eliminates stale/empty token 401 errors.
+        const eventRes = await fetchWithRefresh("/api/booking/event", {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: auth },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             eventDate: state.date
               ? `${state.date.getFullYear()}-${String(state.date.getMonth() + 1).padStart(2, "0")}-${String(state.date.getDate()).padStart(2, "0")}`
@@ -129,9 +130,9 @@ export default function Step6Summary({
             quantity: 1,
           }));
 
-        const orderRes = await fetch("/api/booking/order", {
+        const orderRes = await fetchWithRefresh("/api/booking/order", {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: auth },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             eventId,
             contactEmail: state.email,
@@ -159,22 +160,9 @@ export default function Step6Summary({
         if (!payRes.ok) throw new Error(`payment ${payRes.status}`);
         const { paymentUrl } = await payRes.json();
         try {
-          // Save event details for the payment-success page to display
-          sessionStorage.setItem(
-            "lecercle_booking_summary",
-            JSON.stringify({
-              date: state.date
-                ? `${state.date.getFullYear()}-${String(state.date.getMonth() + 1).padStart(2, "0")}-${String(state.date.getDate()).padStart(2, "0")}`
-                : undefined,
-              startTime: state.startTime,
-              venueName: state.venueName,
-              address: state.address,
-              city: state.city,
-            })
-          );
-          // Stamp orderId into the flow state synchronously so that if the
-          // bank payment fails/cancels and the user comes back, handleFinalize
-          // skips re-creating the event/order and just retries payment.
+          // Stamp orderId into the flow state so that if the bank payment
+          // fails/cancels and the user returns, handleFinalize skips re-creating
+          // the event/order and just retries payment.
           const flowRaw = sessionStorage.getItem("lecercle_booking_flow");
           if (flowRaw) {
             const flow = JSON.parse(flowRaw);

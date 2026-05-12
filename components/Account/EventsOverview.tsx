@@ -73,7 +73,7 @@ function stateLabel(state: EventState, d: EventsPageDict): string {
   }
 }
 
-function stateSubText(state: EventState, event: EventBooking, d: EventsPageDict): string {
+function stateSubText(state: EventState, event: EventBooking): string {
   const primary = event.orders?.[0];
   const total = pickAmount(primary?.totalAmount);
   switch (state) {
@@ -93,26 +93,20 @@ export default function EventsOverview({ locale, dict }: Props) {
   const router = useRouter();
   const d = dict.events_page;
 
-  const [auth, setAuth] = useState<StoredAuth | null>(null);
-  const [events, setEvents] = useState<EventBooking[] | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [auth] = useState<StoredAuth | null>(() => loadAuth()?.auth ?? null);
+  const [events, setEvents] = useState<EventBooking[] | null>(() => (auth && !auth.user.customerId) ? [] : null);
+  const [loading, setLoading] = useState(() => !!auth?.user.customerId);
   const [error, setError] = useState(false);
   const [filter, setFilter] = useState<FilterTab>("all");
 
   useEffect(() => {
-    const result = loadAuth();
-    if (!result) {
+    if (!auth) {
       router.replace(`/${locale}/account/login`);
       return;
     }
-    setAuth(result.auth);
 
-    const customerId = result.auth.user.customerId;
-    if (!customerId) {
-      setLoading(false);
-      setEvents([]);
-      return;
-    }
+    const customerId = auth.user.customerId;
+    if (!customerId) return;
 
     fetchWithRefresh(`/api/account/orders?customerId=${encodeURIComponent(customerId)}`)
       .then(async (r) => {
@@ -132,7 +126,7 @@ export default function EventsOverview({ locale, dict }: Props) {
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, [locale, router]);
+  }, [auth, locale, router]);
 
   const initials = auth
     ? `${auth.user.firstName?.[0] ?? ""}${auth.user.lastName?.[0] ?? ""}`.toUpperCase() || "?"
@@ -179,8 +173,8 @@ export default function EventsOverview({ locale, dict }: Props) {
       />
 
       <main className="flex-1 w-full">
-        <div className="mx-auto max-w-[1728px]">
-          <div className="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8 2xl:px-0 py-14">
+        <div className="mx-auto max-w-432">
+          <div className="mx-auto max-w-295 px-4 sm:px-6 lg:px-8 2xl:px-0 py-14">
 
             {/* Page header */}
             <div className="mb-8">
@@ -293,7 +287,7 @@ function EventRow({
   const primary = event.orders?.[0];
   const day = formatDay(event.eventDate);
   const year = formatYear(event.eventDate);
-  const subText = stateSubText(state, event, d);
+  const subText = stateSubText(state, event);
 
   // Build subtitle: type · city · guests · time · service
   const parts: string[] = [];
@@ -326,7 +320,7 @@ function EventRow({
       </div>
 
       {/* Status */}
-      <div className="shrink-0 flex flex-col items-start gap-1 min-w-[140px]">
+      <div className="shrink-0 flex flex-col items-start gap-1 min-w-35">
         <span className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest ${stateBadgeClass(state)}`}>
           · {stateLabel(state, d)}
         </span>

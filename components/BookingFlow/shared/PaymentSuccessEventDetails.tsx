@@ -36,11 +36,28 @@ export default function PaymentSuccessEventDetails({ labels, months, daysFull }:
   const [summary, setSummary] = useState<BookingSummary | null>(null);
 
   useEffect(() => {
-    // Payment confirmed — clear the booking flow so a new booking starts fresh
-    try { sessionStorage.removeItem("lecercle_booking_flow"); } catch {}
     try {
-      const raw = sessionStorage.getItem("lecercle_booking_summary");
-      if (raw) setSummary(JSON.parse(raw));
+      // Read event details from the booking flow before clearing it
+      const raw = sessionStorage.getItem("lecercle_booking_flow");
+      if (raw) {
+        const flow = JSON.parse(raw);
+        const s = flow?.state;
+        if (s) {
+          setSummary({
+            date: s.date
+              ? `${s.date.y}-${String(s.date.m + 1).padStart(2, "0")}-${String(s.date.d).padStart(2, "0")}`
+              : undefined,
+            startTime: s.startTime,
+            venueName: s.venueName,
+            address: s.address,
+            city: s.city,
+          });
+        }
+      }
+      // Payment confirmed — clear the booking flow so a new booking starts fresh
+      sessionStorage.removeItem("lecercle_booking_flow");
+      // Remove legacy key from older sessions
+      sessionStorage.removeItem("lecercle_booking_summary");
     } catch {}
   }, []);
 

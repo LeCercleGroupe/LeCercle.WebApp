@@ -31,11 +31,37 @@
       "subtitle": "Choose a date and number of guests for your event.",
       "guests_label": "Total number of guests *",
       "months": [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
       ],
-      "days": ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
-      "days_full": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+      "days": [
+        "Mo",
+        "Tu",
+        "We",
+        "Th",
+        "Fr",
+        "Sa",
+        "Su"
+      ],
+      "days_full": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+      ]
     },
     "step2": {
       "title": "What services do you need?",
@@ -132,11 +158,26 @@
       "subtitle": "Your request has been received. Pay the advance of {amount} to confirm your booking.",
       "steps_title": "WHAT'S NEXT",
       "steps": [
-        { "label": "Request received", "sub": "We've received all the details of your event." },
-        { "label": "Pay advance of {amount}", "sub": "Pay online from your profile or contact us to arrange an alternative payment method." },
-        { "label": "Contract in your profile", "sub": "Once the advance is paid, the contract is automatically generated and available in your profile for viewing and download." },
-        { "label": "Coordination call", "sub": "A coordinator will contact you within 2–3 business days to discuss technical details and event preferences." },
-        { "label": "Your event", "sub": "" }
+        {
+          "label": "Request received",
+          "sub": "We've received all the details of your event."
+        },
+        {
+          "label": "Pay advance of {amount}",
+          "sub": "Pay online from your profile or contact us to arrange an alternative payment method."
+        },
+        {
+          "label": "Contract in your profile",
+          "sub": "Once the advance is paid, the contract is automatically generated and available in your profile for viewing and download."
+        },
+        {
+          "label": "Coordination call",
+          "sub": "A coordinator will contact you within 2–3 business days to discuss technical details and event preferences."
+        },
+        {
+          "label": "Your event",
+          "sub": ""
+        }
       ],
       "event_details_title": "EVENT DETAILS",
       "date_label": "Date:",
@@ -150,10 +191,22 @@
       "subtitle": "Your event is firmly booked. We'll be in touch soon to discuss the details.",
       "steps_title": "WHAT'S NEXT",
       "steps": [
-        { "label": "Advance paid", "sub": "Your 10% advance has been successfully processed." },
-        { "label": "Contract in your profile", "sub": "Once the advance is paid, the contract is automatically generated and available in your profile for viewing and download." },
-        { "label": "Coordination call", "sub": "A coordinator will contact you within 2–3 business days to discuss technical details and event preferences." },
-        { "label": "Your event", "sub": "See you at the event!" }
+        {
+          "label": "Advance paid",
+          "sub": "Your 10% advance has been successfully processed."
+        },
+        {
+          "label": "Contract in your profile",
+          "sub": "Once the advance is paid, the contract is automatically generated and available in your profile for viewing and download."
+        },
+        {
+          "label": "Coordination call",
+          "sub": "A coordinator will contact you within 2–3 business days to discuss technical details and event preferences."
+        },
+        {
+          "label": "Your event",
+          "sub": "See you at the event!"
+        }
       ],
       "event_details_title": "EVENT DETAILS",
       "date_label": "Date:",
@@ -181,7 +234,8 @@
       "code_error": "The code is incorrect.",
       "no_account_error": "No account exists for this phone number. Please sign up.",
       "resend": "Resend code",
-      "change_number": "Change number"
+      "change_number": "Change number",
+      "continue": "Continue"
     },
     "register": {
       "title": "Create an account",
@@ -210,7 +264,9 @@
       "sms_code_placeholder": "XXXXXX",
       "verify": "Verify",
       "verified": "Verified",
-      "change_number": "Change number"
+      "change_number": "Change number",
+      "section_personal": "Personal details",
+      "section_company": "Company details"
     },
     "dashboard": {
       "tab_orders": "Orders",
@@ -285,18 +341,16 @@
       "continue_booking": "Continue reservation",
       "contact_team": "Contact the team",
       "book_similar": "Book a similar event",
-
       "pending_action_label": "ACTION REQUIRED · DATE EXPIRES IN {time}",
       "pending_action_title": "Pay the advance of {amount} to confirm the date",
       "pending_action_sub": "Your request was registered on {date}. The advance locks the date and transforms it into a firm reservation. Remaining 90%, {rest}, is paid on the day of the event.",
       "pay_online": "Pay online · {amount}",
       "pay_cash": "Pay cash · WhatsApp",
-
+      "pay_error": "Payment could not be initiated. Please try again.",
       "confirmed_banner_label": "BOOKING CONFIRMED · ALL GOOD",
       "confirmed_banner_title": "Next step: pre-event coordination call",
       "confirmed_banner_sub": "The Le Cercle team will contact you to finalise the menu, seating and logistics. Nothing to do until then.",
       "confirmed_status_desc": "All good. Contract signed, advance paid. We'll reach out before the event.",
-
       "draft_banner_label": "DRAFT SAVED · {date}",
       "draft_banner_title": "Continue reservation from where you left off",
       "draft_banner_sub": "You stopped at step {step} of 6. After completing the remaining steps the advance will confirm your reservation.",
@@ -310,19 +364,16 @@
       "section_progress": "YOUR BOOKING PROGRESS",
       "section_data_filled": "DETAILS FILLED IN SO FAR",
       "transport_calculated": "calculated after location",
-
       "past_banner_label": "EVENT COMPLETED",
       "past_banner_title": "Took place on {date}",
       "past_banner_sub": "All payments have been made. Documents remain available for download.",
       "past_status_desc": "All payments done. Did you enjoy it? Book again.",
-
       "cancelled_banner_label": "CANCELLED BY YOU · {date}",
       "cancelled_banner_title": "Refund of {amount} completed",
       "cancelled_banner_sub": "The advance was fully refunded according to our policy. Documents remain available.",
       "cancelled_reason_prefix": "Reason:",
       "cancelled_status_desc": "Refund of {amount} completed on {date}.",
       "address_anonymised": "Anonymised after cancellation",
-
       "section_whats_next": "WHAT'S NEXT",
       "section_history": "HISTORY",
       "section_event_details": "EVENT DETAILS",
@@ -333,7 +384,6 @@
       "section_contact": "CONTACT DETAILS FOR THE EVENT",
       "section_data": "DATE AND GUESTS",
       "section_location": "LOCATION",
-
       "date_label": "Date",
       "time_label": "Start time",
       "guests_label": "Guests",
@@ -346,7 +396,6 @@
       "logistics_notes_label": "Logistics notes",
       "access_label": "Access",
       "not_selected": "Not selected yet",
-
       "total_event_label": "Total event",
       "advance_label": "Advance (10%)",
       "rest_label": "Rest (90%)",
@@ -354,16 +403,13 @@
       "confirmed_badge": "confirmed",
       "taxes_label": "Taxes included",
       "transport_label": "Transport",
-
       "no_docs": "No documentation yet",
       "no_docs_sub": "Booking confirmation is automatically generated after paying the advance at step 6.",
       "download": "Download",
-
       "contact_label": "Contact",
       "contact_phone": "Phone",
       "contact_email": "Email",
       "contact_notes": "Special notes",
-
       "ref_label": "EVENT REFERENCE",
       "ref_sub": "Quote this code in any communication with our team.",
       "financial_label": "FINANCIAL SUMMARY",
@@ -371,7 +417,6 @@
       "financial_advance": "Advance (10%)",
       "financial_rest": "Rest (90%)",
       "status_section_label": "STATUS",
-
       "step1_label": "Request submitted",
       "step2_label": "Pay advance · {amount}",
       "step3_label": "Contract signed electronically",
@@ -386,14 +431,12 @@
       "history_cancelled2": "Advance paid · {amount}",
       "history_cancelled3": "Cancellation requested",
       "history_cancelled4": "Refund completed · {amount}",
-
       "draft_step1": "Step 1 · Date and guests",
       "draft_step2": "Step 2 · Service selection",
       "draft_step3": "Step 3 · Package selection",
       "draft_step4": "Step 4 · Location",
       "draft_step5": "Step 5 · Contact and verification",
       "draft_step6": "Step 6 · Summary and advance payment",
-
       "loading": "Loading...",
       "error": "An error occurred. Please try again."
     },

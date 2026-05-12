@@ -77,19 +77,44 @@ function loadSaved(): { step: number; state: BookingState } | null {
 }
 
 function getInitialFlow(): { step: number; state: BookingState } {
-  // In-progress flow (language switch, failed payment retry, etc.) takes priority
   const saved = loadSaved();
-  if (saved) return saved;
+  const authResult = loadAuth();
 
-  // Returning user — pre-fill contact data from previous session
-  const result = loadAuth();
-  if (result) {
-    const { auth, tokensValid } = result;
+  if (saved) {
+    if (authResult) {
+      const { auth } = authResult;
+      // Keep booking progress from the session but always overlay the logged-in
+      // user's contact details and fresh tokens so stale session data never wins.
+      return {
+        step: saved.step,
+        state: {
+          ...saved.state,
+          email: auth.user.email ?? "",
+          phone: auth.user.phoneNumber ?? saved.state.phone,
+          firstName: auth.user.firstName || saved.state.firstName,
+          lastName: auth.user.lastName || saved.state.lastName,
+          companyName: auth.user.companyName ?? "",
+          idno: auth.user.idno ?? "",
+          contactType: auth.user.isCompany ? "company" : "person",
+          emailVerified: !!auth.user.email,
+          smsVerified: !!auth.user.phoneNumber,
+          userAccessToken: auth.accessToken,
+          userRefreshToken: auth.refreshToken,
+          userId: auth.user.userId,
+          customerId: auth.user.customerId,
+        },
+      };
+    }
+    return saved;
+  }
+
+  // No saved flow — pre-fill from auth profile
+  if (authResult) {
+    const { auth, tokensValid } = authResult;
     return {
       step: 1,
       state: {
         ...INITIAL_STATE,
-        // Only restore API tokens if they haven't expired yet
         ...(tokensValid && {
           userAccessToken: auth.accessToken,
           userRefreshToken: auth.refreshToken,
@@ -98,7 +123,6 @@ function getInitialFlow(): { step: number; state: BookingState } {
           emailVerified: !!auth.user.email,
           smsVerified: !!auth.user.phoneNumber,
         }),
-        // Always pre-fill form fields (30-day profile TTL)
         email: auth.user.email ?? "",
         phone: auth.user.phoneNumber ?? "+373",
         firstName: auth.user.firstName,

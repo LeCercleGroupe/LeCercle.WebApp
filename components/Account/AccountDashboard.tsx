@@ -189,12 +189,12 @@ export default function AccountDashboard({ locale, dict }: Props) {
   const router = useRouter();
   const d = dict.dashboard;
 
-  const [auth, setAuth] = useState<StoredAuth | null>(null);
+  const [auth] = useState<StoredAuth | null>(() => loadAuth()?.auth ?? null);
   const [tab, setTab] = useState<Tab>("orders");
 
   // Orders
-  const [events, setEvents] = useState<EventBooking[] | null>(null);
-  const [eventsLoading, setEventsLoading] = useState(true);
+  const [events, setEvents] = useState<EventBooking[] | null>(() => (auth && !auth.user.customerId) ? [] : null);
+  const [eventsLoading, setEventsLoading] = useState(() => !!auth?.user.customerId);
   const [eventsError, setEventsError] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventBooking | null>(null);
   const [selectedOrderDetail, setSelectedOrderDetail] = useState<OrderDetail | null>(null);
@@ -206,22 +206,15 @@ export default function AccountDashboard({ locale, dict }: Props) {
   const [contractsLoading, setContractsLoading] = useState(false);
   const [contractsError, setContractsError] = useState(false);
 
-  // Mount — load auth, refresh profile from backend, then fetch events
+  // Mount — refresh profile from backend, then fetch events
   useEffect(() => {
-    const result = loadAuth();
-    if (!result) {
+    if (!auth) {
       router.replace(`/${locale}/account/login`);
       return;
     }
-    const { auth: storedAuth } = result;
-    setAuth(storedAuth);
 
-    const customerId = storedAuth.user.customerId;
-    if (!customerId) {
-      setEventsLoading(false);
-      setEvents([]);
-      return;
-    }
+    const customerId = auth.user.customerId;
+    if (!customerId) return;
 
     fetchWithRefresh(`/api/account/orders?customerId=${encodeURIComponent(customerId)}`)
       .then(async (r) => {
@@ -242,11 +235,11 @@ export default function AccountDashboard({ locale, dict }: Props) {
       })
       .catch(() => setEventsError(true))
       .finally(() => setEventsLoading(false));
-  }, [locale, router]);
+  }, [auth, locale, router]);
 
-  // Lazy-load contracts when the tab is first opened
-  useEffect(() => {
-    if (tab !== "contracts" || contracts !== null) return;
+  // Fetch contracts on demand (called from tab click handler)
+  function loadContracts() {
+    if (contracts !== null) return;
     setContractsLoading(true);
     setContractsError(false);
     fetchWithRefresh("/api/account/contracts")
@@ -260,7 +253,7 @@ export default function AccountDashboard({ locale, dict }: Props) {
       })
       .catch(() => setContractsError(true))
       .finally(() => setContractsLoading(false));
-  }, [tab, contracts]);
+  }
 
   async function openEvent(event: EventBooking) {
     setSelectedEvent(event);
@@ -332,7 +325,7 @@ export default function AccountDashboard({ locale, dict }: Props) {
               <button
                 key={t}
                 type="button"
-                onClick={() => { setTab(t); setSelectedEvent(null); }}
+                onClick={() => { setTab(t); setSelectedEvent(null); if (t === "contracts") loadContracts(); }}
                 className={`flex-1 py-2.5 text-sm font-medium font-figtree tracking-tight border transition-all duration-200 cursor-pointer ${
                   tab === t
                     ? "bg-[#1b1b1b] border-[#474747] text-[#f1f1f1]"

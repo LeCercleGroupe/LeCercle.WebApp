@@ -29,6 +29,7 @@ interface EventDetailDict {
   pending_action_sub: string;
   pay_online: string;
   pay_cash: string;
+  pay_error: string;
   confirmed_banner_label: string;
   confirmed_banner_title: string;
   confirmed_banner_sub: string;
@@ -278,23 +279,23 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
   const router = useRouter();
   const d = dict.event_detail;
 
-  const [auth, setAuth] = useState<StoredAuth | null>(null);
+  const [auth] = useState<StoredAuth | null>(() => loadAuth()?.auth ?? null);
   const [event, setEvent] = useState<EventBooking | null>(null);
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [contracts, setContracts] = useState<Contract[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(() => !!auth?.user.customerId);
+  const [error, setError] = useState(() => !!auth && !auth.user.customerId);
+  const [payingOnline, setPayingOnline] = useState(false);
+  const [payOnlineError, setPayOnlineError] = useState(false);
 
   useEffect(() => {
-    const result = loadAuth();
-    if (!result) {
+    if (!auth) {
       router.replace(`/${locale}/account/login`);
       return;
     }
-    setAuth(result.auth);
 
-    const customerId = result.auth.user.customerId;
-    if (!customerId) { setLoading(false); setError(true); return; }
+    const customerId = auth.user.customerId;
+    if (!customerId) return;
 
     async function load() {
       try {
@@ -334,7 +335,32 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
       }
     }
     load();
-  }, [locale, eventId, router]);
+  }, [auth, locale, eventId, router]);
+
+  async function handlePayOnline() {
+    const orderId = order?.id ?? event?.orders?.[0]?.id;
+    if (!orderId) return;
+    setPayingOnline(true);
+    setPayOnlineError(false);
+    try {
+      const payRes = await fetch("/api/booking/payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          paymentMethod: "Card",
+          language: locale,
+          returnUrl: `${window.location.origin}/${locale}/booking/payment-success?orderId=${orderId}`,
+        }),
+      });
+      if (!payRes.ok) throw new Error(`payment ${payRes.status}`);
+      const { paymentUrl } = await payRes.json();
+      window.location.href = paymentUrl;
+    } catch {
+      setPayOnlineError(true);
+      setPayingOnline(false);
+    }
+  }
 
   const initials = auth
     ? `${auth.user.firstName?.[0] ?? ""}${auth.user.lastName?.[0] ?? ""}`.toUpperCase() || "?"
@@ -370,8 +396,9 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
   const itemsTotal = order?.items?.reduce((s, it) => s + pickAmount(it.unitPrice) * (it.quantity ?? 1), 0) ?? 0;
   const roadTotal = order?.items?.reduce((s, it) => s + pickAmount(it.roadPrice), 0) ?? 0;
   const total = pickAmount(order?.totalAmount, primaryOrder?.totalAmount) || (itemsTotal + roadTotal);
-  const advance = pickAmount(order?.advanceAmount) || Math.round(total * 0.1);
+  const advance = pickAmount(order?.advanceAmount, primaryOrder?.advanceAmount) || (total > 0 ? Math.round(total * 0.1) : 0);
   const rest = total - advance;
+  const advanceDisplay = advance > 0 ? formatMDL(advance) : "—";
 
   // Use simpler labels for badge
   const stateBadgeLabels: Record<EventState, string> = {
@@ -387,8 +414,8 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
       <AccountTopBar locale={locale} initials={initials} displayName={displayName} email={auth?.user.email} navDict={dict.nav} />
 
       <main className="flex-1 w-full">
-        <div className="mx-auto max-w-[1728px]">
-          <div className="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8 2xl:px-0 py-10">
+        <div className="mx-auto max-w-432">
+          <div className="mx-auto max-w-295 px-4 sm:px-6 lg:px-8 2xl:px-0 py-10">
 
             {/* Back link */}
             <Link
@@ -451,28 +478,35 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
                       {d.pending_action_label.replace("{time}", "23:41")}
                     </p>
                     <p className="text-[20px] font-semibold text-[#f0f0f0] font-figtree tracking-tight mb-2">
-                      {d.pending_action_title.replace("{amount}", formatMDL(advance))}
+                      {d.pending_action_title.replace("{amount}", advanceDisplay)}
                     </p>
                     <p className="text-[13px] text-[#888] font-figtree tracking-tight mb-5">
                       {d.pending_action_sub
                         .replace("{date}", formatDateShort(event.createdAt ?? event.eventDate))
-                        .replace("{rest}", formatMDL(rest))}
+                        .replace("{rest}", rest > 0 ? formatMDL(rest) : "—")}
                     </p>
-                    <div className="flex gap-3">
-                      <Link
-                        href={`/${locale}/booking`}
-                        className="px-5 py-2.5 bg-[#f0f0f0] text-[#080808] text-[13px] font-semibold font-figtree tracking-tight hover:bg-white transition-colors"
-                      >
-                        {d.pay_online.replace("{amount}", formatMDL(advance))}
-                      </Link>
-                      <a
-                        href="https://wa.me/37300000000"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-5 py-2.5 border border-[#3a2a00] text-[#fbbf24] text-[13px] font-medium font-figtree tracking-tight hover:bg-[#1f1400] transition-colors"
-                      >
-                        {d.pay_cash}
-                      </a>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          onClick={handlePayOnline}
+                          disabled={payingOnline || !(order?.id ?? event.orders?.[0]?.id)}
+                          className="px-5 py-2.5 bg-[#f0f0f0] text-[#080808] text-[13px] font-semibold font-figtree tracking-tight hover:bg-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          {payingOnline ? "···" : d.pay_online.replace("{amount}", advanceDisplay)}
+                        </button>
+                        <a
+                          href="https://wa.me/37300000000"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-5 py-2.5 border border-[#3a2a00] text-[#fbbf24] text-[13px] font-medium font-figtree tracking-tight hover:bg-[#1f1400] transition-colors"
+                        >
+                          {d.pay_cash}
+                        </a>
+                      </div>
+                      {payOnlineError && (
+                        <p className="text-[12px] text-red-400 font-figtree tracking-tight">{d.pay_error}</p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -946,7 +980,7 @@ function Section({ label, children }: { label: string; children: React.ReactNode
 
 // ─── Timeline: Pending / Confirmed ────────────────────────────────────────────
 function PendingConfirmedSteps({
-  state, event, order, advance, rest, total, d,
+  state, event, order, advance, rest, d,
 }: {
   state: EventState;
   event: EventBooking;
@@ -961,6 +995,8 @@ function PendingConfirmedSteps({
   const date1 = event.createdAt ? formatDate(event.createdAt) : "";
   const date2 = order?.advancePaidAt ? formatDate(order.advancePaidAt) : "";
   const eventDateFmt = `${formatDateShort(event.eventDate)}, ${formatTime(event.eventStartTime)}`;
+  const advanceDisplay = advance > 0 ? formatMDL(advance) : "—";
+  const restDisplay = rest > 0 ? formatMDL(rest) : "—";
 
   return (
     <div className="border border-[#1e1e1e] p-5">
@@ -972,7 +1008,7 @@ function PendingConfirmedSteps({
       <TimelineStep
         done={advancePaid}
         active={!advancePaid}
-        label={d.step2_label.replace("{amount}", formatMDL(advance))}
+        label={d.step2_label.replace("{amount}", advanceDisplay)}
         sub={date2}
       />
       <TimelineStep
@@ -990,7 +1026,7 @@ function PendingConfirmedSteps({
       <TimelineStep
         done={false}
         label={d.step5_label}
-        sub={`${eventDateFmt} · ${formatMDL(rest)} la sosire`}
+        sub={`${eventDateFmt} · ${restDisplay} la sosire`}
       />
     </div>
   );
@@ -998,7 +1034,7 @@ function PendingConfirmedSteps({
 
 // ─── Timeline: History (Past / Cancelled) ─────────────────────────────────────
 function HistorySteps({
-  state, event, order, advance, rest, d,
+  state, event, advance, rest, d,
 }: {
   state: EventState;
   event: EventBooking;
@@ -1007,14 +1043,18 @@ function HistorySteps({
   rest: number;
   d: EventDetailDict;
 }) {
+  const advanceDisplay = advance > 0 ? formatMDL(advance) : "—";
+  const restDisplay = rest > 0 ? formatMDL(rest) : "—";
+
   if (state === "cancelled") {
     const refund = pickAmount(event.refundAmount, advance);
+    const refundDisplay = refund > 0 ? formatMDL(refund) : "—";
     return (
       <div className="border border-[#1e1e1e] p-5">
         <TimelineStep done={true} label={d.history_cancelled1} sub={event.createdAt ? formatDate(event.createdAt) : ""} />
-        <TimelineStep done={true} label={d.history_cancelled2.replace("{amount}", formatMDL(advance))} />
+        <TimelineStep done={true} label={d.history_cancelled2.replace("{amount}", advanceDisplay)} />
         <TimelineStep done={true} label={d.history_cancelled3} sub={event.cancelledAt ? `${formatDate(event.cancelledAt)} · de tine` : ""} />
-        <TimelineStep done={true} label={d.history_cancelled4.replace("{amount}", formatMDL(refund))} />
+        <TimelineStep done={true} label={d.history_cancelled4.replace("{amount}", refundDisplay)} />
       </div>
     );
   }
@@ -1022,10 +1062,10 @@ function HistorySteps({
   return (
     <div className="border border-[#1e1e1e] p-5">
       <TimelineStep done={true} label={d.history_step1} sub={event.createdAt ? formatDate(event.createdAt) : ""} />
-      <TimelineStep done={true} label={d.history_step2.replace("{amount}", formatMDL(advance))} />
+      <TimelineStep done={true} label={d.history_step2.replace("{amount}", advanceDisplay)} />
       <TimelineStep done={true} label={d.history_step3} />
       <TimelineStep done={true} label={d.history_step4} />
-      <TimelineStep done={true} label={d.history_step5.replace("{amount}", formatMDL(rest))} sub={formatDateShort(event.eventDate)} />
+      <TimelineStep done={true} label={d.history_step5.replace("{amount}", restDisplay)} sub={formatDateShort(event.eventDate)} />
     </div>
   );
 }

@@ -3,6 +3,7 @@ export interface OrderSummary {
   orderNumber?: string;
   status?: string;
   totalAmount?: number;
+  advanceAmount?: number;
 }
 
 export interface EventBooking {

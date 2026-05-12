@@ -31,11 +31,37 @@
       "subtitle": "Alege o dată și numărul de invitați pentru evenimentul tău.",
       "guests_label": "Numărul total de invitați *",
       "months": [
-        "Ianuarie", "Februarie", "Martie", "Aprilie", "Mai", "Iunie",
-        "Iulie", "August", "Septembrie", "Octombrie", "Noiembrie", "Decembrie"
+        "Ianuarie",
+        "Februarie",
+        "Martie",
+        "Aprilie",
+        "Mai",
+        "Iunie",
+        "Iulie",
+        "August",
+        "Septembrie",
+        "Octombrie",
+        "Noiembrie",
+        "Decembrie"
       ],
-      "days": ["Lu", "Ma", "Mi", "Jo", "Vi", "Sâ", "Du"],
-      "days_full": ["Luni", "Marți", "Miercuri", "Joi", "Vineri", "Sâmbătă", "Duminică"]
+      "days": [
+        "Lu",
+        "Ma",
+        "Mi",
+        "Jo",
+        "Vi",
+        "Sâ",
+        "Du"
+      ],
+      "days_full": [
+        "Luni",
+        "Marți",
+        "Miercuri",
+        "Joi",
+        "Vineri",
+        "Sâmbătă",
+        "Duminică"
+      ]
     },
     "step2": {
       "title": "Ce servicii dorești?",
@@ -132,11 +158,26 @@
       "subtitle": "Cererea ta a fost înregistrată. Achită avansul de {amount} pentru a confirma rezervarea.",
       "steps_title": "CE URMEAZĂ",
       "steps": [
-        { "label": "Cerere primită", "sub": "Am primit toate detaliile evenimentului tău." },
-        { "label": "Achită avansul de {amount}", "sub": "Plătește online din profilul tău sau contactează-ne pentru a stabili o metodă alternativă." },
-        { "label": "Contract în profilul tău", "sub": "Odată achitat avansul, contractul este generat automat și disponibil în profilul tău pentru vizualizare și descărcare." },
-        { "label": "Apel de coordonare", "sub": "Un coordonator te va contacta în 2–3 zile lucrătoare pentru a discuta detaliile tehnice și preferințele pentru eveniment." },
-        { "label": "Evenimentul tău", "sub": "" }
+        {
+          "label": "Cerere primită",
+          "sub": "Am primit toate detaliile evenimentului tău."
+        },
+        {
+          "label": "Achită avansul de {amount}",
+          "sub": "Plătește online din profilul tău sau contactează-ne pentru a stabili o metodă alternativă."
+        },
+        {
+          "label": "Contract în profilul tău",
+          "sub": "Odată achitat avansul, contractul este generat automat și disponibil în profilul tău pentru vizualizare și descărcare."
+        },
+        {
+          "label": "Apel de coordonare",
+          "sub": "Un coordonator te va contacta în 2–3 zile lucrătoare pentru a discuta detaliile tehnice și preferințele pentru eveniment."
+        },
+        {
+          "label": "Evenimentul tău",
+          "sub": ""
+        }
       ],
       "event_details_title": "DETALII EVENIMENT",
       "date_label": "Data:",
@@ -150,10 +191,22 @@
       "subtitle": "Evenimentul tău este rezervat ferm. Te contactăm în curând pentru a discuta detaliile evenimentului.",
       "steps_title": "CE URMEAZĂ",
       "steps": [
-        { "label": "Avans achitat", "sub": "Avansul de 10% a fost procesat cu succes." },
-        { "label": "Contract în profilul tău", "sub": "Odată achitat avansul, contractul este generat automat și disponibil în profilul tău pentru vizualizare și descărcare." },
-        { "label": "Apel de coordonare", "sub": "Un coordonator te va contacta în 2–3 zile lucrătoare pentru a discuta detaliile tehnice și preferințele pentru eveniment." },
-        { "label": "Evenimentul tău", "sub": "Ne vedem la eveniment!" }
+        {
+          "label": "Avans achitat",
+          "sub": "Avansul de 10% a fost procesat cu succes."
+        },
+        {
+          "label": "Contract în profilul tău",
+          "sub": "Odată achitat avansul, contractul este generat automat și disponibil în profilul tău pentru vizualizare și descărcare."
+        },
+        {
+          "label": "Apel de coordonare",
+          "sub": "Un coordonator te va contacta în 2–3 zile lucrătoare pentru a discuta detaliile tehnice și preferințele pentru eveniment."
+        },
+        {
+          "label": "Evenimentul tău",
+          "sub": "Ne vedem la eveniment!"
+        }
       ],
       "event_details_title": "DETALII EVENIMENT",
       "date_label": "Data:",
@@ -181,7 +234,8 @@
       "code_error": "Codul este incorect.",
       "no_account_error": "Nu există niciun cont asociat acestui număr de telefon. Te rugăm să creezi un cont.",
       "resend": "Retrimite codul",
-      "change_number": "Schimbă numărul"
+      "change_number": "Schimbă numărul",
+      "continue": "Continuă"
     },
     "register": {
       "title": "Crează un cont",
@@ -210,7 +264,9 @@
       "sms_code_placeholder": "XXXXXX",
       "verify": "Verifică",
       "verified": "Verificat",
-      "change_number": "Schimbă numărul"
+      "change_number": "Schimbă numărul",
+      "section_personal": "Date personale",
+      "section_company": "Date companie"
     },
     "dashboard": {
       "tab_orders": "Comenzi",
@@ -285,18 +341,16 @@
       "continue_booking": "Continuă rezervarea",
       "contact_team": "Contactează echipa acum",
       "book_similar": "Rezervă eveniment similar",
-
       "pending_action_label": "ACȚIUNE NECESARĂ · DATA EXPIRĂ ÎN {time}",
       "pending_action_title": "Plătește avansul de {amount} pentru a confirma data",
       "pending_action_sub": "Solicitarea a fost înregistrată pe {date}. Avansul blochează data și transformă cererea într-o rezervare fermă. Restul de 90%, {rest}, se achită în ziua evenimentului.",
       "pay_online": "Plătește online · {amount}",
       "pay_cash": "Plătește cash · WhatsApp",
-
+      "pay_error": "Plata nu a putut fi inițiată. Încearcă din nou.",
       "confirmed_banner_label": "REZERVARE CONFIRMATĂ · TOT ÎN REGULĂ",
       "confirmed_banner_title": "Următorul pas: apelul de coordonare pre-eveniment",
       "confirmed_banner_sub": "Echipa Le Cercle te va contacta pentru a finaliza meniul, dispunerea meselor și detaliile logistice. Nu trebuie să faci nimic până atunci.",
       "confirmed_status_desc": "Tot este în regulă. Contract semnat, avans plătit. Te contactăm înainte de eveniment.",
-
       "draft_banner_label": "DRAFT SALVAT · {date}",
       "draft_banner_title": "Continuă rezervarea de unde ai rămas",
       "draft_banner_sub": "Ești la pasul {step} din 6. După completarea pașilor rămași, avansul va confirma rezervarea ta.",
@@ -310,19 +364,16 @@
       "section_progress": "PROGRESUL REZERVĂRII TALE",
       "section_data_filled": "DATE COMPLETATE PÂNĂ ACUM",
       "transport_calculated": "se calculează după locație",
-
       "past_banner_label": "EVENIMENT ÎNCHEIAT",
       "past_banner_title": "Desfășurat pe {date}",
       "past_banner_sub": "Toate plățile au fost efectuate. Documentele rămân disponibile pentru descărcare.",
       "past_status_desc": "Toate plățile efectuate. Ți-a plăcut? Rezervă din nou.",
-
       "cancelled_banner_label": "ANULAT DE TINE · {date}",
       "cancelled_banner_title": "Rambursare efectuată · {amount}",
       "cancelled_banner_sub": "Avansul a fost rambursat integral conform politicii noastre. Documentele rămân disponibile.",
       "cancelled_reason_prefix": "Motiv:",
       "cancelled_status_desc": "Rambursare de {amount} efectuată pe {date}.",
       "address_anonymised": "Anonimizată după anulare",
-
       "section_whats_next": "CE URMEAZĂ",
       "section_history": "ISTORIC",
       "section_event_details": "DETALII EVENIMENT",
@@ -333,7 +384,6 @@
       "section_contact": "DATE DE CONTACT PENTRU EVENIMENT",
       "section_data": "DATA ȘI INVITAȚI",
       "section_location": "LOCAȚIE",
-
       "date_label": "Data",
       "time_label": "Ora de Începere",
       "guests_label": "Număr invitați",
@@ -346,7 +396,6 @@
       "logistics_notes_label": "Note logistice",
       "access_label": "Acces",
       "not_selected": "Neselectat încă",
-
       "total_event_label": "Total eveniment",
       "advance_label": "Avans (10%)",
       "rest_label": "Rest (90%)",
@@ -354,16 +403,13 @@
       "confirmed_badge": "confirmat",
       "taxes_label": "Taxe incluse",
       "transport_label": "Transport",
-
       "no_docs": "Nicio documentație încă",
       "no_docs_sub": "Confirmarea de rezervare se generează automat după plata avansului la pasul 6.",
       "download": "Descarcă",
-
       "contact_label": "Responsabil",
       "contact_phone": "Telefon",
       "contact_email": "Email",
       "contact_notes": "Mențiuni speciale",
-
       "ref_label": "REFERINȚĂ EVENIMENT",
       "ref_sub": "Citează acest cod în orice comunicare cu echipa noastră.",
       "financial_label": "REZUMAT FINANCIAR",
@@ -371,7 +417,6 @@
       "financial_advance": "Avans (10%)",
       "financial_rest": "Rest (90%)",
       "status_section_label": "STATUS",
-
       "step1_label": "Solicitare trimisă",
       "step2_label": "Plătește avansul · {amount}",
       "step3_label": "Contract semnat electronic",
@@ -386,14 +431,12 @@
       "history_cancelled2": "Avans plătit · {amount}",
       "history_cancelled3": "Anulare solicitată",
       "history_cancelled4": "Rambursare efectuată · {amount}",
-
       "draft_step1": "Pasul 1 · Data și invitații",
       "draft_step2": "Pasul 2 · Alegerea serviciilor",
       "draft_step3": "Pasul 3 · Alegerea pachetului",
       "draft_step4": "Pasul 4 · Locație",
       "draft_step5": "Pasul 5 · Contact și verificare",
       "draft_step6": "Pasul 6 · Sumar și plata avansului",
-
       "loading": "Se încarcă...",
       "error": "A apărut o eroare. Încearcă din nou."
     },
