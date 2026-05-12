@@ -3,10 +3,11 @@
 import type { RefObject } from "react";
 import { BookingState, ContactType } from "../types";
 import type { BookingDict } from "../dict";
-import { saveAuth } from "../utils/auth";
+import { saveAuth, updateAuthProfile } from "../utils/auth";
 import BookingStepper from "../shared/BookingStepper";
 import BackButton from "../shared/BackButton";
 import BookingInput from "../shared/BookingInput";
+import PhoneInput from "../shared/PhoneInput";
 import PrimaryButton from "../shared/PrimaryButton";
 import OtpVerificationField from "../shared/OtpVerificationField";
 
@@ -39,15 +40,6 @@ export default function Step5Contact({ state, onChange, onNext, onBack, dict, st
     (!isCompany || (state.companyName.trim() !== "" && state.idno.trim().length === 13));
 
   const canProceed = formFilled && state.emailVerified;
-
-  function handlePhoneChange(raw: string) {
-    let digits = raw.replace(/\D/g, "");
-    // Strip country code prefix whether whole or partially deleted (+373 → 373, +37 → 37, +3 → 3)
-    if (digits.startsWith("373")) digits = digits.slice(3);
-    else if (digits.startsWith("37")) digits = digits.slice(2);
-    else if (digits.startsWith("3")) digits = digits.slice(1);
-    onChange({ phone: "+373" + digits.slice(0, 8), smsVerified: false, smsSent: false });
-  }
 
   function authHeader(): Record<string, string> {
     const token = tokenRef.current;
@@ -225,17 +217,33 @@ export default function Step5Contact({ state, onChange, onNext, onBack, dict, st
           onVerify={handleVerifyEmail}
         />
 
-        <BookingInput
+        <PhoneInput
           label={d.phone_label}
           value={state.phone}
-          onChange={handlePhoneChange}
-          placeholder={d.phone_placeholder}
-          type="tel"
+          onChange={(v) => onChange({ phone: v, smsVerified: false, smsSent: false })}
         />
         {/* Phone OTP temporarily disabled — re-enable OtpVerificationField when ready */}
       </div>
 
-      <PrimaryButton label={dict.continue} onClick={onNext} disabled={!canProceed} />
+      <PrimaryButton
+        label={dict.continue}
+        onClick={() => {
+          // Persist latest form values so the dashboard sees the user's
+          // complete profile (phone is filled after email verify and would
+          // otherwise be lost from the saveAuth call inside handleVerifyEmail).
+          updateAuthProfile({
+            firstName: state.firstName,
+            lastName: state.lastName,
+            email: state.email || null,
+            phoneNumber: state.phone && state.phone !== "+373" ? state.phone : null,
+            companyName: isCompany ? state.companyName : null,
+            idno: isCompany ? state.idno : null,
+            isCompany,
+          });
+          onNext();
+        }}
+        disabled={!canProceed}
+      />
     </div>
   );
 }

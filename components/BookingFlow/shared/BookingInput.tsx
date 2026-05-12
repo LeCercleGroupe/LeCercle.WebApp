@@ -7,6 +7,7 @@ interface BookingInputProps {
   placeholder?: string;
   type?: "text" | "email" | "tel" | "time";
   multiline?: boolean;
+  disabled?: boolean;
 }
 
 export default function BookingInput({
@@ -16,6 +17,7 @@ export default function BookingInput({
   placeholder = "",
   type = "text",
   multiline = false,
+  disabled = false,
 }: BookingInputProps) {
   return (
     <div className="flex flex-col gap-2 w-full">
@@ -27,8 +29,9 @@ export default function BookingInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
+          disabled={disabled}
           rows={5}
-          className="w-full bg-[#111] border border-[#303030] px-3 py-3.5 text-base text-[#f1f1f1] placeholder:text-[#747474] font-figtree tracking-tight resize-none focus:outline-none focus:border-[#474747] transition-colors"
+          className="w-full bg-[#111] border border-[#303030] px-3 py-3.5 text-base text-[#f1f1f1] placeholder:text-[#747474] font-figtree tracking-tight resize-none focus:outline-none focus:border-[#474747] transition-colors disabled:opacity-50"
         />
       ) : (
         <input
@@ -36,7 +39,8 @@ export default function BookingInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full bg-[#111] border border-[#303030] px-3 py-3.5 text-base text-[#f1f1f1] placeholder:text-[#747474] font-figtree tracking-tight focus:outline-none focus:border-[#474747] transition-colors"
+          disabled={disabled}
+          className="w-full bg-[#111] border border-[#303030] px-3 py-3.5 text-base text-[#f1f1f1] placeholder:text-[#747474] font-figtree tracking-tight focus:outline-none focus:border-[#474747] transition-colors disabled:opacity-50"
         />
       )}
     </div>

@@ -87,3 +87,65 @@ export function clearAuth(): void {
     localStorage.removeItem(AUTH_KEY);
   } catch {}
 }
+
+// Partial-update the stored user profile without touching tokens.
+// Used by the booking flow to persist latest form values when the user
+// continues past Step 5, and by the dashboard after fetching /api/auth/me.
+export function updateAuthProfile(updates: Partial<StoredAuth["user"]>): void {
+  try {
+    const raw = localStorage.getItem(AUTH_KEY);
+    if (!raw) return;
+    const stored: StoredAuth = JSON.parse(raw);
+    stored.user = { ...stored.user, ...updates };
+    // Refresh the 30-day profile TTL whenever the profile changes
+    stored.profileExpiresAt = Date.now() + PROFILE_TTL_MS;
+    localStorage.setItem(AUTH_KEY, JSON.stringify(stored));
+  } catch {}
+}
+
+async function refreshTokens(refreshToken: string): Promise<StoredAuth | null> {
+  try {
+    const res = await fetch("/api/auth/refresh", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.accessToken) return null;
+
+    const raw = localStorage.getItem(AUTH_KEY);
+    if (!raw) return null;
+    const stored: StoredAuth = JSON.parse(raw);
+    stored.accessToken = data.accessToken;
+    stored.refreshToken = data.refreshToken ?? stored.refreshToken;
+    stored.tokenExpiresAt = Date.now() + (data.expiresIn ?? 3600) * 1000;
+    localStorage.setItem(AUTH_KEY, JSON.stringify(stored));
+    return stored;
+  } catch {
+    return null;
+  }
+}
+
+// Wrap fetch with automatic token refresh on 401.
+// Pass the request without an Authorization header — this helper injects it.
+export async function fetchWithRefresh(
+  input: string,
+  init: RequestInit = {}
+): Promise<Response> {
+  const result = loadAuth();
+  if (!result) throw new Error("No auth");
+
+  const headers = new Headers(init.headers);
+  headers.set("Authorization", `Bearer ${result.auth.accessToken}`);
+
+  let res = await fetch(input, { ...init, headers });
+  if (res.status !== 401) return res;
+
+  const refreshed = await refreshTokens(result.auth.refreshToken);
+  if (!refreshed) return res; // bubble up original 401
+
+  headers.set("Authorization", `Bearer ${refreshed.accessToken}`);
+  res = await fetch(input, { ...init, headers });
+  return res;
+}

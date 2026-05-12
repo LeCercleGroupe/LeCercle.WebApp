@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { loadAuth } from "@/components/BookingFlow/utils/auth";
 
 type FitMode = "Fill" | "Fit" | "Crop" | "Tile";
 type Quality = "Low" | "Medium" | "High";
@@ -50,6 +51,16 @@ export default function LeCircleHero({ dict, locale }: LeCircleHeroProps) {
   const [activeVenue, setActiveVenue] = useState<number>(0);
   const [langOpen, setLangOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [userInitials, setUserInitials] = useState<string | null>(null);
+
+  useEffect(() => {
+    const result = loadAuth();
+    if (result) {
+      const { auth } = result;
+      const initials = `${auth.user.firstName?.[0] ?? ""}${auth.user.lastName?.[0] ?? ""}`.toUpperCase();
+      setUserInitials(initials || "U");
+    }
+  }, []);
 
   useEffect(() => {
     const checkIsMobile = () => {
@@ -111,43 +122,65 @@ export default function LeCircleHero({ dict, locale }: LeCircleHeroProps) {
           className="sm:hidden w-24 h-auto drop-shadow-[0_2px_20px_rgba(0,0,0,0.4)]"
         />
 
-        {/* Language switcher — desktop: left side; mobile: right side */}
-        <div className="relative sm:order-first">
-          <button
-            onClick={() => setLangOpen((o) => !o)}
-            className="bg-transparent border-0 text-gray-100 text-[13px] tracking-widest cursor-pointer flex items-center gap-1.25 uppercase"
-          >
-            {dict.nav.lang}
-            <span
-              className={`text-[9px] opacity-[0.65] transition-transform duration-200 inline-block ${langOpen ? "rotate-180" : ""}`}
+        {/* Right cluster on mobile; full-width with internal justify-between on desktop */}
+        <div className="flex items-center gap-4 sm:gap-5 sm:flex-1 sm:justify-between">
+          {/* Language switcher — left on desktop, grouped with profile icon on mobile */}
+          <div className="relative">
+            <button
+              onClick={() => setLangOpen((o) => !o)}
+              className="bg-transparent border-0 text-gray-100 text-[13px] tracking-widest cursor-pointer flex items-center gap-1.25 uppercase"
             >
-              ▾
-            </span>
-          </button>
+              {dict.nav.lang}
+              <span
+                className={`text-[9px] opacity-[0.65] transition-transform duration-200 inline-block ${langOpen ? "rotate-180" : ""}`}
+              >
+                ▾
+              </span>
+            </button>
 
-          {langOpen && (
-            <div className="absolute top-full right-0 sm:left-0 sm:right-auto mt-2 flex flex-col gap-0.5 backdrop-blur-md bg-black/55 py-1.5">
-              {LOCALES.filter((l) => l !== locale).map((l) => (
-                <button
-                  key={l}
-                  onClick={() => switchLocale(l)}
-                  className="bg-transparent border-0 text-white/72 text-[13px] tracking-widest cursor-pointer px-4.5 py-1.5 text-left uppercase transition-colors duration-200 hover:text-white"
-                >
-                  {l}
-                </button>
-              ))}
-            </div>
-          )}
+            {langOpen && (
+              <div className="absolute top-full right-0 sm:left-0 sm:right-auto mt-2 flex flex-col gap-0.5 backdrop-blur-md bg-black/55 py-1.5">
+                {LOCALES.filter((l) => l !== locale).map((l) => (
+                  <button
+                    key={l}
+                    onClick={() => switchLocale(l)}
+                    className="bg-transparent border-0 text-white/72 text-[13px] tracking-widest cursor-pointer px-4.5 py-1.5 text-left uppercase transition-colors duration-200 hover:text-white"
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Right-side actions: profile icon (left) + contact CTA (right) */}
+          <div className="flex items-center gap-3 sm:gap-4">
+            {/* User account circle */}
+            <Link
+              href={userInitials ? `/${locale}/account` : `/${locale}/account/login`}
+              className="size-9 rounded-full flex items-center justify-center transition-all duration-200 shrink-0 border border-white/20 hover:border-white/50"
+              style={{ backgroundColor: userInitials ? "rgba(196,151,63,0.85)" : "rgba(255,255,255,0.1)" }}
+            >
+              {userInitials ? (
+                <span className="text-[11px] font-semibold text-[#0d0d0d] font-figtree leading-none">{userInitials}</span>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-white/80">
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                </svg>
+              )}
+            </Link>
+
+            {/* Contact CTA — desktop only */}
+            <Link href={contact_link} className="hidden sm:flex group border-0 bg-gray-100/20 text-gray-100 text-[12px] tracking-[0.12em] cursor-pointer px-5.5 py-2.25 transition-all duration-250 relative hover:bg-gray-100/40 hover:text-white">
+              <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
+              <span className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
+              <span className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
+              {dict.nav.contact}
+            </Link>
+          </div>
         </div>
-
-        {/* Contact CTA — desktop only */}
-        <Link href={contact_link} className="hidden sm:flex group border-0 bg-gray-100/20 text-gray-100 text-[12px] tracking-[0.12em] cursor-pointer px-5.5 py-2.25 transition-all duration-250 relative hover:bg-gray-100/40 hover:text-white">
-          <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
-          <span className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
-          <span className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
-          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
-          {dict.nav.contact}
-        </Link>
       </nav>
 
       {/* ── Centre hero text ─────────────────────────────────────────────── */}

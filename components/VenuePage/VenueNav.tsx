@@ -4,7 +4,8 @@ import { contact_link } from "@/data/venues/constants/links";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { loadAuth } from "@/components/BookingFlow/utils/auth";
 
 const LOCALES = ["ro", "en", "ru"] as const;
 
@@ -20,8 +21,18 @@ export default function VenueNav({
   langLabel,
 }: VenueNavProps) {
   const [langOpen, setLangOpen] = useState(false);
+  const [userInitials, setUserInitials] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    const result = loadAuth();
+    if (result) {
+      const { auth } = result;
+      const initials = `${auth.user.firstName?.[0] ?? ""}${auth.user.lastName?.[0] ?? ""}`.toUpperCase();
+      setUserInitials(initials || "U");
+    }
+  }, []);
 
   function switchLocale(next: string) {
     setLangOpen(false);
@@ -85,6 +96,22 @@ export default function VenueNav({
           <span className="absolute bottom-0 left-0 w-3 h-2 border-b border-l border-gray-100/70" />
           <span className="absolute bottom-0 right-0 w-3 h-2 border-b border-r border-gray-100/70" />
           {contactLabel}
+        </Link>
+
+        {/* User account circle */}
+        <Link
+          href={userInitials ? `/${locale}/account` : `/${locale}/account/login`}
+          className="size-8 rounded-full flex items-center justify-center transition-all duration-200 shrink-0 border border-white/20 hover:border-white/50"
+          style={{ backgroundColor: userInitials ? "rgba(196,151,63,0.85)" : "rgba(255,255,255,0.1)" }}
+        >
+          {userInitials ? (
+            <span className="text-[10px] font-semibold text-[#0d0d0d] font-figtree leading-none">{userInitials}</span>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-white/80">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+            </svg>
+          )}
         </Link>
       </div>
     </nav>
