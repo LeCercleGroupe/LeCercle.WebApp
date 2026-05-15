@@ -1,15 +1,15 @@
 "use client";
 
 import type { RefObject } from "react";
-import { BookingState, ContactType } from "../types";
 import type { BookingDict } from "../dict";
-import { saveAuth, updateAuthProfile } from "../utils/auth";
-import BookingStepper from "../shared/BookingStepper";
 import BackButton from "../shared/BackButton";
 import BookingInput from "../shared/BookingInput";
+import BookingStepper from "../shared/BookingStepper";
+import OtpVerificationField from "../shared/OtpVerificationField";
 import PhoneInput from "../shared/PhoneInput";
 import PrimaryButton from "../shared/PrimaryButton";
-import OtpVerificationField from "../shared/OtpVerificationField";
+import { BookingState, ContactType } from "../types";
+import { saveAuth, updateAuthProfile } from "../utils/auth";
 
 interface Props {
   state: BookingState;
@@ -21,7 +21,15 @@ interface Props {
   tokenRef: RefObject<string | null>;
 }
 
-export default function Step5Contact({ state, onChange, onNext, onBack, dict, stepLabel, tokenRef }: Props) {
+export default function Step5Contact({
+  state,
+  onChange,
+  onNext,
+  onBack,
+  dict,
+  stepLabel,
+  tokenRef,
+}: Props) {
   const d = dict.step5;
   const isCompany = state.contactType === "company";
 
@@ -37,7 +45,8 @@ export default function Step5Contact({ state, onChange, onNext, onBack, dict, st
     state.lastName.trim() !== "" &&
     state.email.trim() !== "" &&
     phoneFilled &&
-    (!isCompany || (state.companyName.trim() !== "" && state.idno.trim().length === 13));
+    (!isCompany ||
+      (state.companyName.trim() !== "" && state.idno.trim().length === 13));
 
   const canProceed = formFilled && state.emailVerified;
 
@@ -50,7 +59,7 @@ export default function Step5Contact({ state, onChange, onNext, onBack, dict, st
     const res = await fetch("/api/otp/send", {
       method: "POST",
       headers: { ...authHeader(), "Content-Type": "application/json" },
-      body: JSON.stringify({ identifier: state.phone }),
+      body: JSON.stringify({ phoneNumber: state.phone, email: null }),
     });
     if (!res.ok) throw new Error(`${res.status}`);
     onChange({ smsSent: true });
@@ -61,7 +70,8 @@ export default function Step5Contact({ state, onChange, onNext, onBack, dict, st
       method: "POST",
       headers: { ...authHeader(), "Content-Type": "application/json" },
       body: JSON.stringify({
-        identifier: state.phone,
+        phoneNumber: state.phone,
+        email: state.email || null,
         code,
         customerType: isCompany ? 1 : 0,
         firstName: isCompany ? null : state.firstName,
@@ -101,7 +111,7 @@ export default function Step5Contact({ state, onChange, onNext, onBack, dict, st
     const res = await fetch("/api/otp/send", {
       method: "POST",
       headers: { ...authHeader(), "Content-Type": "application/json" },
-      body: JSON.stringify({ identifier: state.email }),
+      body: JSON.stringify({ email: state.email, phoneNumber: null }),
     });
     if (!res.ok) throw new Error(`${res.status}`);
   }
@@ -111,7 +121,8 @@ export default function Step5Contact({ state, onChange, onNext, onBack, dict, st
       method: "POST",
       headers: { ...authHeader(), "Content-Type": "application/json" },
       body: JSON.stringify({
-        identifier: state.email,
+        email: state.email,
+        phoneNumber: state.phone || null,
         code,
         customerType: isCompany ? 1 : 0,
         firstName: state.firstName,
@@ -123,9 +134,17 @@ export default function Step5Contact({ state, onChange, onNext, onBack, dict, st
     if (!res.ok) throw new Error(`${res.status}`);
     const data = await res.json();
     const customerId =
-      data.customerId ?? data.customerID ?? data.user?.customerId ?? data.user?.customerID ?? "";
+      data.customerId ??
+      data.customerID ??
+      data.user?.customerId ??
+      data.user?.customerID ??
+      "";
     const userId =
-      data.userId ?? data.userID ?? data.user?.userId ?? data.user?.userID ?? "";
+      data.userId ??
+      data.userID ??
+      data.user?.userId ??
+      data.user?.userID ??
+      "";
     onChange({
       emailVerified: true,
       userAccessToken: data.accessToken ?? "",
@@ -156,8 +175,12 @@ export default function Step5Contact({ state, onChange, onNext, onBack, dict, st
           <BookingStepper currentStep={5} label={stepLabel} />
           <BackButton label={dict.back} onClick={onBack} />
         </div>
-        <h2 className="text-2xl font-medium text-[#f1f1f1] font-figtree tracking-tight mt-3">{d.title}</h2>
-        <p className="text-sm text-[#a8a8a8] font-figtree tracking-tight">{d.subtitle}</p>
+        <h2 className="text-2xl font-medium text-[#f1f1f1] font-figtree tracking-tight mt-3">
+          {d.title}
+        </h2>
+        <p className="text-sm text-[#a8a8a8] font-figtree tracking-tight">
+          {d.subtitle}
+        </p>
       </div>
 
       <div className="flex gap-2">
@@ -179,7 +202,12 @@ export default function Step5Contact({ state, onChange, onNext, onBack, dict, st
       <div className="flex flex-col gap-4">
         {isCompany && (
           <>
-            <BookingInput label={d.company_name_label} value={state.companyName} onChange={(v) => onChange({ companyName: v })} placeholder={d.company_name_placeholder} />
+            <BookingInput
+              label={d.company_name_label}
+              value={state.companyName}
+              onChange={(v) => onChange({ companyName: v })}
+              placeholder={d.company_name_placeholder}
+            />
             <BookingInput
               label={d.idno_label}
               value={state.idno}
@@ -193,8 +221,18 @@ export default function Step5Contact({ state, onChange, onNext, onBack, dict, st
         )}
 
         <div className="flex gap-3">
-          <BookingInput label={d.first_name_label} value={state.firstName} onChange={(v) => onChange({ firstName: v })} placeholder={d.first_name_placeholder} />
-          <BookingInput label={d.last_name_label} value={state.lastName} onChange={(v) => onChange({ lastName: v })} placeholder={d.last_name_placeholder} />
+          <BookingInput
+            label={d.first_name_label}
+            value={state.firstName}
+            onChange={(v) => onChange({ firstName: v })}
+            placeholder={d.first_name_placeholder}
+          />
+          <BookingInput
+            label={d.last_name_label}
+            value={state.lastName}
+            onChange={(v) => onChange({ lastName: v })}
+            placeholder={d.last_name_placeholder}
+          />
         </div>
 
         <OtpVerificationField
@@ -220,7 +258,9 @@ export default function Step5Contact({ state, onChange, onNext, onBack, dict, st
         <PhoneInput
           label={d.phone_label}
           value={state.phone}
-          onChange={(v) => onChange({ phone: v, smsVerified: false, smsSent: false })}
+          onChange={(v) =>
+            onChange({ phone: v, smsVerified: false, smsSent: false })
+          }
         />
         {/* Phone OTP temporarily disabled — re-enable OtpVerificationField when ready */}
       </div>
@@ -235,7 +275,8 @@ export default function Step5Contact({ state, onChange, onNext, onBack, dict, st
             firstName: state.firstName,
             lastName: state.lastName,
             email: state.email || null,
-            phoneNumber: state.phone && state.phone !== "+373" ? state.phone : null,
+            phoneNumber:
+              state.phone && state.phone !== "+373" ? state.phone : null,
             companyName: isCompany ? state.companyName : null,
             idno: isCompany ? state.idno : null,
             isCompany,

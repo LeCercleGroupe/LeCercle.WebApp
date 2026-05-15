@@ -5,6 +5,7 @@ import type { RefObject } from "react";
 import Image from "next/image";
 import { BookingState, ServiceId, SelectedPackage, VENUE_INFO } from "../types";
 import type { BookingDict } from "../dict";
+import { fetchWithRefresh, loadAuth } from "../utils/auth";
 import BookingStepper from "../shared/BookingStepper";
 import BackButton from "../shared/BackButton";
 import PrimaryButton from "../shared/PrimaryButton";
@@ -125,6 +126,8 @@ export default function Step3Packages({ state, onChange, onNext, onBack, dict, s
   const [activeVenue, setActiveVenue] = useState<ServiceId>(state.selectedServices[0]);
   const [packagesMap, setPackagesMap] = useState<Map<ServiceId, ApiPackage[]> | null>(null);
   const [error, setError] = useState(false);
+  const [reserving, setReserving] = useState(false);
+  const [reserveError, setReserveError] = useState(false);
 
   useEffect(() => {
     const token = tokenRef.current;
@@ -163,6 +166,39 @@ export default function Step3Packages({ state, onChange, onNext, onBack, dict, s
 
   function setServiceGuests(serviceId: ServiceId, count: number) {
     onChange({ guestsPerService: { ...state.guestsPerService, [serviceId]: count } });
+  }
+
+  async function handleNext() {
+    setReserveError(false);
+
+    // Reservation requires customer auth — skip here if the user hasn't
+    // authenticated yet (Step 5 comes later). Step 6 will make the call then.
+    if (!loadAuth()?.tokensValid) {
+      onNext();
+      return;
+    }
+
+    setReserving(true);
+    try {
+      const eventDate = state.date
+        ? `${state.date.getFullYear()}-${String(state.date.getMonth() + 1).padStart(2, "0")}-${String(state.date.getDate()).padStart(2, "0")}`
+        : undefined;
+      const res = await fetchWithRefresh("/api/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventDate,
+          items: state.selectedServices.map((serviceId) => ({ serviceId, quantity: 1 })),
+        }),
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+      const { token } = await res.json();
+      onChange({ reservationToken: token ?? "" });
+      onNext();
+    } catch {
+      setReserveError(true);
+      setReserving(false);
+    }
   }
 
   return (
@@ -242,7 +278,10 @@ export default function Step3Packages({ state, onChange, onNext, onBack, dict, s
         </p>
       )}
 
-      <PrimaryButton label={dict.continue} onClick={onNext} disabled={!canProceed} />
+      {reserveError && (
+        <p className="text-sm text-red-400 font-figtree tracking-tight text-center">{d.reserve_error}</p>
+      )}
+      <PrimaryButton label={dict.continue} onClick={handleNext} disabled={!canProceed || reserving} loading={reserving} />
     </div>
   );
 }

@@ -190,7 +190,7 @@ export default function AccountLogin({ locale, dict }: Props) {
       const res = await fetch("/api/otp/send", {
         method: "POST",
         headers: { ...authHeader(), "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: phone }),
+        body: JSON.stringify({ phoneNumber: phone, email: null }),
       });
       if (!res.ok) throw new Error();
       const data = await res.json();
@@ -224,7 +224,7 @@ export default function AccountLogin({ locale, dict }: Props) {
       const res = await fetch("/api/otp/verify", {
         method: "POST",
         headers: { ...authHeader(), "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: phone, code: otpCode }),
+        body: JSON.stringify({ phoneNumber: phone, email: null, code: otpCode }),
       });
       if (!res.ok) throw new Error();
       const data = await res.json();
@@ -271,12 +271,12 @@ export default function AccountLogin({ locale, dict }: Props) {
         method: "POST",
         headers: { ...authHeader(), "Content-Type": "application/json" },
         body: JSON.stringify({
-          identifier: phone,
+          phoneNumber: phone,
+          email: email || null,
           code: otpCode,
           customerType: isCompany ? 1 : 0,
           firstName,
           lastName,
-          email: email || null,
           companyName: isCompany ? companyName : null,
           idno: isCompany ? idno : null,
         }),

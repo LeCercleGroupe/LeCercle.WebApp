@@ -74,7 +74,8 @@
       "selected_badge": "Selected",
       "progress": "{done} of {total} services configured",
       "guests_for_service": "Guests for this service",
-      "guests_hint": "Default: total number of guests"
+      "guests_hint": "Default: total number of guests",
+      "reserve_error": "Could not reserve the date. Please try again."
     },
     "step4": {
       "title": "Event location",

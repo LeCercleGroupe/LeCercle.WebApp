@@ -74,7 +74,8 @@
       "selected_badge": "Selectat",
       "progress": "{done} din {total} servicii configurate",
       "guests_for_service": "Invitați pentru acest serviciu",
-      "guests_hint": "Implicit: numărul total de invitați"
+      "guests_hint": "Implicit: numărul total de invitați",
+      "reserve_error": "Nu s-a putut rezerva data. Încearcă din nou."
     },
     "step4": {
       "title": "Locația evenimentului",

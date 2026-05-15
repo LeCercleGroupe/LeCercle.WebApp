@@ -52,6 +52,7 @@ const INITIAL_STATE: BookingState = {
   userId: "",
   customerId: "",
   bookingRef: "",
+  reservationToken: "",
 };
 
 function loadSaved(): { step: number; state: BookingState } | null {
@@ -105,7 +106,20 @@ function getInitialFlow(): { step: number; state: BookingState } {
         },
       };
     }
-    return saved;
+    // Session exists but no auth in localStorage — preserve booking progress
+    // but clear auth fields and cap step at 5 so the user must re-authenticate.
+    return {
+      step: Math.min(saved.step, 5),
+      state: {
+        ...saved.state,
+        emailVerified: false,
+        smsVerified: false,
+        userAccessToken: "",
+        userRefreshToken: "",
+        userId: "",
+        customerId: "",
+      },
+    };
   }
 
   // No saved flow — pre-fill from auth profile

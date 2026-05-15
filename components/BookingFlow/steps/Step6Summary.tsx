@@ -98,15 +98,41 @@ export default function Step6Summary({
       let orderId = state.bookingRef;
 
       if (!orderId) {
+        // Ensure we have a reservation token — obtained at Step 3 for logged-in
+        // users, or here for users who authenticate for the first time at Step 5.
+        let reservationToken = state.reservationToken;
+        if (!reservationToken) {
+          const eventDate = state.date
+            ? `${state.date.getFullYear()}-${String(state.date.getMonth() + 1).padStart(2, "0")}-${String(state.date.getDate()).padStart(2, "0")}`
+            : undefined;
+          const resRes = await fetchWithRefresh("/api/reservations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              eventDate,
+              items: state.selectedServices.map((sid) => ({ serviceId: sid, quantity: 1 })),
+            }),
+          });
+          if (!resRes.ok) {
+            const body = await resRes.text().catch(() => "");
+            console.error(`[finalize] reservation failed ${resRes.status}:`, body);
+            throw new Error(`reservation ${resRes.status}`);
+          }
+          const { token } = await resRes.json();
+          reservationToken = token ?? "";
+          onChange({ reservationToken });
+        }
+
         // Use fetchWithRefresh so the live localStorage token is always used
         // and auto-refreshed on 401 — eliminates stale/empty token 401 errors.
+        const eventDate = state.date
+          ? `${state.date.getFullYear()}-${String(state.date.getMonth() + 1).padStart(2, "0")}-${String(state.date.getDate()).padStart(2, "0")}`
+          : undefined;
         const eventRes = await fetchWithRefresh("/api/booking/event", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            eventDate: state.date
-              ? `${state.date.getFullYear()}-${String(state.date.getMonth() + 1).padStart(2, "0")}-${String(state.date.getDate()).padStart(2, "0")}`
-              : undefined,
+            eventDate,
             venueTitle: state.venueName,
             venueAddress: state.address,
             city: state.city,
@@ -119,7 +145,11 @@ export default function Step6Summary({
             customerId: state.customerId,
           }),
         });
-        if (!eventRes.ok) throw new Error(`event ${eventRes.status}`);
+        if (!eventRes.ok) {
+          const body = await eventRes.text().catch(() => "");
+          console.error(`[finalize] event failed ${eventRes.status}:`, body);
+          throw new Error(`event ${eventRes.status}`);
+        }
         const { id: eventId } = await eventRes.json();
 
         const items = state.selectedServices
@@ -137,11 +167,16 @@ export default function Step6Summary({
             eventId,
             contactEmail: state.email,
             contactPhone: state.phone,
+            reservationToken,
             items,
             customerId: state.customerId,
           }),
         });
-        if (!orderRes.ok) throw new Error(`order ${orderRes.status}`);
+        if (!orderRes.ok) {
+          const body = await orderRes.text().catch(() => "");
+          console.error(`[finalize] order failed ${orderRes.status}:`, body);
+          throw new Error(`order ${orderRes.status}`);
+        }
         const { id: newOrderId } = await orderRes.json();
         orderId = newOrderId;
       }
@@ -157,7 +192,11 @@ export default function Step6Summary({
             returnUrl: `${window.location.origin}/${locale}/booking/payment-success?orderId=${orderId}`,
           }),
         });
-        if (!payRes.ok) throw new Error(`payment ${payRes.status}`);
+        if (!payRes.ok) {
+          const body = await payRes.text().catch(() => "");
+          console.error(`[finalize] payment failed ${payRes.status}:`, body);
+          throw new Error(`payment ${payRes.status}`);
+        }
         const { paymentUrl } = await payRes.json();
         try {
           // Stamp orderId into the flow state so that if the bank payment
@@ -176,7 +215,8 @@ export default function Step6Summary({
 
       onChange({ bookingRef: orderId });
       onNext();
-    } catch {
+    } catch (err) {
+      console.error("[finalize] caught:", err);
       setSubmitError(true);
     } finally {
       setSubmitting(false);

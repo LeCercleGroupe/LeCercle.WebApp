@@ -49,6 +49,7 @@ export interface BookingState {
   userId: string;
   customerId: string;
   bookingRef: string;
+  reservationToken: string;
 }
 
 export const VENUE_INFO: Record<ServiceId, { name: string; description: string; logo: string }> = {

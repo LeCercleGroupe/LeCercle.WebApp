@@ -24,6 +24,7 @@ export interface BookingDict {
     progress: string;
     guests_for_service: string;
     guests_hint: string;
+    reserve_error: string;
   };
   step4: {
     title: string;
