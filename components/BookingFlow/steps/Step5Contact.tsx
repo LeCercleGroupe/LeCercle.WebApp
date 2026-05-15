@@ -59,7 +59,7 @@ export default function Step5Contact({
     const res = await fetch("/api/otp/send", {
       method: "POST",
       headers: { ...authHeader(), "Content-Type": "application/json" },
-      body: JSON.stringify({ phoneNumber: state.phone, email: null }),
+      body: JSON.stringify({ phoneNumber: state.phone }),
     });
     if (!res.ok) throw new Error(`${res.status}`);
     onChange({ smsSent: true });
@@ -71,13 +71,13 @@ export default function Step5Contact({
       headers: { ...authHeader(), "Content-Type": "application/json" },
       body: JSON.stringify({
         phoneNumber: state.phone,
-        email: state.email || null,
+        ...(state.email && { email: state.email }),
         code,
         customerType: isCompany ? 1 : 0,
-        firstName: isCompany ? null : state.firstName,
-        lastName: isCompany ? null : state.lastName,
-        companyName: isCompany ? state.companyName : null,
-        idno: isCompany ? state.idno : null,
+        ...(!isCompany && state.firstName && { firstName: state.firstName }),
+        ...(!isCompany && state.lastName && { lastName: state.lastName }),
+        ...(isCompany && state.companyName && { companyName: state.companyName }),
+        ...(isCompany && state.idno && { idno: state.idno }),
       }),
     });
     if (!res.ok) throw new Error(`${res.status}`);
@@ -111,7 +111,7 @@ export default function Step5Contact({
     const res = await fetch("/api/otp/send", {
       method: "POST",
       headers: { ...authHeader(), "Content-Type": "application/json" },
-      body: JSON.stringify({ email: state.email, phoneNumber: null }),
+      body: JSON.stringify({ email: state.email }),
     });
     if (!res.ok) throw new Error(`${res.status}`);
   }
@@ -122,13 +122,13 @@ export default function Step5Contact({
       headers: { ...authHeader(), "Content-Type": "application/json" },
       body: JSON.stringify({
         email: state.email,
-        phoneNumber: state.phone || null,
+        ...(state.phone && state.phone !== "+373" && { phoneNumber: state.phone }),
         code,
         customerType: isCompany ? 1 : 0,
-        firstName: state.firstName,
-        lastName: state.lastName,
-        companyName: isCompany ? state.companyName : null,
-        idno: isCompany ? state.idno : null,
+        ...(state.firstName && { firstName: state.firstName }),
+        ...(state.lastName && { lastName: state.lastName }),
+        ...(isCompany && state.companyName && { companyName: state.companyName }),
+        ...(isCompany && state.idno && { idno: state.idno }),
       }),
     });
     if (!res.ok) throw new Error(`${res.status}`);

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BookingNavbar from "@/components/BookingFlow/shared/BookingNavbar";
-import PhoneInput from "@/components/BookingFlow/shared/PhoneInput";
 import PrimaryButton from "@/components/BookingFlow/shared/PrimaryButton";
 import { saveAuth, loadAuth } from "@/components/BookingFlow/utils/auth";
 
@@ -17,7 +16,8 @@ interface LoginDict {
   tab_register: string;
   title: string;
   subtitle: string;
-  phone_label: string;
+  email_label: string;
+  // phone_label: string; // uncomment when switching back to phone login
   code_valid: string;
   send_code: string;
   confirm_title: string;
@@ -155,7 +155,7 @@ export default function AccountLogin({ locale, dict }: Props) {
 
   // ── Unified flow state ────────────────────────────────────────────────────
   const [step, setStep] = useState<Step>("phone");
-  const [phone, setPhone] = useState("+373");
+  // const [phone, setPhone] = useState("+373"); // uncomment when switching back to phone login
   const [otpCode, setOtpCode] = useState("");
   const [isExistingUser, setIsExistingUser] = useState(true);
   const [otpState, setOtpState] = useState<OtpState>("idle");
@@ -171,7 +171,8 @@ export default function AccountLogin({ locale, dict }: Props) {
   const [idno, setIdno] = useState("");
   const [profileError, setProfileError] = useState(false);
 
-  const phoneFilled = /^\+373\d{8}$/.test(phone);
+  const emailFilled = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  // const phoneFilled = /^\+373\d{8}$/.test(phone); // uncomment when switching back to phone login
   const isCompany = contactType === "company";
   const profileFormValid =
     firstName.trim() !== "" &&
@@ -190,7 +191,8 @@ export default function AccountLogin({ locale, dict }: Props) {
       const res = await fetch("/api/otp/send", {
         method: "POST",
         headers: { ...authHeader(), "Content-Type": "application/json" },
-        body: JSON.stringify({ phoneNumber: phone, email: null }),
+        body: JSON.stringify({ email }),
+        // body: JSON.stringify({ phoneNumber: phone }), // uncomment when switching back to phone login
       });
       if (!res.ok) throw new Error();
       const data = await res.json();
@@ -209,7 +211,7 @@ export default function AccountLogin({ locale, dict }: Props) {
     await handleSend();
   }
 
-  function handleChangeNumber() {
+  function handleChangeEmail() {
     setStep("phone");
     setOtpCode("");
     setCodeError(false);
@@ -224,7 +226,8 @@ export default function AccountLogin({ locale, dict }: Props) {
       const res = await fetch("/api/otp/verify", {
         method: "POST",
         headers: { ...authHeader(), "Content-Type": "application/json" },
-        body: JSON.stringify({ phoneNumber: phone, email: null, code: otpCode }),
+        body: JSON.stringify({ email, code: otpCode }),
+        // body: JSON.stringify({ phoneNumber: phone, code: otpCode }), // uncomment when switching back to phone login
       });
       if (!res.ok) throw new Error();
       const data = await res.json();
@@ -240,8 +243,8 @@ export default function AccountLogin({ locale, dict }: Props) {
         expiresIn: data.expiresIn ?? 3600,
         userId,
         customerId,
-        email: data.user?.email ?? existing?.email ?? "",
-        phone: data.user?.phoneNumber ?? phone,
+        email: data.user?.email ?? email ?? "",
+        phone: data.user?.phoneNumber ?? existing?.phoneNumber ?? "",
         firstName: data.user?.firstName ?? derivedFirst ?? existing?.firstName ?? "",
         lastName: data.user?.lastName ?? derivedLast ?? existing?.lastName ?? "",
         companyName: data.user?.companyName ?? existing?.companyName ?? "",
@@ -271,14 +274,14 @@ export default function AccountLogin({ locale, dict }: Props) {
         method: "POST",
         headers: { ...authHeader(), "Content-Type": "application/json" },
         body: JSON.stringify({
-          phoneNumber: phone,
-          email: email || null,
+          email,
+          // phoneNumber: phone, // uncomment when switching back to phone login
           code: otpCode,
           customerType: isCompany ? 1 : 0,
           firstName,
           lastName,
-          companyName: isCompany ? companyName : null,
-          idno: isCompany ? idno : null,
+          ...(isCompany && companyName && { companyName }),
+          ...(isCompany && idno && { idno }),
         }),
       });
       if (!res.ok) throw new Error();
@@ -292,7 +295,7 @@ export default function AccountLogin({ locale, dict }: Props) {
         userId,
         customerId,
         email: data.user?.email ?? email ?? "",
-        phone: data.user?.phoneNumber ?? phone,
+        phone: data.user?.phoneNumber ?? "",
         firstName: data.user?.firstName ?? firstName,
         lastName: data.user?.lastName ?? lastName,
         companyName: data.user?.companyName ?? (isCompany ? companyName : ""),
@@ -424,12 +427,12 @@ export default function AccountLogin({ locale, dict }: Props) {
                       <FieldLabel>{r.email_label}</FieldLabel>
                       <ProfileTextInput
                         value={email}
-                        onChange={setEmail}
-                        placeholder={r.email_placeholder}
+                        onChange={() => {}}
                         type="email"
-                        disabled={verifying}
+                        disabled
                       />
                     </div>
+                    {/* Phone field — uncomment when switching back to phone login
                     <div>
                       <FieldLabel>{r.phone_label}</FieldLabel>
                       <ProfileTextInput
@@ -438,6 +441,7 @@ export default function AccountLogin({ locale, dict }: Props) {
                         disabled
                       />
                     </div>
+                    */}
                   </div>
                 </div>
               </div>
@@ -466,14 +470,14 @@ export default function AccountLogin({ locale, dict }: Props) {
     );
   }
 
-  // ── Phone & OTP steps (narrow card) ──────────────────────────────────────
+  // ── Email & OTP steps (narrow card) ──────────────────────────────────────
   return (
     <div className="flex flex-col min-h-svh bg-[#0d0d0d]">
       <BookingNavbar locale={locale} />
       <main className="flex-1 flex flex-col items-center px-4 py-8">
         <div className="w-full max-w-lg flex flex-col gap-6">
 
-          {/* ── PHONE STEP ─────────────────────────────────────────────── */}
+          {/* ── EMAIL STEP ─────────────────────────────────────────────── */}
           {step === "phone" && (
             <div className="flex flex-col gap-6">
               <div className="flex flex-col gap-1">
@@ -483,9 +487,19 @@ export default function AccountLogin({ locale, dict }: Props) {
 
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-[#a8a8a8] font-figtree tracking-tight">
-                  {d.phone_label}
+                  {d.email_label}
                 </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={sending}
+                  placeholder="email@example.com"
+                  className="w-full bg-[#111] border border-[#303030] px-3 py-3.5 text-base text-[#f1f1f1] placeholder:text-[#747474] font-figtree tracking-tight focus:outline-none focus:border-[#474747] transition-colors disabled:opacity-50"
+                />
+                {/* Phone input — uncomment when switching back to phone login
                 <PhoneInput value={phone} onChange={setPhone} disabled={sending} />
+                */}
                 <div className="flex items-center gap-1.5">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 text-[#474747]">
                     <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2" />
@@ -501,7 +515,7 @@ export default function AccountLogin({ locale, dict }: Props) {
               <PrimaryButton
                 label={sending ? "" : d.send_code}
                 onClick={handleSend}
-                disabled={!phoneFilled || sending}
+                disabled={!emailFilled || sending}
                 loading={sending}
               />
             </div>
@@ -515,11 +529,11 @@ export default function AccountLogin({ locale, dict }: Props) {
                   {d.confirm_title}
                 </h2>
                 <p className="text-sm text-[#a8a8a8] font-figtree tracking-tight leading-snug">
-                  {d.confirm_subtitle.replace("{phone}", phone)}
+                  {d.confirm_subtitle.replace("{email}", email)}
                 </p>
                 <button
                   type="button"
-                  onClick={handleChangeNumber}
+                  onClick={handleChangeEmail}
                   className="text-xs text-[#747474] underline font-figtree tracking-tight text-left w-fit hover:text-[#f1f1f1] transition-colors mt-1 cursor-pointer"
                 >
                   {d.change_number}

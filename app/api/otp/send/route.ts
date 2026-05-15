@@ -6,6 +6,7 @@ export async function POST(request: Request) {
   if (!BOOKING_API_BASE) return Response.json({ error: "Missing API base URL" }, { status: 500 });
 
   const body = await request.json();
+  console.log("[otp/send] sending to upstream:", JSON.stringify(body));
 
   const res = await fetch(`${BOOKING_API_BASE}/api/otp/send`, {
     method: "POST",
@@ -16,7 +17,12 @@ export async function POST(request: Request) {
 
   const text = await res.text();
 
-  if (!res.ok) return Response.json({ error: `Upstream error: ${res.statusText}` }, { status: res.status });
+  if (!res.ok) {
+    console.error(`[otp/send] upstream ${res.status}:`, text);
+    let detail: unknown;
+    try { detail = JSON.parse(text); } catch { detail = { raw: text }; }
+    return Response.json(detail, { status: res.status });
+  }
 
   let data: unknown;
   try { data = JSON.parse(text); } catch { data = {}; }
