@@ -30,13 +30,20 @@ export async function POST(request: Request) {
 
   const payload = { ...body, callbackUrl: `${BOOKING_API_BASE}/api/payments/webhook` };
 
-  const res = await fetch(`${BOOKING_API_BASE}/api/payments/initiate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify(payload),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${BOOKING_API_BASE}/api/payments/initiate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload),
+    });
+  } catch (err) {
+    console.error("[payment] upstream unreachable:", err);
+    return Response.json({ error: "Payment service temporarily unavailable" }, { status: 503 });
+  }
 
   const text = await res.text();
+  console.log(`[payment] status=${res.status} body=`, text);
 
   let data: unknown;
   try { data = JSON.parse(text); } catch { data = { raw: text }; }

@@ -156,7 +156,9 @@
       "pay_later_sub": "The {amount} advance can be paid later online or arranged in a meeting with our team.",
       "recommended": "Recommended",
       "finalize": "Confirm now",
-      "submit_error": "Something went wrong. Please try again."
+      "submit_error": "Something went wrong. Please try again.",
+      "upgrade_package": "Upgrade package",
+      "select_upgrade": "Select"
     },
     "step7": {
       "title": "Booking pending",
@@ -218,6 +220,12 @@
       "time_label": "Start time:",
       "location_label": "Location:",
       "address_label": "Address:",
+      "back_home": "← Back to homepage"
+    },
+    "payment_fail": {
+      "title": "Payment not processed",
+      "subtitle": "There was a problem processing your payment. Your booking is saved — you can retry at any time.",
+      "retry": "Try again",
       "back_home": "← Back to homepage"
     }
   },

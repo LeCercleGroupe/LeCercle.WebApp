@@ -1,15 +1,48 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import type { RefObject } from "react";
 import type { BookingDict } from "../dict";
 import BackButton from "../shared/BackButton";
 import BookingStepper from "../shared/BookingStepper";
 import PrimaryButton from "../shared/PrimaryButton";
-import { BookingState, PaymentOption, VENUE_INFO } from "../types";
+import { BookingState, PaymentOption, ServiceId, VENUE_INFO } from "../types";
 import { fetchWithRefresh } from "../utils/auth";
 
-const TRANSPORT_RATE_PER_KM = 20 * 2; // round trip
+const TRANSPORT_RATE_PER_KM = 20 * 2;
+
+// ─── API shapes ──────────────────────────────────────────────────────────────
+
+interface ApiPackage {
+  id: string;
+  serviceId: string;
+  name: string;
+  tier: string;
+  minGuests: number;
+  maxGuests: number;
+  basePrice: number;
+  durationMinutes: number;
+  isActive: boolean;
+}
+
+interface ApiFeatureOption {
+  id: string;
+  label: string;
+  isDefault: boolean;
+  additionalCost: number;
+  sortOrder: number;
+}
+
+interface ApiFeature {
+  id: string;
+  label: string;
+  type: 0 | 1;
+  sortOrder: number;
+  options: ApiFeatureOption[];
+}
+
+// ─── Props ───────────────────────────────────────────────────────────────────
 
 interface Props {
   state: BookingState;
@@ -19,7 +52,10 @@ interface Props {
   dict: BookingDict;
   locale: string;
   stepLabel: string;
+  tokenRef: RefObject<string | null>;
 }
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatMDL(amount: number): string {
   return new Intl.NumberFormat("ro-MD").format(amount) + " MDL";
@@ -42,6 +78,39 @@ function inject(template: string, amount: string): string {
   return template.replace("{amount}", amount);
 }
 
+function computeDefaultCost(features: ApiFeature[]): { selectedOptionIds: string[]; additionalCost: number } {
+  const selectedOptionIds: string[] = [];
+  let additionalCost = 0;
+  for (const feature of features) {
+    if (feature.type !== 1) continue;
+    const defaults = feature.options
+      .filter((o) => o.isDefault)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    for (let i = 0; i < defaults.length; i++) {
+      selectedOptionIds.push(defaults[i].id);
+      if (i > 0) additionalCost += defaults[i].additionalCost;
+    }
+  }
+  return { selectedOptionIds, additionalCost };
+}
+
+function computeAdditionalCostFromIds(features: ApiFeature[], selectedOptionIds: string[]): number {
+  const selectedIds = new Set(selectedOptionIds);
+  let total = 0;
+  for (const feature of features) {
+    if (feature.type !== 1) continue;
+    const selectedOptions = feature.options
+      .filter((o) => selectedIds.has(o.id))
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    for (let i = 1; i < selectedOptions.length; i++) {
+      total += selectedOptions[i].additionalCost;
+    }
+  }
+  return total;
+}
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p className="text-xs font-medium text-[#747474] font-figtree tracking-widest uppercase">
@@ -61,6 +130,8 @@ function Row({ label, value, dimValue }: { label: string; value: string; dimValu
   );
 }
 
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export default function Step6Summary({
   state,
   onChange,
@@ -69,12 +140,100 @@ export default function Step6Summary({
   dict,
   locale,
   stepLabel,
+  tokenRef,
 }: Props) {
   const d = dict.step6;
   const months = dict.step1.months;
   const daysFull = dict.step1.days_full;
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
+  const [packagesMap, setPackagesMap] = useState<Map<ServiceId, ApiPackage[]> | null>(null);
+  const [featuresMap, setFeaturesMap] = useState<Map<string, ApiFeature[]>>(new Map());
+  const [expandedUpgrade, setExpandedUpgrade] = useState<ServiceId | null>(null);
+
+  // ── Fetch all packages + features for display and upgrade options ─────────
+
+  useEffect(() => {
+    const token = tokenRef.current;
+    if (!token || !state.selectedServices.length) return;
+
+    Promise.all(
+      state.selectedServices.map((serviceId) =>
+        fetch(`/api/booking/packages/${serviceId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((r) => (r.ok ? (r.json() as Promise<ApiPackage[]>) : ([] as ApiPackage[])))
+          .then((pkgs) => [serviceId, pkgs.filter((p) => p.isActive)] as const)
+          .catch((): readonly [ServiceId, ApiPackage[]] => [serviceId, []])
+      )
+    )
+      .then((results) => {
+        const pMap = new Map(results);
+        setPackagesMap(pMap);
+
+        const allPackageIds = [...pMap.values()].flat().map((p) => p.id);
+        return Promise.all(
+          allPackageIds.map((pkgId) =>
+            fetch(`/api/booking/packages/${pkgId}/features`, {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+              .then((r) => (r.ok ? (r.json() as Promise<ApiFeature[]>) : ([] as ApiFeature[])))
+              .then((feats): readonly [string, ApiFeature[]] => [pkgId, feats])
+              .catch((): readonly [string, ApiFeature[]] => [pkgId, []])
+          )
+        );
+      })
+      .then((featResults) => {
+        setFeaturesMap(new Map(featResults));
+      })
+      .catch(() => {});
+  }, [state.selectedServices, tokenRef]);
+
+  // ── Upgrade handler ──────────────────────────────────────────────────────
+
+  function handleUpgrade(serviceId: ServiceId, pkg: ApiPackage) {
+    const features = featuresMap.get(pkg.id) ?? [];
+    const { selectedOptionIds, additionalCost } = computeDefaultCost(features);
+    onChange({
+      selectedPackages: {
+        ...state.selectedPackages,
+        [serviceId]: {
+          id: pkg.id,
+          name: pkg.name,
+          basePrice: pkg.basePrice,
+          tier: pkg.tier,
+          selectedOptionIds,
+          additionalCost,
+        },
+      },
+    });
+    setExpandedUpgrade(null);
+  }
+
+  function toggleOption(serviceId: ServiceId, featureId: string, optionId: string) {
+    const pkg = state.selectedPackages[serviceId];
+    if (!pkg) return;
+    const features = featuresMap.get(pkg.id) ?? [];
+    const currentIds = new Set(pkg.selectedOptionIds ?? []);
+    if (currentIds.has(optionId)) {
+      currentIds.delete(optionId);
+    } else {
+      currentIds.add(optionId);
+    }
+    const newSelectedOptionIds = [...currentIds];
+    onChange({
+      selectedPackages: {
+        ...state.selectedPackages,
+        [serviceId]: {
+          ...pkg,
+          selectedOptionIds: newSelectedOptionIds,
+          additionalCost: computeAdditionalCostFromIds(features, newSelectedOptionIds),
+        },
+      },
+    });
+  }
+
+  // ── Cost computation ─────────────────────────────────────────────────────
 
   const cityNorm = state.city.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   const isChisinau = cityNorm === "chisinau" || cityNorm === "kishinev";
@@ -89,17 +248,16 @@ export default function Step6Summary({
   const advanceAmount = Math.round(totalPrice * 0.1);
   const advanceFormatted = formatMDL(advanceAmount);
 
+  // ── Finalize handler ─────────────────────────────────────────────────────
+
   async function handleFinalize() {
     setSubmitting(true);
     setSubmitError(false);
 
     try {
-      // If returning from step 7 (order already exists), skip event/order creation
       let orderId = state.bookingRef;
 
       if (!orderId) {
-        // Ensure we have a reservation token — obtained at Step 3 for logged-in
-        // users, or here for users who authenticate for the first time at Step 5.
         let reservationToken = state.reservationToken;
         if (!reservationToken) {
           const eventDate = state.date
@@ -123,8 +281,6 @@ export default function Step6Summary({
           onChange({ reservationToken });
         }
 
-        // Use fetchWithRefresh so the live localStorage token is always used
-        // and auto-refreshed on 401 — eliminates stale/empty token 401 errors.
         const eventDate = state.date
           ? `${state.date.getFullYear()}-${String(state.date.getMonth() + 1).padStart(2, "0")}-${String(state.date.getDate()).padStart(2, "0")}`
           : undefined;
@@ -190,7 +346,8 @@ export default function Step6Summary({
             orderId,
             paymentMethod: "Card",
             language: locale,
-            returnUrl: `${window.location.origin}/${locale}/booking/payment-success?orderId=${orderId}`,
+            successUrl: `${window.location.origin}/${locale}/booking/payment-success?orderId=${orderId}`,
+            failUrl: `${window.location.origin}/${locale}/booking/payment-fail?orderId=${orderId}`,
           }),
         });
         if (!payRes.ok) {
@@ -200,9 +357,6 @@ export default function Step6Summary({
         }
         const { paymentUrl } = await payRes.json();
         try {
-          // Stamp orderId into the flow state so that if the bank payment
-          // fails/cancels and the user returns, handleFinalize skips re-creating
-          // the event/order and just retries payment.
           const flowRaw = sessionStorage.getItem("lecercle_booking_flow");
           if (flowRaw) {
             const flow = JSON.parse(flowRaw);
@@ -291,24 +445,214 @@ export default function Step6Summary({
             {state.selectedServices.map((v) => {
               const info = VENUE_INFO[v];
               const pkg = state.selectedPackages[v];
+              const pkgFeatures = pkg
+                ? (featuresMap.get(pkg.id) ?? []).sort((a, b) => a.sortOrder - b.sortOrder)
+                : [];
+              const allPkgs = packagesMap?.get(v) ?? [];
+              const upgradeOptions = pkg
+                ? allPkgs.filter((p) => p.isActive && p.basePrice > pkg.basePrice)
+                : [];
+
               return (
-                <div key={v} className="flex flex-col gap-2.5 bg-[#111] border border-[#2a2a2a] px-3 py-3">
-                  <div className="flex justify-between items-start gap-3">
-                    <Image
-                      src={info.logo}
-                      alt={info.name}
-                      width={100}
-                      height={40}
-                      className="object-contain object-left h-10 w-auto"
-                    />
-                    <p className="text-base font-medium text-[#f1f1f1] font-figtree tracking-tight shrink-0">
-                      {pkg ? formatMDL(pkg.basePrice + (pkg.additionalCost ?? 0)) : "—"}
-                    </p>
+                <div key={v} className="flex flex-col bg-[#111] border border-[#2a2a2a]">
+                  {/* Package info */}
+                  <div className="flex flex-col gap-2.5 px-3 py-3">
+                    <div className="flex justify-between items-start gap-3">
+                      <Image
+                        src={info.logo}
+                        alt={info.name}
+                        width={100}
+                        height={40}
+                        className="object-contain object-left h-10 w-auto"
+                      />
+                      <p className="text-base font-medium text-[#f1f1f1] font-figtree tracking-tight shrink-0">
+                        {pkg ? formatMDL(pkg.basePrice + (pkg.additionalCost ?? 0)) : "—"}
+                      </p>
+                    </div>
+                    {pkg && (
+                      <>
+                        <div className="flex items-center gap-1.5">
+                          <div className="size-4 rounded-full bg-[#c4973f] shrink-0" />
+                          <p className="text-sm text-[#d4d4d4] font-figtree tracking-tight">{pkg.name}</p>
+                        </div>
+                        {/* Fixed features — read-only bullet list */}
+                        {pkgFeatures.some((f) => f.type === 0) && (
+                          <ul className="flex flex-col gap-1.5">
+                            {pkgFeatures
+                              .filter((f) => f.type === 0)
+                              .map((feature) => (
+                                <li key={feature.id} className="flex gap-2 items-start">
+                                  <svg width="12" height="10" viewBox="0 0 12 10" fill="none" className="shrink-0 mt-0.5">
+                                    <path d="M1 5l3.5 3.5L11 1" stroke="#37a067" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                  <span className="text-xs text-[#a8a8a8] font-figtree tracking-tight">
+                                    {feature.label}
+                                  </span>
+                                </li>
+                              ))}
+                          </ul>
+                        )}
+                      </>
+                    )}
                   </div>
-                  {pkg && (
-                    <div className="flex items-center gap-1.5">
-                      <div className="size-4 rounded-full bg-[#c4973f] shrink-0" />
-                      <p className="text-sm text-[#d4d4d4] font-figtree tracking-tight">{pkg.name}</p>
+
+                  {/* Multi-selectable options — interactive */}
+                  {pkg && pkgFeatures.some((f) => f.type === 1) && (
+                    <div className="flex flex-col gap-4 px-3 py-4 border-t border-[#2a2a2a] bg-[#0d0d0d]">
+                      {pkgFeatures
+                        .filter((f) => f.type === 1)
+                        .map((feature) => {
+                          const sortedOptions = [...feature.options].sort((a, b) => a.sortOrder - b.sortOrder);
+                          const selectedIds = new Set(pkg.selectedOptionIds ?? []);
+                          const selectedSorted = sortedOptions.filter((o) => selectedIds.has(o.id));
+                          const freeOptionId = selectedSorted.length > 0 ? selectedSorted[0].id : null;
+                          return (
+                            <div key={feature.id} className="flex flex-col gap-2">
+                              <div className="flex flex-col gap-0.5">
+                                <p className="text-sm font-medium text-[#f1f1f1] font-figtree tracking-tight">
+                                  {feature.label}
+                                </p>
+                                <p className="text-xs text-[#747474] font-figtree tracking-tight">
+                                  {dict.step3.first_free_hint}
+                                </p>
+                              </div>
+                              <div className="flex flex-col gap-1.5">
+                                {sortedOptions.map((option) => {
+                                  const isChecked = selectedIds.has(option.id);
+                                  const isFree = isChecked && option.id === freeOptionId;
+                                  const noSelections = selectedSorted.length === 0;
+                                  const priceLabel = isFree
+                                    ? dict.step3.feature_included
+                                    : !isChecked && noSelections
+                                    ? dict.step3.feature_free
+                                    : `+${formatMDL(option.additionalCost)}`;
+                                  return (
+                                    <button
+                                      key={option.id}
+                                      type="button"
+                                      onClick={() => toggleOption(v, feature.id, option.id)}
+                                      className="flex items-center gap-3 px-3 py-2.5 bg-[#111] border border-[#303030] hover:border-[#474747] transition-colors text-left w-full"
+                                    >
+                                      <div className={`size-4 shrink-0 border flex items-center justify-center transition-colors ${
+                                        isChecked ? "bg-[#37a067] border-[#37a067]" : "bg-transparent border-[#474747]"
+                                      }`}>
+                                        {isChecked && (
+                                          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                                            <path d="M1 4l3 3 5-6" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                          </svg>
+                                        )}
+                                      </div>
+                                      <span className="flex-1 text-sm text-[#c4c4c4] font-figtree tracking-tight">
+                                        {option.label}
+                                      </span>
+                                      <span className={`text-xs font-medium font-figtree tracking-tight shrink-0 ${
+                                        isFree || (!isChecked && noSelections) ? "text-[#37a067]" : "text-[#a8a8a8]"
+                                      }`}>
+                                        {priceLabel}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+
+                  {/* Upgrade section — only if higher-tier packages exist */}
+                  {pkg && upgradeOptions.length > 0 && (
+                    <div className="border-t border-[#2a2a2a]">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedUpgrade(expandedUpgrade === v ? null : v)}
+                        className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-white/5 transition-colors"
+                      >
+                        <span className="text-xs font-medium text-[#c4973f] font-figtree tracking-tight">
+                          {d.upgrade_package}
+                        </span>
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 12 12"
+                          fill="none"
+                          className={`shrink-0 transition-transform ${expandedUpgrade === v ? "rotate-180" : ""}`}
+                        >
+                          <path
+                            d="M3 4.5l3 3 3-3"
+                            stroke="#c4973f"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </button>
+
+                      {expandedUpgrade === v && (
+                        <div className="flex flex-col gap-2 px-3 pb-3">
+                          {upgradeOptions.map((upgPkg) => {
+                            const upgFeatures = (featuresMap.get(upgPkg.id) ?? []).sort(
+                              (a, b) => a.sortOrder - b.sortOrder
+                            );
+                            const upgDefaultCost = computeDefaultCost(upgFeatures).additionalCost;
+                            return (
+                              <div
+                                key={upgPkg.id}
+                                className="flex flex-col gap-2 bg-[#161616] border border-[#333] px-3 py-3"
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex flex-col gap-0.5">
+                                    <p className="text-sm font-medium text-[#f1f1f1] font-figtree tracking-tight">
+                                      {upgPkg.name}
+                                    </p>
+                                    <p className="text-xs text-[#747474] font-figtree tracking-tight uppercase">
+                                      {upgPkg.tier}
+                                    </p>
+                                  </div>
+                                  <div className="flex flex-col items-end gap-2 shrink-0">
+                                    <p className="text-sm font-medium text-[#f1f1f1] font-figtree tracking-tight">
+                                      {formatMDL(upgPkg.basePrice + upgDefaultCost)}
+                                    </p>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleUpgrade(v, upgPkg)}
+                                      className="text-xs px-3 py-1.5 bg-[#37a067] text-white font-figtree tracking-tight hover:bg-[#2d8a58] transition-colors"
+                                    >
+                                      {d.select_upgrade}
+                                    </button>
+                                  </div>
+                                </div>
+                                {upgFeatures.length > 0 && (
+                                  <ul className="flex flex-col gap-1">
+                                    {upgFeatures.map((f) => (
+                                      <li key={f.id} className="flex gap-1.5 items-start">
+                                        <svg
+                                          width="10"
+                                          height="8"
+                                          viewBox="0 0 10 8"
+                                          fill="none"
+                                          className="shrink-0 mt-0.5"
+                                        >
+                                          <path
+                                            d="M1 4l3 3 5-6"
+                                            stroke="#37a067"
+                                            strokeWidth="1.5"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                          />
+                                        </svg>
+                                        <span className="text-xs text-[#747474] font-figtree tracking-tight">
+                                          {f.label}
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

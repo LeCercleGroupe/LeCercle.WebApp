@@ -106,6 +106,8 @@ export interface BookingDict {
     recommended: string;
     finalize: string;
     submit_error: string;
+    upgrade_package: string;
+    select_upgrade: string;
   };
   step7: {
     title: string;
@@ -129,6 +131,12 @@ export interface BookingDict {
     time_label: string;
     location_label: string;
     address_label: string;
+    back_home: string;
+  };
+  payment_fail: {
+    title: string;
+    subtitle: string;
+    retry: string;
     back_home: string;
   };
 }

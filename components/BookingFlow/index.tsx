@@ -199,6 +199,7 @@ export default function BookingFlow({ locale, dict }: BookingFlowProps) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+
   const commonProps = { state, onChange: patch, onNext: goNext, onBack: goBack, dict, locale };
 
   return (
@@ -251,6 +252,7 @@ export default function BookingFlow({ locale, dict }: BookingFlowProps) {
             <Step6Summary
               {...commonProps}
               stepLabel={stepLabel(dict, 6)}
+              tokenRef={tokenRef}
             />
           )}
           {step === 7 && (

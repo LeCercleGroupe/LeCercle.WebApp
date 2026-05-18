@@ -156,7 +156,9 @@
       "pay_later_sub": "Avansul de {amount} poate fi achitat ulterior online sau printr-o întâlnire cu echipa noastră.",
       "recommended": "Recomandat",
       "finalize": "Achită acum",
-      "submit_error": "Ceva nu a mers bine. Te rugăm să încerci din nou."
+      "submit_error": "Ceva nu a mers bine. Te rugăm să încerci din nou.",
+      "upgrade_package": "Îmbunătățește pachetul",
+      "select_upgrade": "Selectează"
     },
     "step7": {
       "title": "Rezervare în așteptare",
@@ -218,6 +220,12 @@
       "time_label": "Ora de începere:",
       "location_label": "Locație:",
       "address_label": "Adresă:",
+      "back_home": "← Înapoi acasă"
+    },
+    "payment_fail": {
+      "title": "Plata nu a fost procesată",
+      "subtitle": "A apărut o problemă la procesarea plății. Rezervarea ta este salvată — poți relua plata oricând.",
+      "retry": "Încearcă din nou",
       "back_home": "← Înapoi acasă"
     }
   },

@@ -10,10 +10,16 @@ export async function GET(request: Request) {
   if (!BOOKING_API_BASE) return Response.json({ error: "Missing API base URL" }, { status: 500 });
 
 
-  const res = await fetch(`${BOOKING_API_BASE}/api/services/availability?date=${date}`, {
-    headers: { Authorization: auth },
-    cache: "no-store",
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${BOOKING_API_BASE}/api/services/availability?date=${date}`, {
+      headers: { Authorization: auth },
+      cache: "no-store",
+    });
+  } catch (err) {
+    console.error("[services] upstream unreachable:", err);
+    return Response.json({ error: "Service temporarily unavailable" }, { status: 503 });
+  }
 
   const text = await res.text();
 
