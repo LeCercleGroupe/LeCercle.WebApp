@@ -1,12 +1,12 @@
 "use client";
 
+import { loadAuth } from "@/components/BookingFlow/utils/auth";
 import VideoShowcase from "@/components/MainHero/VideoShowcase";
 import { contact_link } from "@/data/venues/constants/links";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { loadAuth } from "@/components/BookingFlow/utils/auth";
 
 type FitMode = "Fill" | "Fit" | "Crop" | "Tile";
 type Quality = "Low" | "Medium" | "High";
@@ -34,7 +34,7 @@ export interface HeroDict {
   venues: Record<VenueKey, VenueDict>;
 }
 
-interface LeCircleHeroProps {
+interface LeCercleHeroProps {
   dict: HeroDict;
   locale: string;
 }
@@ -47,20 +47,17 @@ const VENUES: { key: VenueKey; logo: string; slug: string }[] = [
   { key: "perle", logo: "/logos/LaPerle.svg", slug: "laperle" },
 ];
 
-export default function LeCircleHero({ dict, locale }: LeCircleHeroProps) {
+export default function LeCercleHero({ dict, locale }: LeCercleHeroProps) {
   const [activeVenue, setActiveVenue] = useState<number>(0);
   const [langOpen, setLangOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [userInitials, setUserInitials] = useState<string | null>(null);
-
-  useEffect(() => {
+  const [userInitials] = useState<string | null>(() => {
     const result = loadAuth();
-    if (result) {
-      const { auth } = result;
-      const initials = `${auth.user.firstName?.[0] ?? ""}${auth.user.lastName?.[0] ?? ""}`.toUpperCase();
-      setUserInitials(initials || "U");
-    }
-  }, []);
+    if (!result) return null;
+    const initials =
+      `${result.auth.user.firstName?.[0] ?? ""}${result.auth.user.lastName?.[0] ?? ""}`.toUpperCase();
+    return initials || "U";
+  });
 
   useEffect(() => {
     const checkIsMobile = () => {
@@ -71,9 +68,15 @@ export default function LeCircleHero({ dict, locale }: LeCircleHeroProps) {
     return () => window.removeEventListener("resize", checkIsMobile);
   }, []);
 
-  const video1 = isMobile ? "/videos/lebureau-vertical.mp4" : "/videos/lebureau-horizontal.mp4";
-  const video2 = isMobile ? "/videos/maisondufeu-vertical.mp4" : "/videos/maisondufeu-horizontal.mp4";
-  const video3 = isMobile ? "/videos/laperle-vertical.mp4" : "/videos/laperle-horizontal.mp4";
+  const video1 = isMobile
+    ? "/videos/lebureau-vertical.mp4"
+    : "/videos/lebureau-horizontal.mp4";
+  const video2 = isMobile
+    ? "/videos/maisondufeu-vertical.mp4"
+    : "/videos/maisondufeu-horizontal.mp4";
+  const video3 = isMobile
+    ? "/videos/laperle-vertical.mp4"
+    : "/videos/laperle-horizontal.mp4";
 
   const router = useRouter();
   const pathname = usePathname();
@@ -157,14 +160,32 @@ export default function LeCircleHero({ dict, locale }: LeCircleHeroProps) {
           <div className="flex items-center gap-3 sm:gap-4">
             {/* User account circle */}
             <Link
-              href={userInitials ? `/${locale}/account` : `/${locale}/account/login`}
+              href={
+                userInitials ? `/${locale}/account` : `/${locale}/account/login`
+              }
               className="size-9 rounded-full flex items-center justify-center transition-all duration-200 shrink-0 border border-white/20 hover:border-white/50"
-              style={{ backgroundColor: userInitials ? "rgba(196,151,63,0.85)" : "rgba(255,255,255,0.1)" }}
+              style={{
+                backgroundColor: userInitials
+                  ? "rgba(196,151,63,0.85)"
+                  : "rgba(255,255,255,0.1)",
+              }}
             >
               {userInitials ? (
-                <span className="text-[11px] font-semibold text-[#0d0d0d] font-figtree leading-none">{userInitials}</span>
+                <span className="text-[11px] font-semibold text-[#0d0d0d] font-figtree leading-none">
+                  {userInitials}
+                </span>
               ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-white/80">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-white/80"
+                >
                   <circle cx="12" cy="8" r="4" />
                   <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
                 </svg>
@@ -172,7 +193,10 @@ export default function LeCircleHero({ dict, locale }: LeCircleHeroProps) {
             </Link>
 
             {/* Contact CTA — desktop only */}
-            <Link href={contact_link} className="hidden sm:flex group border-0 bg-gray-100/20 text-gray-100 text-[12px] tracking-[0.12em] cursor-pointer px-5.5 py-2.25 transition-all duration-250 relative hover:bg-gray-100/40 hover:text-white">
+            <Link
+              href={contact_link}
+              className="hidden sm:flex group border-0 bg-gray-100/20 text-gray-100 text-[12px] tracking-[0.12em] cursor-pointer px-5.5 py-2.25 transition-all duration-250 relative hover:bg-gray-100/40 hover:text-white"
+            >
               <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
               <span className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
               <span className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
@@ -197,7 +221,10 @@ export default function LeCircleHero({ dict, locale }: LeCircleHeroProps) {
           {dict.hero.description}
         </p>
         {/* Contact CTA — mobile only, under description */}
-        <Link href={contact_link} className="sm:hidden group border-0 bg-gray-100/20 text-gray-100 text-[12px] tracking-[0.12em] cursor-pointer px-4 py-2 mt-6 transition-all duration-250 relative hover:bg-gray-100/40 hover:text-white">
+        <Link
+          href={contact_link}
+          className="sm:hidden group border-0 bg-gray-100/20 text-gray-100 text-[12px] tracking-[0.12em] cursor-pointer px-4 py-2 mt-6 transition-all duration-250 relative hover:bg-gray-100/40 hover:text-white"
+        >
           <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
           <span className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
           <span className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b border-l border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
