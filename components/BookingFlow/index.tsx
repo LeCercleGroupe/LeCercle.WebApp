@@ -83,7 +83,7 @@ function getInitialFlow(): { step: number; state: BookingState } {
 
   if (saved) {
     if (authResult) {
-      const { auth } = authResult;
+      const { auth, tokensValid } = authResult;
       // Keep booking progress from the session but always overlay the logged-in
       // user's contact details and fresh tokens so stale session data never wins.
       return {
@@ -97,12 +97,15 @@ function getInitialFlow(): { step: number; state: BookingState } {
           companyName: auth.user.companyName ?? "",
           idno: auth.user.idno ?? "",
           contactType: auth.user.isCompany ? "company" : "person",
-          emailVerified: !!auth.user.email,
-          smsVerified: !!auth.user.phoneNumber,
-          userAccessToken: auth.accessToken,
-          userRefreshToken: auth.refreshToken,
-          userId: auth.user.userId,
-          customerId: auth.user.customerId,
+          // Only count email/sms as verified if the access token is still valid.
+          // Expired tokens mean the user must re-authenticate, even if the email
+          // address is still present in localStorage.
+          emailVerified: !!auth.user.email && tokensValid,
+          smsVerified: !!auth.user.phoneNumber && tokensValid,
+          userAccessToken: tokensValid ? auth.accessToken : "",
+          userRefreshToken: tokensValid ? auth.refreshToken : "",
+          userId: tokensValid ? auth.user.userId : "",
+          customerId: tokensValid ? auth.user.customerId : "",
         },
       };
     }

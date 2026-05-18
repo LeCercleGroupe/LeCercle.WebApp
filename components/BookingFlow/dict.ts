@@ -25,6 +25,10 @@ export interface BookingDict {
     guests_for_service: string;
     guests_hint: string;
     reserve_error: string;
+    recommended: string;
+    feature_included: string;
+    feature_free: string;
+    first_free_hint: string;
   };
   step4: {
     title: string;

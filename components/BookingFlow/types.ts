@@ -13,6 +13,8 @@ export interface SelectedPackage {
   name: string;
   basePrice: number;
   tier: string;
+  selectedOptionIds: string[];
+  additionalCost: number;
 }
 
 export type ContactType = "person" | "company";

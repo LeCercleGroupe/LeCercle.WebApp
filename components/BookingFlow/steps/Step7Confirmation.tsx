@@ -54,7 +54,8 @@ export default function Step7Confirmation({ state, dict, locale, onBack }: Props
   const daysFull = dict.step1.days_full;
 
   const totalPrice = state.selectedServices.reduce((sum, v) => {
-    return sum + (state.selectedPackages[v]?.basePrice ?? 0);
+    const pkg = state.selectedPackages[v];
+    return sum + (pkg?.basePrice ?? 0) + (pkg?.additionalCost ?? 0);
   }, 0);
   const advanceMDL = formatMDL(Math.round(totalPrice * 0.1));
 

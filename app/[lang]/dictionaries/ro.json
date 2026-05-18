@@ -75,7 +75,11 @@
       "progress": "{done} din {total} servicii configurate",
       "guests_for_service": "Invitați pentru acest serviciu",
       "guests_hint": "Implicit: numărul total de invitați",
-      "reserve_error": "Nu s-a putut rezerva data. Încearcă din nou."
+      "reserve_error": "Nu s-a putut rezerva data. Încearcă din nou.",
+      "recommended": "Recomandat",
+      "feature_included": "Inclus",
+      "feature_free": "Gratuit",
+      "first_free_hint": "Prima selecție este inclusă"
     },
     "step4": {
       "title": "Locația evenimentului",

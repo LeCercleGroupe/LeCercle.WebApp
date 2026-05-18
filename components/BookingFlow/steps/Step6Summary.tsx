@@ -82,7 +82,7 @@ export default function Step6Summary({
   const transportCost = Math.round(transportKm * TRANSPORT_RATE_PER_KM);
 
   const serviceTotal = state.selectedServices.reduce(
-    (sum, v) => sum + (state.selectedPackages[v]?.basePrice ?? 0),
+    (sum, v) => sum + (state.selectedPackages[v]?.basePrice ?? 0) + (state.selectedPackages[v]?.additionalCost ?? 0),
     0
   );
   const totalPrice = serviceTotal + transportCost;
@@ -158,6 +158,7 @@ export default function Step6Summary({
             packageId: state.selectedPackages[sid]!.id,
             serviceId: sid,
             quantity: 1,
+            selectedOptionIds: state.selectedPackages[sid]!.selectedOptionIds ?? [],
           }));
 
         const orderRes = await fetchWithRefresh("/api/booking/order", {
@@ -301,7 +302,7 @@ export default function Step6Summary({
                       className="object-contain object-left h-10 w-auto"
                     />
                     <p className="text-base font-medium text-[#f1f1f1] font-figtree tracking-tight shrink-0">
-                      {pkg ? formatMDL(pkg.basePrice) : "—"}
+                      {pkg ? formatMDL(pkg.basePrice + (pkg.additionalCost ?? 0)) : "—"}
                     </p>
                   </div>
                   {pkg && (
@@ -337,7 +338,7 @@ export default function Step6Summary({
                 <Row
                   key={v}
                   label={`${info.name}: ${pkg?.name ?? ""}`}
-                  value={pkg ? formatMDL(pkg.basePrice) : "—"}
+                  value={pkg ? formatMDL(pkg.basePrice + (pkg.additionalCost ?? 0)) : "—"}
                 />
               );
             })}
