@@ -9,6 +9,7 @@ interface OtpVerificationFieldProps {
   inputType?: "tel" | "email";
   placeholder?: string;
   isFilled: boolean;
+  initialSent?: boolean;
   initialVerified?: boolean;
   hint: string;
   sendLabel: string;
@@ -31,6 +32,7 @@ export default function OtpVerificationField({
   inputType = "tel",
   placeholder = "",
   isFilled,
+  initialSent = false,
   initialVerified = false,
   hint,
   sendLabel,
@@ -43,7 +45,7 @@ export default function OtpVerificationField({
   onSend,
   onVerify,
 }: OtpVerificationFieldProps) {
-  const [otpState, setOtpState] = useState<OtpState>(initialVerified ? "verified" : "idle");
+  const [otpState, setOtpState] = useState<OtpState>(initialVerified ? "verified" : initialSent ? "sent" : "idle");
   const [code, setCode] = useState("");
   const [sendLoading, setSendLoading] = useState(false);
   const [verifyLoading, setVerifyLoading] = useState(false);

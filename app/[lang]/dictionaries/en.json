@@ -473,6 +473,7 @@
       "loading": "Loading...",
       "error": "An error occurred. Please try again.",
       "na": "N/A",
+      "status_confirmed": "CONFIRMED",
       "status_signed": "SIGNED",
       "status_issued": "ISSUED",
       "status_paid": "PAID",

@@ -46,6 +46,7 @@ const INITIAL_STATE: BookingState = {
   paymentOption: "now",
   smsSent: false,
   smsVerified: false,
+  emailSent: false,
   emailVerified: false,
   userAccessToken: "",
   userRefreshToken: "",

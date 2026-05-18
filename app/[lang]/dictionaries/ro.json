@@ -473,6 +473,7 @@
       "loading": "Se încarcă...",
       "error": "A apărut o eroare. Încearcă din nou.",
       "na": "N/A",
+      "status_confirmed": "CONFIRMAT",
       "status_signed": "SEMNAT",
       "status_issued": "EMIS",
       "status_paid": "PLĂTITĂ",

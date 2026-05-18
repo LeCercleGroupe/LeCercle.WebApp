@@ -244,10 +244,16 @@ export default function AccountDashboard({ locale, dict }: Props) {
     setContractsError(false);
     fetchWithRefresh("/api/account/contracts")
       .then(async (r) => {
+        if (r.status === 401) {
+          clearAuth();
+          router.replace(`/${locale}/account/login`);
+          return null;
+        }
         if (!r.ok) throw new Error(`${r.status}`);
         return r.json();
       })
       .then((data) => {
+        if (data == null) return;
         const list: Contract[] = Array.isArray(data) ? data : data?.items ?? data?.contracts ?? [];
         setContracts(list);
       })
@@ -655,7 +661,9 @@ function ContractsList({
                 <p className="text-xs text-[#747474] font-figtree tracking-tight">{c.orderNumber}</p>
               )}
             </div>
-            <StatusBadge status={c.status} dict={d} />
+            {(c.status ?? "").toLowerCase() !== "confirmed" && (
+              <StatusBadge status={c.status} dict={d} />
+            )}
           </div>
 
           <div className="flex flex-col gap-1">

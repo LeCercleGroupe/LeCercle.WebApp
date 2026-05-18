@@ -11,10 +11,12 @@ export async function GET(request: Request) {
       cache: "no-store",
     });
     const text = await res.text();
+    console.log("[contracts] status:", res.status, "body:", text.slice(0, 500));
     let data: unknown;
     try { data = JSON.parse(text); } catch { data = { raw: text }; }
     return Response.json(data, { status: res.status });
-  } catch {
+  } catch (err) {
+    console.error("[contracts] upstream error:", err);
     return Response.json({ error: "Upstream unreachable" }, { status: 502 });
   }
 }

@@ -45,6 +45,7 @@ export interface BookingState {
   paymentOption: PaymentOption;
   smsSent: boolean;
   smsVerified: boolean;
+  emailSent: boolean;
   emailVerified: boolean;
   userAccessToken: string;
   userRefreshToken: string;

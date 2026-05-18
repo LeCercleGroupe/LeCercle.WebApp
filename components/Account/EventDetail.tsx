@@ -243,9 +243,11 @@ function DocRow({
         <p className="text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight truncate">{name}</p>
         {number && <p className="text-[12px] text-[#666] font-figtree tracking-tight">{number}</p>}
       </div>
-      <span className={`text-[11px] font-medium font-figtree tracking-widest border px-2 py-0.5 shrink-0 ${statusClass}`}>
-        · {status}
-      </span>
+      {status.toLowerCase() !== "confirmed" && (
+        <span className={`text-[11px] font-medium font-figtree tracking-widest border px-2 py-0.5 shrink-0 ${statusClass}`}>
+          · {status}
+        </span>
+      )}
       {fileUrl ? (
         <a
           href={fileUrl}
@@ -319,14 +321,12 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
           }
         }
 
-        // Fetch contracts
+        // Fetch contracts — API is already scoped to the authenticated user
         const cRes = await fetchWithRefresh("/api/account/contracts");
         if (cRes.ok) {
           const cData = await cRes.json();
           const allContracts: Contract[] = Array.isArray(cData) ? cData : (cData?.items ?? cData?.contracts ?? []);
-          setContracts(allContracts.filter((c) =>
-            c.orderId === primaryOrderId || c.eventId === eventId
-          ));
+          setContracts(allContracts);
         }
       } catch {
         setError(true);
@@ -350,7 +350,9 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
           orderId,
           paymentMethod: "Card",
           language: locale,
-          returnUrl: `${window.location.origin}/${locale}/booking/payment-success?orderId=${orderId}`,
+          successUrl: `${window.location.origin}/${locale}/booking/payment-success?orderId=${orderId}`,
+          failUrl: `${window.location.origin}/${locale}/booking/payment-fail?orderId=${orderId}`,
+          callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin}/api/booking/payment/callback`,
         }),
       });
       if (!payRes.ok) throw new Error(`payment ${payRes.status}`);
@@ -811,7 +813,7 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
                       <p className="text-[12px] text-[#666] font-figtree tracking-tight text-center max-w-xs">{d.no_docs_sub}</p>
                     </div>
                   ) : (
-                    <div className="border border-[#1e1e1e]">
+                    <div className="border border-[#1e1e1e] p-4">
                       {contracts.map((c) => (
                         <DocRow
                           key={c.id}

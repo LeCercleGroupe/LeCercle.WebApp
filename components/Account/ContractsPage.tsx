@@ -29,6 +29,7 @@ interface ContractsDict {
   loading: string;
   error: string;
   na: string;
+  status_confirmed: string;
   status_signed: string;
   status_issued: string;
   status_paid: string;
@@ -65,6 +66,7 @@ function contractCategory(status: string): ContractFilter {
 
 function statusLabel(status: string, d: ContractsDict): string {
   const s = (status ?? "").toLowerCase();
+  if (s === "confirmed") return d.status_confirmed;
   if (s === "signed" || s === "semnat") return d.status_signed;
   if (s === "issued" || s === "emis") return d.status_issued;
   if (s === "paid" || s === "platita" || s === "plătită") return d.status_paid;
@@ -76,6 +78,8 @@ function statusLabel(status: string, d: ContractsDict): string {
 
 function statusClass(status: string): string {
   const s = (status ?? "").toLowerCase();
+  if (s === "confirmed")
+    return "bg-[#0a1a2a] border-[#1a3a5a] text-[#60a5fa]";
   if (s === "signed" || s === "semnat" || s === "paid" || s === "platita" || s === "plătită")
     return "bg-[#0a2010] border-[#1a4a2a] text-[#4ade80]";
   if (s === "issued" || s === "emis")
@@ -275,9 +279,11 @@ export default function ContractsPage({ locale, dict }: Props) {
 
                     {/* Status */}
                     <div>
-                      <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-medium font-figtree tracking-widest border ${statusClass(c.status)}`}>
-                        · {statusLabel(c.status, d)}
-                      </span>
+                      {(c.status ?? "").toLowerCase() !== "confirmed" && (
+                        <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-medium font-figtree tracking-widest border ${statusClass(c.status)}`}>
+                          · {statusLabel(c.status, d)}
+                        </span>
+                      )}
                     </div>
 
                     {/* Issued date */}

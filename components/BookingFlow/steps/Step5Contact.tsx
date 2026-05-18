@@ -114,6 +114,7 @@ export default function Step5Contact({
       body: JSON.stringify({ email: state.email }),
     });
     if (!res.ok) throw new Error(`${res.status}`);
+    onChange({ emailSent: true });
   }
 
   async function handleVerifyEmail(code: string) {
@@ -238,10 +239,11 @@ export default function Step5Contact({
         <OtpVerificationField
           label={d.email_label}
           value={state.email}
-          onChange={(v) => onChange({ email: v, emailVerified: false })}
+          onChange={(v) => onChange({ email: v, emailSent: false, emailVerified: false })}
           inputType="email"
           placeholder={d.email_placeholder}
           isFilled={emailFilled}
+          initialSent={state.emailSent}
           initialVerified={state.emailVerified}
           hint={d.email_hint.replace("{email}", state.email)}
           sendLabel={d.send_email}

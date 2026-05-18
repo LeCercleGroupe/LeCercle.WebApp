@@ -473,6 +473,7 @@
       "loading": "Загрузка...",
       "error": "Произошла ошибка. Попробуйте снова.",
       "na": "Н/Д",
+      "status_confirmed": "ПОДТВЕРЖДЁН",
       "status_signed": "ПОДПИСАН",
       "status_issued": "ВЫДАН",
       "status_paid": "ОПЛАЧЕН",
