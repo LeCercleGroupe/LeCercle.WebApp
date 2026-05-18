@@ -128,7 +128,12 @@
       "verified": "Verified",
       "change_number": "Change number",
       "change_email": "Change email",
-      "code_error": "The entered code is invalid."
+      "code_error": "The entered code is invalid.",
+      "fill_required": "Please fill in all required fields before requesting the code.",
+      "field_required": "This field is required",
+      "field_email_invalid": "Enter a valid email address",
+      "field_phone_invalid": "Enter a valid phone number (+373XXXXXXXX)",
+      "field_idno_invalid": "IDNO must be exactly 13 digits"
     },
     "step6": {
       "title": "Summary & payment",
@@ -419,7 +424,7 @@
       "transport_label": "Transport",
       "no_docs": "No documentation yet",
       "no_docs_sub": "Booking confirmation is automatically generated after paying the advance at step 6.",
-      "download": "Download",
+      "download": "View",
       "contact_label": "Contact",
       "contact_phone": "Phone",
       "contact_email": "Email",
@@ -467,7 +472,7 @@
       "col_event_date": "Event date",
       "col_status": "Status",
       "col_issued": "Issued",
-      "download": "Download",
+      "download": "View",
       "view_event": "View event",
       "empty": "No contracts yet.",
       "loading": "Loading...",

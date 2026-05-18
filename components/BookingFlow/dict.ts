@@ -78,6 +78,11 @@ export interface BookingDict {
     change_number: string;
     change_email: string;
     code_error: string;
+    fill_required: string;
+    field_required: string;
+    field_email_invalid: string;
+    field_phone_invalid: string;
+    field_idno_invalid: string;
   };
   step6: {
     title: string;

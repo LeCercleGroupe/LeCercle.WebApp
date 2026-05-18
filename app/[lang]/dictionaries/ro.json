@@ -128,7 +128,12 @@
       "verified": "Verificat",
       "change_number": "Schimbă numărul",
       "change_email": "Schimbă emailul",
-      "code_error": "Codul introdus este invalid."
+      "code_error": "Codul introdus este invalid.",
+      "fill_required": "Te rugăm să completezi toate câmpurile obligatorii înainte de a solicita codul.",
+      "field_required": "Câmp obligatoriu",
+      "field_email_invalid": "Introdu o adresă de email validă",
+      "field_phone_invalid": "Introdu un număr de telefon valid (+373XXXXXXXX)",
+      "field_idno_invalid": "IDNO trebuie să conțină exact 13 cifre"
     },
     "step6": {
       "title": "Sumar și plată",
@@ -419,7 +424,7 @@
       "transport_label": "Transport",
       "no_docs": "Nicio documentație încă",
       "no_docs_sub": "Confirmarea de rezervare se generează automat după plata avansului la pasul 6.",
-      "download": "Descarcă",
+      "download": "Vizualizează",
       "contact_label": "Responsabil",
       "contact_phone": "Telefon",
       "contact_email": "Email",
@@ -467,7 +472,7 @@
       "col_event_date": "Data eveniment",
       "col_status": "Status",
       "col_issued": "Emis",
-      "download": "Descarcă",
+      "download": "Vizualizează",
       "view_event": "Vezi eveniment",
       "empty": "Nu ai niciun contract încă.",
       "loading": "Se încarcă...",

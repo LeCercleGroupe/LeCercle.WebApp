@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { RefObject } from "react";
 import type { BookingDict } from "../dict";
 import BackButton from "../shared/BackButton";
@@ -32,6 +33,7 @@ export default function Step5Contact({
 }: Props) {
   const d = dict.step5;
   const isCompany = state.contactType === "company";
+  const [showErrors, setShowErrors] = useState(false);
 
   const typeOptions: { key: ContactType; label: string }[] = [
     { key: "person", label: d.type_person },
@@ -40,14 +42,12 @@ export default function Step5Contact({
 
   const phoneFilled = /^\+373\d{8}$/.test(state.phone);
   const emailFilled = state.email.trim().includes("@");
-  const formFilled =
-    state.firstName.trim() !== "" &&
-    state.lastName.trim() !== "" &&
-    state.email.trim() !== "" &&
-    phoneFilled &&
-    (!isCompany ||
-      (state.companyName.trim() !== "" && state.idno.trim().length === 13));
+  const firstNameValid = state.firstName.trim() !== "";
+  const lastNameValid = state.lastName.trim() !== "";
+  const companyNameValid = !isCompany || state.companyName.trim() !== "";
+  const idnoValid = !isCompany || state.idno.trim().length === 13;
 
+  const formFilled = firstNameValid && lastNameValid && emailFilled && phoneFilled && companyNameValid && idnoValid;
   const canProceed = formFilled && state.emailVerified;
 
   function authHeader(): Record<string, string> {
@@ -108,6 +108,8 @@ export default function Step5Contact({
   }
 
   async function handleSendEmail() {
+    setShowErrors(true);
+    if (!formFilled) throw new Error("validation");
     const res = await fetch("/api/otp/send", {
       method: "POST",
       headers: { ...authHeader(), "Content-Type": "application/json" },
@@ -203,37 +205,57 @@ export default function Step5Contact({
       <div className="flex flex-col gap-4">
         {isCompany && (
           <>
-            <BookingInput
-              label={d.company_name_label}
-              value={state.companyName}
-              onChange={(v) => onChange({ companyName: v })}
-              placeholder={d.company_name_placeholder}
-            />
-            <BookingInput
-              label={d.idno_label}
-              value={state.idno}
-              onChange={(v) => {
-                const digits = v.replace(/\D/g, "").slice(0, 13);
-                onChange({ idno: digits });
-              }}
-              placeholder={d.idno_placeholder}
-            />
+            <div className="flex flex-col gap-1">
+              <BookingInput
+                label={d.company_name_label}
+                value={state.companyName}
+                onChange={(v) => onChange({ companyName: v })}
+                placeholder={d.company_name_placeholder}
+              />
+              {showErrors && !companyNameValid && (
+                <p className="text-xs text-red-400 font-figtree tracking-tight">{d.field_required}</p>
+              )}
+            </div>
+            <div className="flex flex-col gap-1">
+              <BookingInput
+                label={d.idno_label}
+                value={state.idno}
+                onChange={(v) => {
+                  const digits = v.replace(/\D/g, "").slice(0, 13);
+                  onChange({ idno: digits });
+                }}
+                placeholder={d.idno_placeholder}
+              />
+              {showErrors && !idnoValid && (
+                <p className="text-xs text-red-400 font-figtree tracking-tight">{d.field_idno_invalid}</p>
+              )}
+            </div>
           </>
         )}
 
         <div className="flex gap-3">
-          <BookingInput
-            label={d.first_name_label}
-            value={state.firstName}
-            onChange={(v) => onChange({ firstName: v })}
-            placeholder={d.first_name_placeholder}
-          />
-          <BookingInput
-            label={d.last_name_label}
-            value={state.lastName}
-            onChange={(v) => onChange({ lastName: v })}
-            placeholder={d.last_name_placeholder}
-          />
+          <div className="flex flex-col gap-1 flex-1">
+            <BookingInput
+              label={d.first_name_label}
+              value={state.firstName}
+              onChange={(v) => onChange({ firstName: v })}
+              placeholder={d.first_name_placeholder}
+            />
+            {showErrors && !firstNameValid && (
+              <p className="text-xs text-red-400 font-figtree tracking-tight">{d.field_required}</p>
+            )}
+          </div>
+          <div className="flex flex-col gap-1 flex-1">
+            <BookingInput
+              label={d.last_name_label}
+              value={state.lastName}
+              onChange={(v) => onChange({ lastName: v })}
+              placeholder={d.last_name_placeholder}
+            />
+            {showErrors && !lastNameValid && (
+              <p className="text-xs text-red-400 font-figtree tracking-tight">{d.field_required}</p>
+            )}
+          </div>
         </div>
 
         <OtpVerificationField
@@ -247,7 +269,7 @@ export default function Step5Contact({
           initialVerified={state.emailVerified}
           hint={d.email_hint.replace("{email}", state.email)}
           sendLabel={d.send_email}
-          sendErrorMessage={d.send_error}
+          sendErrorMessage={formFilled ? d.send_error : d.fill_required}
           codePlaceholder={d.sms_code_placeholder}
           verifyLabel={d.verify}
           verifiedLabel={d.verified}
@@ -257,13 +279,18 @@ export default function Step5Contact({
           onVerify={handleVerifyEmail}
         />
 
-        <PhoneInput
-          label={d.phone_label}
-          value={state.phone}
-          onChange={(v) =>
-            onChange({ phone: v, smsVerified: false, smsSent: false })
-          }
-        />
+        <div className="flex flex-col gap-1">
+          <PhoneInput
+            label={d.phone_label}
+            value={state.phone}
+            onChange={(v) =>
+              onChange({ phone: v, smsVerified: false, smsSent: false })
+            }
+          />
+          {showErrors && !phoneFilled && (
+            <p className="text-xs text-red-400 font-figtree tracking-tight">{d.field_phone_invalid}</p>
+          )}
+        </div>
         {/* Phone OTP temporarily disabled — re-enable OtpVerificationField when ready */}
       </div>
 

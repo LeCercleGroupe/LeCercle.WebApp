@@ -253,8 +253,11 @@ function DocRow({
           href={fileUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="shrink-0 px-3 py-1.5 border border-[#2a2a2a] text-[13px] font-medium text-[#c0c0c0] font-figtree tracking-tight hover:border-[#4a4a4a] hover:text-[#f0f0f0] transition-colors"
+          className="shrink-0 flex items-center gap-2 px-3 py-1.5 bg-[#f0f0f0] text-[#080808] text-[13px] font-medium font-figtree tracking-tight hover:bg-white transition-colors"
         >
+          <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+            <path d="M4.5 2H2a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V6.5M7 1h3m0 0v3m0-3L5 6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
           {downloadLabel}
         </a>
       ) : (
