@@ -22,6 +22,7 @@ interface Props {
   dict: BookingDict;
   stepLabel: string;
   tokenRef: RefObject<string | null>;
+  tokenReady: boolean;
 }
 
 function toggleService(selected: ServiceId[], key: ServiceId): ServiceId[] {
@@ -32,7 +33,7 @@ function formatDate(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-export default function Step2Services({ state, onChange, onNext, onBack, dict, stepLabel, tokenRef }: Props) {
+export default function Step2Services({ state, onChange, onNext, onBack, dict, stepLabel, tokenRef, tokenReady }: Props) {
   const d = dict.step2;
   const [availability, setAvailability] = useState<Map<string, boolean> | null>(null);
   const [error, setError] = useState(false);
@@ -55,7 +56,7 @@ export default function Step2Services({ state, onChange, onNext, onBack, dict, s
         setAvailability(map);
       })
       .catch(() => setError(true));
-  }, [state.date, tokenRef]);
+  }, [state.date, tokenReady]);
 
   const loading = availability === null && !error;
   const canProceed = state.selectedServices.length > 0;

@@ -5,6 +5,7 @@ import type { RefObject, ReactNode } from "react";
 
 interface TokenCtx {
   tokenRef: RefObject<string | null>;
+  tokenReady: boolean;
   error: boolean;
 }
 
@@ -18,6 +19,7 @@ export function useBookingToken(): TokenCtx {
 
 export default function BookingTokenProvider({ children }: { children: ReactNode }) {
   const tokenRef = useRef<string | null>(null);
+  const [tokenReady, setTokenReady] = useState(false);
   const [error, setError] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -33,6 +35,7 @@ export default function BookingTokenProvider({ children }: { children: ReactNode
       if (!r.ok) throw new Error(`${r.status}`);
       const { access_token, expires_in } = await r.json();
       tokenRef.current = access_token;
+      setTokenReady(true);
       if (error) setError(false);
       if (expires_in) scheduleRefresh(expires_in);
     } catch {
@@ -49,5 +52,5 @@ export default function BookingTokenProvider({ children }: { children: ReactNode
     };
   }, []);
 
-  return <Ctx.Provider value={{ tokenRef, error }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ tokenRef, tokenReady, error }}>{children}</Ctx.Provider>;
 }

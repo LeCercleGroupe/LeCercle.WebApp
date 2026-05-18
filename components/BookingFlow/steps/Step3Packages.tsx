@@ -52,6 +52,7 @@ interface Props {
   locale: string;
   stepLabel: string;
   tokenRef: RefObject<string | null>;
+  tokenReady: boolean;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -60,11 +61,6 @@ function formatMDL(amount: number): string {
   return new Intl.NumberFormat("ro-MD").format(amount) + " MDL";
 }
 
-/**
- * Compute additional cost for a single package given the current selections.
- * The option with the lowest sortOrder among the selected ones is free;
- * every subsequent selected option adds its additionalCost.
- */
 function computeAdditionalCost(
   packageId: string,
   features: ApiFeature[],
@@ -72,19 +68,15 @@ function computeAdditionalCost(
 ): number {
   const pkgSelections = selections.get(packageId);
   if (!pkgSelections) return 0;
-
   let total = 0;
   for (const feature of features) {
     if (feature.type !== 1) continue;
     const selectedIds = pkgSelections.get(feature.id);
     if (!selectedIds || selectedIds.size === 0) continue;
-
-    // Collect selected options sorted by sortOrder ascending
+    // Sort selected by cost ascending — cheapest is free, rest add their cost
     const selectedOptions = feature.options
       .filter((o) => selectedIds.has(o.id))
-      .sort((a, b) => a.sortOrder - b.sortOrder);
-
-    // First selected option is free — skip index 0
+      .sort((a, b) => a.additionalCost - b.additionalCost);
     for (let i = 1; i < selectedOptions.length; i++) {
       total += selectedOptions[i].additionalCost;
     }
@@ -149,8 +141,6 @@ interface PackageCardProps {
   selectedBadge: string;
   recommendedLabel: string;
   featureIncluded: string;
-  featureFree: string;
-  firstFreeHint: string;
 }
 
 function PackageCard({
@@ -165,8 +155,6 @@ function PackageCard({
   selectedBadge,
   recommendedLabel,
   featureIncluded,
-  featureFree,
-  firstFreeHint,
 }: PackageCardProps) {
   const allFeatures = [...features].sort((a, b) => a.sortOrder - b.sortOrder);
   const multiFeatures = allFeatures.filter((f) => f.type === 1);
@@ -253,43 +241,25 @@ function PackageCard({
         }`}>
           {multiFeatures.map((feature) => {
             const selectedIds = pkgSelections.get(feature.id) ?? new Set<string>();
-            const sortedOptions = [...feature.options].sort((a, b) => a.sortOrder - b.sortOrder);
-
-            // Lowest-sortOrder selected option is free
-            const selectedSorted = sortedOptions.filter((o) => selectedIds.has(o.id));
-            const freeOptionId = selectedSorted.length > 0 ? selectedSorted[0].id : null;
+            // Sort by additionalCost ascending — cheapest option displayed first
+            const sortedOptions = [...feature.options].sort((a, b) => a.additionalCost - b.additionalCost);
+            // The cheapest currently-selected option is always free
+            const freeOptionId = sortedOptions.find((o) => selectedIds.has(o.id))?.id ?? null;
 
             return (
               <div key={feature.id} className="flex flex-col gap-2">
-                <div className="flex flex-col gap-0.5">
-                  <p className="text-sm font-medium text-[#f1f1f1] font-figtree tracking-tight">
-                    {feature.label}
-                  </p>
-                  <p className="text-xs text-[#747474] font-figtree tracking-tight">
-                    {firstFreeHint}
-                  </p>
-                </div>
+                <p className="text-sm font-medium text-[#f1f1f1] font-figtree tracking-tight">
+                  {feature.label}
+                </p>
                 <div className="flex flex-col gap-1.5">
                   {sortedOptions.map((option) => {
                     const isChecked = selectedIds.has(option.id);
                     const isFree = isChecked && option.id === freeOptionId;
-                    const noSelections = selectedIds.size === 0;
-
-                    let priceLabel: string;
-                    if (isFree) {
-                      priceLabel = featureIncluded;
-                    } else if (!isChecked && noSelections) {
-                      priceLabel = featureFree;
-                    } else {
-                      priceLabel = `+${formatMDL(option.additionalCost)}`;
-                    }
-
                     return (
                       <button
                         key={option.id}
                         type="button"
                         onClick={() => {
-                          // Auto-select this package when user interacts with its options
                           if (!selected) onSelect();
                           onToggleOption(feature.id, option.id);
                         }}
@@ -317,12 +287,8 @@ function PackageCard({
                         <span className="flex-1 text-sm text-[#c4c4c4] font-figtree tracking-tight">
                           {option.label}
                         </span>
-                        <span
-                          className={`text-xs font-medium font-figtree tracking-tight shrink-0 ${
-                            isFree || (!isChecked && noSelections) ? "text-[#37a067]" : "text-[#a8a8a8]"
-                          }`}
-                        >
-                          {priceLabel}
+                        <span className={`text-xs font-medium font-figtree tracking-tight shrink-0 ${isChecked ? "text-[#37a067]" : "text-[#a8a8a8]"}`}>
+                          {isFree ? featureIncluded : `+${formatMDL(option.additionalCost)}`}
                         </span>
                       </button>
                     );
@@ -347,6 +313,7 @@ export default function Step3Packages({
   dict,
   stepLabel,
   tokenRef,
+  tokenReady,
 }: Props) {
   const d = dict.step3;
 
@@ -440,7 +407,7 @@ export default function Step3Packages({
       })
       .catch(() => setError(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.selectedServices, tokenRef]);
+  }, [state.selectedServices, tokenReady]);
 
   // ── Derived state ─────────────────────────────────────────────────────────
 
@@ -488,6 +455,7 @@ export default function Step3Packages({
       const optionSet = new Set(featureMap.get(featureId) ?? new Set<string>());
 
       if (optionSet.has(optionId)) {
+        if (optionSet.size <= 1) return prev; // always keep at least one selected
         optionSet.delete(optionId);
       } else {
         optionSet.add(optionId);
@@ -637,8 +605,6 @@ export default function Step3Packages({
                 selectedBadge={d.selected_badge}
                 recommendedLabel={d.recommended}
                 featureIncluded={d.feature_included}
-                featureFree={d.feature_free}
-                firstFreeHint={d.first_free_hint}
               />
             );
           })}

@@ -180,7 +180,7 @@ function stepLabel(dict: BookingDict, current: number, total = 6): string {
 export default function BookingFlow({ locale, dict }: BookingFlowProps) {
   const [step, setStep] = useState(() => getInitialFlow().step);
   const [state, setState] = useState<BookingState>(() => getInitialFlow().state);
-  const { tokenRef, error: tokenError } = useBookingToken();
+  const { tokenRef, tokenReady, error: tokenError } = useBookingToken();
 
   useEffect(() => {
     saveFlow(step, state);
@@ -227,6 +227,7 @@ export default function BookingFlow({ locale, dict }: BookingFlowProps) {
               {...commonProps}
               stepLabel={stepLabel(dict, 2)}
               tokenRef={tokenRef}
+              tokenReady={tokenReady}
             />
           )}
           {step === 3 && (
@@ -234,6 +235,7 @@ export default function BookingFlow({ locale, dict }: BookingFlowProps) {
               {...commonProps}
               stepLabel={stepLabel(dict, 3)}
               tokenRef={tokenRef}
+              tokenReady={tokenReady}
             />
           )}
           {step === 4 && (
@@ -254,6 +256,7 @@ export default function BookingFlow({ locale, dict }: BookingFlowProps) {
               {...commonProps}
               stepLabel={stepLabel(dict, 6)}
               tokenRef={tokenRef}
+              tokenReady={tokenReady}
             />
           )}
           {step === 7 && (

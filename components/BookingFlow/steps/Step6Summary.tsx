@@ -53,6 +53,7 @@ interface Props {
   locale: string;
   stepLabel: string;
   tokenRef: RefObject<string | null>;
+  tokenReady: boolean;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -85,7 +86,7 @@ function computeDefaultCost(features: ApiFeature[]): { selectedOptionIds: string
     if (feature.type !== 1) continue;
     const defaults = feature.options
       .filter((o) => o.isDefault)
-      .sort((a, b) => a.sortOrder - b.sortOrder);
+      .sort((a, b) => a.additionalCost - b.additionalCost); // cheapest first = free
     for (let i = 0; i < defaults.length; i++) {
       selectedOptionIds.push(defaults[i].id);
       if (i > 0) additionalCost += defaults[i].additionalCost;
@@ -95,13 +96,14 @@ function computeDefaultCost(features: ApiFeature[]): { selectedOptionIds: string
 }
 
 function computeAdditionalCostFromIds(features: ApiFeature[], selectedOptionIds: string[]): number {
-  const selectedIds = new Set(selectedOptionIds);
+  const allSelectedIds = new Set(selectedOptionIds);
   let total = 0;
   for (const feature of features) {
     if (feature.type !== 1) continue;
+    // Sort selected by cost ascending — cheapest is free, rest add their cost
     const selectedOptions = feature.options
-      .filter((o) => selectedIds.has(o.id))
-      .sort((a, b) => a.sortOrder - b.sortOrder);
+      .filter((o) => allSelectedIds.has(o.id))
+      .sort((a, b) => a.additionalCost - b.additionalCost);
     for (let i = 1; i < selectedOptions.length; i++) {
       total += selectedOptions[i].additionalCost;
     }
@@ -141,6 +143,7 @@ export default function Step6Summary({
   locale,
   stepLabel,
   tokenRef,
+  tokenReady,
 }: Props) {
   const d = dict.step6;
   const months = dict.step1.months;
@@ -187,7 +190,7 @@ export default function Step6Summary({
         setFeaturesMap(new Map(featResults));
       })
       .catch(() => {});
-  }, [state.selectedServices, tokenRef]);
+  }, [state.selectedServices, tokenReady]);
 
   // ── Upgrade handler ──────────────────────────────────────────────────────
 
@@ -214,13 +217,20 @@ export default function Step6Summary({
     const pkg = state.selectedPackages[serviceId];
     if (!pkg) return;
     const features = featuresMap.get(pkg.id) ?? [];
-    const currentIds = new Set(pkg.selectedOptionIds ?? []);
-    if (currentIds.has(optionId)) {
-      currentIds.delete(optionId);
+    const feature = features.find((f) => f.id === featureId);
+    if (!feature) return;
+    const featureOptionIds = new Set(feature.options.map((o) => o.id));
+    const currentAllIds = pkg.selectedOptionIds ?? [];
+    const thisFeatureIds = currentAllIds.filter((id) => featureOptionIds.has(id));
+    const otherIds = currentAllIds.filter((id) => !featureOptionIds.has(id));
+    const idx = thisFeatureIds.indexOf(optionId);
+    if (idx !== -1) {
+      if (thisFeatureIds.length <= 1) return; // always keep at least one selected
+      thisFeatureIds.splice(idx, 1);
     } else {
-      currentIds.add(optionId);
+      thisFeatureIds.push(optionId);
     }
-    const newSelectedOptionIds = [...currentIds];
+    const newSelectedOptionIds = [...otherIds, ...thisFeatureIds];
     onChange({
       selectedPackages: {
         ...state.selectedPackages,
@@ -237,7 +247,8 @@ export default function Step6Summary({
 
   const cityNorm = state.city.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   const isChisinau = cityNorm === "chisinau" || cityNorm === "kishinev";
-  const transportKm = !isChisinau && state.distanceKm ? state.distanceKm : 0;
+  const rawKm = !isChisinau && state.distanceKm ? state.distanceKm : 0;
+  const transportKm = rawKm >= 15 ? rawKm : 0;
   const transportCost = Math.round(transportKm * TRANSPORT_RATE_PER_KM);
 
   const serviceTotal = state.selectedServices.reduce(
@@ -502,30 +513,21 @@ export default function Step6Summary({
                       {pkgFeatures
                         .filter((f) => f.type === 1)
                         .map((feature) => {
-                          const sortedOptions = [...feature.options].sort((a, b) => a.sortOrder - b.sortOrder);
-                          const selectedIds = new Set(pkg.selectedOptionIds ?? []);
-                          const selectedSorted = sortedOptions.filter((o) => selectedIds.has(o.id));
-                          const freeOptionId = selectedSorted.length > 0 ? selectedSorted[0].id : null;
+                          // Sort by additionalCost ascending — cheapest displayed first
+                          const sortedOptions = [...feature.options].sort((a, b) => a.additionalCost - b.additionalCost);
+                          const featureOptionIds = new Set(feature.options.map((o) => o.id));
+                          const selectedIds = new Set((pkg.selectedOptionIds ?? []).filter((id) => featureOptionIds.has(id)));
+                          // Cheapest currently-selected option is free
+                          const freeOptionId = sortedOptions.find((o) => selectedIds.has(o.id))?.id ?? null;
                           return (
                             <div key={feature.id} className="flex flex-col gap-2">
-                              <div className="flex flex-col gap-0.5">
-                                <p className="text-sm font-medium text-[#f1f1f1] font-figtree tracking-tight">
-                                  {feature.label}
-                                </p>
-                                <p className="text-xs text-[#747474] font-figtree tracking-tight">
-                                  {dict.step3.first_free_hint}
-                                </p>
-                              </div>
+                              <p className="text-sm font-medium text-[#f1f1f1] font-figtree tracking-tight">
+                                {feature.label}
+                              </p>
                               <div className="flex flex-col gap-1.5">
                                 {sortedOptions.map((option) => {
                                   const isChecked = selectedIds.has(option.id);
                                   const isFree = isChecked && option.id === freeOptionId;
-                                  const noSelections = selectedSorted.length === 0;
-                                  const priceLabel = isFree
-                                    ? dict.step3.feature_included
-                                    : !isChecked && noSelections
-                                    ? dict.step3.feature_free
-                                    : `+${formatMDL(option.additionalCost)}`;
                                   return (
                                     <button
                                       key={option.id}
@@ -546,9 +548,9 @@ export default function Step6Summary({
                                         {option.label}
                                       </span>
                                       <span className={`text-xs font-medium font-figtree tracking-tight shrink-0 ${
-                                        isFree || (!isChecked && noSelections) ? "text-[#37a067]" : "text-[#a8a8a8]"
+                                        isChecked ? "text-[#37a067]" : "text-[#a8a8a8]"
                                       }`}>
-                                        {priceLabel}
+                                        {isFree ? dict.step3.feature_included : `+${formatMDL(option.additionalCost)}`}
                                       </span>
                                     </button>
                                   );

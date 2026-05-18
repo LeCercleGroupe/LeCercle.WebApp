@@ -130,6 +130,7 @@ export default function Step4Location({
 
   const cityNorm = state.city.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   const isChisinau = cityNorm === "chisinau" || cityNorm === "kishinev" || cityNorm === "chisineu";
+  const transportFree = isChisinau || (state.distanceKm != null && state.distanceKm < 15);
   const showTransportBanner = state.city.trim() !== "";
 
   const canProceed =
@@ -199,7 +200,7 @@ export default function Step4Location({
       </div>
 
       {showTransportBanner && (
-        isChisinau ? (
+        transportFree ? (
           <div className="flex gap-3 bg-[#0b2a18] border border-[#1a4d2e] px-4 py-4">
             <div className="mt-0.5 shrink-0">
               <div className="flex items-center justify-center size-5 rounded-full bg-[#37a067]">
