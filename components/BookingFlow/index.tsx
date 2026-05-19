@@ -196,6 +196,11 @@ export default function BookingFlow({ locale, dict }: BookingFlowProps) {
   }
 
   function goBack() {
+    // Going back from Step 6 means the current order is being abandoned;
+    // clear it so the next finalize creates a fresh event and order.
+    if (step === 6) {
+      patch({ bookingRef: "", reservationToken: "" });
+    }
     setStep((s) => Math.max(s - 1, 1));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }

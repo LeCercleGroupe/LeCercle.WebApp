@@ -51,13 +51,16 @@ export default function LeCercleHero({ dict, locale }: LeCercleHeroProps) {
   const [activeVenue, setActiveVenue] = useState<number>(0);
   const [langOpen, setLangOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [userInitials] = useState<string | null>(() => {
+  const [userInitials, setUserInitials] = useState<string | null>(null);
+
+  useEffect(() => {
     const result = loadAuth();
-    if (!result) return null;
-    const initials =
-      `${result.auth.user.firstName?.[0] ?? ""}${result.auth.user.lastName?.[0] ?? ""}`.toUpperCase();
-    return initials || "U";
-  });
+    if (result) {
+      const initials =
+        `${result.auth.user.firstName?.[0] ?? ""}${result.auth.user.lastName?.[0] ?? ""}`.toUpperCase();
+      setUserInitials(initials || "U");
+    }
+  }, []);
 
   useEffect(() => {
     const checkIsMobile = () => {

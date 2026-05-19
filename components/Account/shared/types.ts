@@ -32,6 +32,7 @@ export interface EventBooking {
 
 export interface OrderItem {
   id: string;
+  orderId: string;
   packageId: string;
   serviceId: string;
   packageName: string;
@@ -39,6 +40,7 @@ export interface OrderItem {
   unitPrice: number;
   roadPrice: number;
   quantity: number;
+  createdAt?: string;
 }
 
 export interface OrderDetail {
@@ -52,9 +54,12 @@ export interface OrderDetail {
   advancePaidAt?: string;
   contactEmail: string;
   contactPhone: string;
+  phoneVerified?: boolean;
   contactFirstName?: string;
   contactLastName?: string;
   contactNotes?: string;
+  createdAt?: string;
+  updatedAt?: string;
   items: OrderItem[];
 }
 
@@ -85,5 +90,14 @@ export function deriveEventState(event: EventBooking, order?: OrderDetail | null
     if (eventDate && eventDate < new Date()) return "past";
     return "confirmed";
   }
+  return "pending";
+}
+
+export function deriveOrderState(order: OrderDetail): EventState {
+  const status = (order.status ?? "").toLowerCase();
+  if (status === "cancelled" || status === "canceled") return "cancelled";
+  if (status === "completed") return "past";
+  if (status === "draft" || status === "processing" || status === "inprogress" || status === "in_progress") return "draft";
+  if (status === "confirmed") return "confirmed";
   return "pending";
 }

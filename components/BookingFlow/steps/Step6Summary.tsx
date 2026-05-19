@@ -150,6 +150,17 @@ export default function Step6Summary({
   const daysFull = dict.step1.days_full;
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
+
+  // On bfcache restore (browser back from payment page), React's scheduler may not
+  // resume correctly and state updates won't commit — force a fresh load instead,
+  // which is exactly what the user does manually with F5.
+  useEffect(() => {
+    const handlePageshow = (e: PageTransitionEvent) => {
+      if (e.persisted) window.location.reload();
+    };
+    window.addEventListener("pageshow", handlePageshow);
+    return () => window.removeEventListener("pageshow", handlePageshow);
+  }, []);
   const [packagesMap, setPackagesMap] = useState<Map<ServiceId, ApiPackage[]> | null>(null);
   const [featuresMap, setFeaturesMap] = useState<Map<string, ApiFeature[]>>(new Map());
   const [expandedUpgrade, setExpandedUpgrade] = useState<ServiceId | null>(null);
@@ -190,7 +201,7 @@ export default function Step6Summary({
         setFeaturesMap(new Map(featResults));
       })
       .catch(() => {});
-  }, [state.selectedServices, tokenReady]);
+  }, [state.selectedServices, tokenReady, tokenRef]);
 
   // ── Upgrade handler ──────────────────────────────────────────────────────
 
@@ -247,7 +258,7 @@ export default function Step6Summary({
 
   const cityNorm = state.city.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   const isChisinau = cityNorm === "chisinau" || cityNorm === "kishinev";
-  const rawKm = !isChisinau && state.distanceKm ? state.distanceKm : 0;
+  const rawKm = !isChisinau && state.distanceKm ? Math.trunc(state.distanceKm) : 0;
   const transportKm = rawKm >= 15 ? rawKm : 0;
   const transportCost = Math.round(transportKm * TRANSPORT_RATE_PER_KM);
 
@@ -303,12 +314,13 @@ export default function Step6Summary({
             venueTitle: state.venueName,
             venueAddress: state.address,
             city: state.city,
+            postalCode: state.postalCode || null,
             eventStartTime: normalizeTime(state.startTime),
             guestCount: state.guests,
             notes: state.notes,
-            latitude: state.latitude ?? 0,
-            longitude: state.longitude ?? 0,
-            distanceKm: state.distanceKm ?? 0,
+            latitude: state.latitude,
+            longitude: state.longitude,
+            distanceKm: state.distanceKm != null ? Math.trunc(state.distanceKm) : null,
             customerId: state.customerId,
           }),
         });
@@ -335,6 +347,8 @@ export default function Step6Summary({
             eventId,
             contactEmail: state.email,
             contactPhone: state.phone,
+            contactFirstName: state.firstName,
+            contactLastName: state.lastName,
             reservationToken,
             items,
             customerId: state.customerId,
@@ -367,6 +381,9 @@ export default function Step6Summary({
           throw new Error(`payment ${payRes.status}`);
         }
         const { paymentUrl } = await payRes.json();
+        // Persist bookingRef into both React state (for bfcache restore) and
+        // sessionStorage directly (in case saveFlow effect doesn't run before navigation)
+        onChange({ bookingRef: orderId });
         try {
           const flowRaw = sessionStorage.getItem("lecercle_booking_flow");
           if (flowRaw) {
@@ -690,7 +707,7 @@ export default function Step6Summary({
             })}
             {transportCost > 0 && (
               <Row
-                label={d.transport_label.replace("{km}", String(Math.round(transportKm)))}
+                label={d.transport_label.replace("{km}", String(transportKm))}
                 value={formatMDL(transportCost)}
               />
             )}

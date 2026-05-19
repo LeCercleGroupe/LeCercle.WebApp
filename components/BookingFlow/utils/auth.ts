@@ -57,7 +57,7 @@ export function saveAuth(params: {
       },
     };
     localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
-  } catch {}
+  } catch { }
 }
 
 export function loadAuth(): AuthResult | null {
@@ -85,7 +85,7 @@ export function loadAuth(): AuthResult | null {
 export function clearAuth(): void {
   try {
     localStorage.removeItem(AUTH_KEY);
-  } catch {}
+  } catch { }
 }
 
 // Partial-update the stored user profile without touching tokens.
@@ -100,7 +100,7 @@ export function updateAuthProfile(updates: Partial<StoredAuth["user"]>): void {
     // Refresh the 30-day profile TTL whenever the profile changes
     stored.profileExpiresAt = Date.now() + PROFILE_TTL_MS;
     localStorage.setItem(AUTH_KEY, JSON.stringify(stored));
-  } catch {}
+  } catch { }
 }
 
 async function refreshTokens(refreshToken: string): Promise<StoredAuth | null> {

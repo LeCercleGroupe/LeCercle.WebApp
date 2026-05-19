@@ -332,6 +332,8 @@ export default function Step3Packages({
     const token = tokenRef.current;
     if (!token || !state.selectedServices.length) return;
 
+    let pMap: Map<ServiceId, ApiPackage[]>;
+
     Promise.all(
       state.selectedServices.map((serviceId) =>
         fetch(`/api/booking/packages/${serviceId}`, {
@@ -345,7 +347,7 @@ export default function Step3Packages({
       )
     )
       .then((results) => {
-        const pMap = new Map(results);
+        pMap = new Map(results);
         setPackagesMap(pMap);
 
         // Collect all package IDs across all services
@@ -404,6 +406,31 @@ export default function Step3Packages({
           }
           return next;
         });
+
+        // Auto-select the recommended package for services that have no selection yet
+        const autoPackages: Partial<Record<ServiceId, SelectedPackage>> = {};
+        const autoGuests: Partial<Record<ServiceId, number>> = {};
+        for (const [serviceId, pkgs] of pMap.entries()) {
+          if (state.selectedPackages[serviceId]) continue;
+          if (pkgs.length < 2) continue;
+          const recommended = pkgs[pkgs.length - 2];
+          if (!recommended) continue;
+          autoPackages[serviceId] = {
+            id: recommended.id,
+            name: recommended.name,
+            basePrice: recommended.basePrice,
+            tier: recommended.tier,
+            selectedOptionIds: [],
+            additionalCost: 0,
+          };
+          autoGuests[serviceId] = state.guestsPerService[serviceId] ?? state.guests;
+        }
+        if (Object.keys(autoPackages).length > 0) {
+          onChange({
+            selectedPackages: { ...state.selectedPackages, ...autoPackages },
+            guestsPerService: { ...state.guestsPerService, ...autoGuests },
+          });
+        }
       })
       .catch(() => setError(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
