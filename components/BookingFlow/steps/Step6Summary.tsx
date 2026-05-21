@@ -381,16 +381,10 @@ export default function Step6Summary({
           throw new Error(`payment ${payRes.status}`);
         }
         const { paymentUrl } = await payRes.json();
-        // Persist bookingRef into both React state (for bfcache restore) and
-        // sessionStorage directly (in case saveFlow effect doesn't run before navigation)
         onChange({ bookingRef: orderId });
         try {
-          const flowRaw = sessionStorage.getItem("lecercle_booking_flow");
-          if (flowRaw) {
-            const flow = JSON.parse(flowRaw);
-            if (flow.state) flow.state.bookingRef = orderId;
-            sessionStorage.setItem("lecercle_booking_flow", JSON.stringify(flow));
-          }
+          sessionStorage.removeItem("lecercle_booking_flow");
+          sessionStorage.removeItem("lecercle_booking_summary");
         } catch {}
         window.location.href = paymentUrl;
         return;

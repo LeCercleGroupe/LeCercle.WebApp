@@ -183,6 +183,13 @@ export default function BookingFlow({ locale, dict }: BookingFlowProps) {
   const { tokenRef, tokenReady, error: tokenError } = useBookingToken();
 
   useEffect(() => {
+    if (step === 7) {
+      try {
+        sessionStorage.removeItem(STORAGE_KEY);
+        sessionStorage.removeItem("lecercle_booking_summary");
+      } catch {}
+      return;
+    }
     saveFlow(step, state);
   }, [step, state]);
 

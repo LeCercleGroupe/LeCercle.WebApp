@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { loadAuth, clearAuth, fetchWithRefresh, StoredAuth } from "@/components/BookingFlow/utils/auth";
 import AccountTopBar from "./shared/AccountTopBar";
-import { formatDate } from "./shared/format";
+import { formatDay, formatYear } from "./shared/format";
 import { Contract } from "./shared/types";
 
 type ContractFilter = "all" | "signed" | "awaiting_sig" | "awaiting_pay" | "cancelled";
@@ -162,11 +162,11 @@ export default function ContractsPage({ locale, dict }: Props) {
   }, [contracts, filter, search]);
 
   const filterTabs: { key: ContractFilter; label: string }[] = [
-    { key: "all", label: d.filter_all.replace("{count}", String(counts.all)) },
-    { key: "signed", label: d.filter_signed.replace("{count}", String(counts.signed)) },
+    { key: "all",          label: d.filter_all.replace("{count}", String(counts.all)) },
+    { key: "signed",       label: d.filter_signed.replace("{count}", String(counts.signed)) },
     { key: "awaiting_sig", label: d.filter_awaiting_sig.replace("{count}", String(counts.awaiting_sig)) },
     { key: "awaiting_pay", label: d.filter_awaiting_pay.replace("{count}", String(counts.awaiting_pay)) },
-    { key: "cancelled", label: d.filter_cancelled.replace("{count}", String(counts.cancelled)) },
+    { key: "cancelled",    label: d.filter_cancelled.replace("{count}", String(counts.cancelled)) },
   ];
 
   return (
@@ -181,134 +181,84 @@ export default function ContractsPage({ locale, dict }: Props) {
 
       <main className="flex-1 w-full">
         <div className="mx-auto max-w-432">
-          <div className="mx-auto max-w-295 px-4 sm:px-6 lg:px-8 2xl:px-0 py-14">
+          <div className="mx-auto max-w-295 px-4 sm:px-6 lg:px-8 2xl:px-0 py-8 sm:py-14">
 
             {/* Page header */}
-            <div className="mb-8">
-              <h1 className="text-[40px] font-semibold text-[#f0f0f0] font-figtree tracking-tight leading-none mb-3">
-                {d.title}
-              </h1>
-              <p className="text-[15px] text-[#888] font-figtree tracking-tight">
+            <div className="mb-6 sm:mb-8">
+              <div className="flex items-start justify-between gap-4 mb-2 sm:mb-3">
+                <h1 className="text-[28px] sm:text-[40px] font-semibold text-[#f0f0f0] font-figtree tracking-tight leading-none">
+                  {d.title}
+                </h1>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={d.search}
+                  className="shrink-0 px-3 py-2 border border-[#2a2a2a] bg-[#111] text-[13px] text-[#f0f0f0] font-figtree tracking-tight placeholder-[#555] focus:outline-none focus:border-[#4a4a4a] w-36 sm:w-44"
+                />
+              </div>
+              <p className="text-[13px] sm:text-[15px] text-[#888] font-figtree tracking-tight">
                 {d.subtitle}
               </p>
             </div>
 
-            {/* Filters + search */}
-            <div className="flex items-center justify-between gap-4 mb-6">
-              <div className="flex gap-2 flex-wrap">
-                {filterTabs.map(({ key, label }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setFilter(key)}
-                    className={`px-4 py-2 text-[13px] font-medium font-figtree tracking-tight border transition-colors cursor-pointer ${
-                      filter === key
-                        ? "border-[#4a4a4a] bg-[#1e1e1e] text-[#f0f0f0]"
-                        : "border-[#2a2a2a] bg-transparent text-[#888] hover:border-[#3a3a3a] hover:text-[#c0c0c0]"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={d.search}
-                className="px-3 py-2 border border-[#2a2a2a] bg-[#111] text-[13px] text-[#f0f0f0] font-figtree tracking-tight placeholder-[#555] focus:outline-none focus:border-[#4a4a4a] w-44"
-              />
+            {/* Summary badges */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {counts.signed > 0 && (
+                <span className="inline-flex items-center px-3 py-1.5 text-xs font-medium font-figtree tracking-widest border border-[#1a4a2a] bg-[#0a2010] text-[#4ade80]">
+                  {d.filter_signed.replace("{count}", String(counts.signed))}
+                </span>
+              )}
+              {counts.awaiting_sig > 0 && (
+                <span className="inline-flex items-center px-3 py-1.5 text-xs font-medium font-figtree tracking-widest border border-[#3a2000] bg-[#1a0f00] text-[#fb923c]">
+                  {d.filter_awaiting_sig.replace("{count}", String(counts.awaiting_sig))}
+                </span>
+              )}
+              {counts.awaiting_pay > 0 && (
+                <span className="inline-flex items-center px-3 py-1.5 text-xs font-medium font-figtree tracking-widest border border-[#3a2a00] bg-[#1f1400] text-[#fbbf24]">
+                  {d.filter_awaiting_pay.replace("{count}", String(counts.awaiting_pay))}
+                </span>
+              )}
+              {counts.cancelled > 0 && (
+                <span className="inline-flex items-center px-3 py-1.5 text-xs font-medium font-figtree tracking-widest border border-[#3a1010] bg-[#1a0505] text-[#f87171]">
+                  {d.filter_cancelled.replace("{count}", String(counts.cancelled))}
+                </span>
+              )}
+            </div>
+
+            {/* Filter tabs */}
+            <div className="flex flex-wrap gap-2 mb-5 sm:mb-6">
+              {filterTabs.map(({ key, label }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setFilter(key)}
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 text-[13px] sm:text-sm font-medium font-figtree tracking-tight border transition-colors cursor-pointer ${
+                    filter === key
+                      ? "border-[#4a4a4a] bg-[#1e1e1e] text-[#f0f0f0]"
+                      : "border-[#2a2a2a] bg-transparent text-[#888] hover:border-[#3a3a3a] hover:text-[#c0c0c0]"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
 
             {/* Content */}
             {loading && (
-              <p className="text-sm text-[#666] font-figtree py-12 text-center">{d.loading}</p>
+              <p className="text-sm text-[#666] font-figtree tracking-tight py-12 text-center">{d.loading}</p>
             )}
             {error && (
-              <p className="text-sm text-red-400 font-figtree py-12 text-center">{d.error}</p>
+              <p className="text-sm text-red-400 font-figtree tracking-tight py-12 text-center">{d.error}</p>
             )}
             {!loading && !error && filtered.length === 0 && (
-              <p className="text-sm text-[#666] font-figtree py-12 text-center">{d.empty}</p>
+              <p className="text-sm text-[#666] font-figtree tracking-tight py-12 text-center">{d.empty}</p>
             )}
 
             {!loading && !error && filtered.length > 0 && (
-              <div className="border border-[#1e1e1e]">
-                {/* Table header */}
-                <div className="grid grid-cols-[1fr_140px_160px_140px_100px] gap-0 px-4 py-3 border-b border-[#1e1e1e] bg-[#0e0e0e]">
-                  <p className="text-[11px] font-medium text-[#555] font-figtree tracking-[0.12em] uppercase">{d.col_document}</p>
-                  <p className="text-[11px] font-medium text-[#555] font-figtree tracking-[0.12em] uppercase">{d.col_event_date}</p>
-                  <p className="text-[11px] font-medium text-[#555] font-figtree tracking-[0.12em] uppercase">{d.col_status}</p>
-                  <p className="text-[11px] font-medium text-[#555] font-figtree tracking-[0.12em] uppercase">{d.col_issued}</p>
-                  <p className="text-[11px] font-medium text-[#555] font-figtree tracking-[0.12em] uppercase text-right">&nbsp;</p>
-                </div>
+              <div className="flex flex-col gap-0 border border-[#1e1e1e]">
                 {filtered.map((c) => (
-                  <div
-                    key={c.id}
-                    className="grid grid-cols-[1fr_140px_160px_140px_100px] gap-0 px-4 py-4 border-b border-[#141414] last:border-b-0 items-center hover:bg-[#0e0e0e] transition-colors"
-                  >
-                    {/* Document */}
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="size-7 border border-[#2a2a2a] bg-[#111] shrink-0 flex items-center justify-center">
-                        <svg width="12" height="14" viewBox="0 0 12 14" fill="none">
-                          <path d="M7 1H2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5L7 1Z" stroke="#555" strokeWidth="1.1" strokeLinejoin="round"/>
-                          <path d="M7 1v4h4" stroke="#555" strokeWidth="1.1" strokeLinejoin="round"/>
-                        </svg>
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight truncate">
-                          {c.documentName || c.contractNumber || "—"}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <p className="text-[12px] text-[#666] font-figtree tracking-tight truncate">{c.contractNumber || c.orderNumber || "—"}</p>
-                          {c.eventId && (
-                            <Link
-                              href={`/${locale}/account/events/${c.eventId}`}
-                              className="text-[11px] text-[#666] font-figtree tracking-tight hover:text-[#c0c0c0] transition-colors shrink-0 underline underline-offset-2"
-                            >
-                              {d.view_event}
-                            </Link>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Event date */}
-                    <p className="text-[13px] text-[#888] font-figtree tracking-tight">
-                      {c.eventDate ? formatDate(c.eventDate) : d.na}
-                    </p>
-
-                    {/* Status */}
-                    <div>
-                      {(c.status ?? "").toLowerCase() !== "confirmed" && (
-                        <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-medium font-figtree tracking-widest border ${statusClass(c.status)}`}>
-                          · {statusLabel(c.status, d)}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Issued date */}
-                    <p className="text-[13px] text-[#888] font-figtree tracking-tight">
-                      {c.generatedAt ? formatDate(c.generatedAt) : d.na}
-                    </p>
-
-                    {/* Download */}
-                    <div className="flex justify-end">
-                      {c.fileUrl ? (
-                        <a
-                          href={c.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-3 py-1.5 border border-[#2a2a2a] text-[13px] font-medium text-[#c0c0c0] font-figtree tracking-tight hover:border-[#4a4a4a] hover:text-[#f0f0f0] transition-colors"
-                        >
-                          {d.download}
-                        </a>
-                      ) : (
-                        <span className="px-3 py-1.5 border border-[#1a1a1a] text-[13px] text-[#444] font-figtree tracking-tight cursor-not-allowed">
-                          {d.download}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                  <ContractRow key={c.id} contract={c} locale={locale} d={d} />
                 ))}
               </div>
             )}
@@ -317,4 +267,95 @@ export default function ContractsPage({ locale, dict }: Props) {
       </main>
     </div>
   );
+}
+
+function ContractRow({
+  contract: c,
+  locale,
+  d,
+}: {
+  contract: Contract;
+  locale: string;
+  d: ContractsDict;
+}) {
+  const dateStr = c.eventDate || c.generatedAt || "";
+  const day  = formatDay(dateStr);
+  const year = formatYear(dateStr);
+
+  const title    = c.documentName || c.contractNumber || "—";
+  const subtitle = [c.contractNumber, c.orderNumber].filter(Boolean).join(" · ");
+
+  const inner = (
+    <>
+      {/* Date */}
+      <div className="w-20 sm:w-24 shrink-0 flex flex-col pt-0.5">
+        <span className="text-[20px] sm:text-[22px] font-semibold text-[#f0f0f0] font-figtree tracking-tight leading-none whitespace-nowrap">
+          {day}
+        </span>
+        <span className="text-[11px] sm:text-xs text-[#555] font-figtree tracking-tight mt-0.5">{year}</span>
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 min-w-0 flex flex-col gap-1">
+        <p className="text-[15px] font-medium text-[#f0f0f0] font-figtree tracking-tight truncate">
+          {title}
+        </p>
+        <div className="flex items-center gap-2 flex-wrap">
+          {subtitle && (
+            <p className="text-[13px] text-[#666] font-figtree tracking-tight truncate">{subtitle}</p>
+          )}
+          {c.eventId && (
+            <Link
+              href={`/${locale}/account/events/${c.eventId}`}
+              onClick={(e) => e.stopPropagation()}
+              className="text-[11px] text-[#555] font-figtree tracking-tight hover:text-[#c0c0c0] transition-colors shrink-0 underline underline-offset-2"
+            >
+              {d.view_event}
+            </Link>
+          )}
+        </div>
+        {/* Status — mobile only */}
+        <div className="flex items-center gap-2 mt-1 sm:hidden">
+          <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-medium font-figtree tracking-widest border ${statusClass(c.status)}`}>
+            {statusLabel(c.status, d)}
+          </span>
+        </div>
+      </div>
+
+      {/* Status — desktop only */}
+      <div className="hidden sm:flex shrink-0 flex-col items-start gap-1 min-w-40">
+        <span className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest border ${statusClass(c.status)}`}>
+          {statusLabel(c.status, d)}
+        </span>
+      </div>
+
+      {/* Download — desktop only */}
+      <span className={`hidden sm:inline-flex shrink-0 px-4 py-2 border text-sm font-medium font-figtree tracking-tight transition-colors ${
+        c.fileUrl
+          ? "border-[#2a2a2a] text-[#c0c0c0] hover:border-[#4a4a4a] hover:text-[#f0f0f0]"
+          : "border-[#1a1a1a] text-[#444] cursor-not-allowed"
+      }`}>
+        {d.download}
+      </span>
+
+      {/* Chevron — mobile only */}
+      <div className="sm:hidden shrink-0 self-center text-[#444]">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </div>
+    </>
+  );
+
+  const rowClass = "flex items-start sm:items-center gap-4 sm:gap-6 px-4 sm:px-5 py-4 border-b border-[#141414] last:border-b-0 bg-[#0c0c0c] hover:bg-[#0f0f0f] active:bg-[#111] transition-colors";
+
+  if (c.fileUrl) {
+    return (
+      <a href={c.fileUrl} target="_blank" rel="noopener noreferrer" className={rowClass}>
+        {inner}
+      </a>
+    );
+  }
+
+  return <div className={rowClass}>{inner}</div>;
 }

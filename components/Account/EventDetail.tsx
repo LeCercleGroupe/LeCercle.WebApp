@@ -303,7 +303,7 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
                   {event.venueTitle || "—"}
                 </h1>
                 <span className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest border shrink-0 ${stateBadgeClasses[eventState]}`}>
-                  · {stateLabel(eventState, d)}
+                  {stateLabel(eventState, d)}
                 </span>
               </div>
               <p className="text-[13px] sm:text-[15px] text-[#888] font-figtree tracking-tight">
@@ -402,7 +402,7 @@ function OrderRow({
         {/* Status row — mobile only */}
         <div className="flex items-center gap-2 mt-1 sm:hidden">
           <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-medium font-figtree tracking-widest border ${stateBadgeClass(state)}`}>
-            · {stateLabel(state, d)}
+            {stateLabel(state, d)}
           </span>
           {subText && (
             <span className="text-[12px] text-[#666] font-figtree tracking-tight">{subText}</span>
@@ -413,7 +413,7 @@ function OrderRow({
       {/* Status — desktop only */}
       <div className="hidden sm:flex shrink-0 flex-col items-start gap-1 min-w-35">
         <span className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest border ${stateBadgeClass(state)}`}>
-          · {stateLabel(state, d)}
+          {stateLabel(state, d)}
         </span>
         {subText && (
           <span className="text-[12px] text-[#666] font-figtree tracking-tight">{subText}</span>

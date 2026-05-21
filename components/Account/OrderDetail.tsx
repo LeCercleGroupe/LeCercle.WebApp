@@ -60,7 +60,7 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
       try {
         const [ordRes, cRes] = await Promise.all([
           fetchWithRefresh(`/api/account/orders/${orderId}`),
-          fetchWithRefresh("/api/account/contracts"),
+          fetchWithRefresh(`/api/account/contracts/${orderId}`),
         ]);
 
         if (ordRes.status === 401) {
@@ -80,8 +80,8 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
 
         if (cRes.ok) {
           const cData = await cRes.json();
-          const all: Contract[] = Array.isArray(cData) ? cData : (cData?.items ?? cData?.contracts ?? []);
-          setContracts(all.filter((c) => c.orderId === orderId || c.orderNumber === order?.orderNumber));
+          const list: Contract[] = Array.isArray(cData) ? cData : (cData ? [cData] : []);
+          setContracts(list);
         }
       } catch {
         setError(true);
@@ -91,14 +91,6 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
     }
     load();
   }, [auth, locale, orderId, router]);
-
-  // Re-filter contracts once order is loaded (order.orderNumber available)
-  useEffect(() => {
-    if (!order) return;
-    setContracts((prev) =>
-      prev.filter((c) => c.orderId === orderId || c.orderNumber === order.orderNumber)
-    );
-  }, [order, orderId]);
 
   async function handlePayOnline() {
     if (!orderId) return;
@@ -206,7 +198,7 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
               </div>
               <div className="flex items-center flex-wrap gap-2 shrink-0">
                 <span className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest border ${stateClasses[orderState]}`}>
-                  · {stateBadgeLabels[orderState]}
+                  {stateBadgeLabels[orderState]}
                 </span>
                 <a
                   href="{whatsapp}"
@@ -347,7 +339,7 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                           }`}>
                             {formatMDL(advance)}
                             {(orderState === "past" || orderState === "confirmed") && (
-                              <span className="text-[11px] ml-1">· {d.paid_badge}</span>
+                              <span className="text-[11px] ml-1">{d.paid_badge}</span>
                             )}
                           </span>
                         </div>
@@ -357,7 +349,7 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                             orderState === "past" ? "text-[#4ade80]" : "text-[#f0f0f0]"
                           }`}>
                             {formatMDL(rest)}
-                            {orderState === "past" && <span className="text-[11px] ml-1">· {d.paid_badge}</span>}
+                            {orderState === "past" && <span className="text-[11px] ml-1">{d.paid_badge}</span>}
                           </span>
                         </div>
                       </div>
@@ -409,7 +401,7 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                           </div>
                           <div className="flex items-center gap-2 mt-1.5 ml-11">
                             <span className={`text-[11px] font-medium font-figtree tracking-widest border px-2 py-0.5 ${contractStatusClass(c.status)}`}>
-                              · {c.status?.toUpperCase() ?? "—"}
+                              {c.status?.toUpperCase() ?? "—"}
                             </span>
                             <p className="text-[12px] text-[#666] font-figtree tracking-tight truncate">
                               {c.contractNumber} {c.generatedAt ? `· ${formatDate(c.generatedAt)}` : ""}
@@ -482,7 +474,7 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                         }`}>
                           {formatMDL(advance)}
                           {(orderState === "past" || orderState === "confirmed") && (
-                            <span className="text-[11px] ml-1">· {d.paid_badge}</span>
+                            <span className="text-[11px] ml-1">{d.paid_badge}</span>
                           )}
                         </span>
                       </div>

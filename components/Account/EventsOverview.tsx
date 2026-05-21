@@ -188,17 +188,17 @@ export default function EventsOverview({ locale, dict }: Props) {
             <div className="flex flex-wrap gap-2 mb-4">
               {upcoming.length > 0 && (
                 <span className="inline-flex items-center px-3 py-1.5 text-xs font-medium font-figtree tracking-widest border border-[#3a2a00] bg-[#1f1400] text-[#fbbf24]">
-                  · {d.badge_upcoming.replace("{count}", String(upcoming.length))}
+                  {d.badge_upcoming.replace("{count}", String(upcoming.length))}
                 </span>
               )}
               {past.length > 0 && (
                 <span className="inline-flex items-center px-3 py-1.5 text-xs font-medium font-figtree tracking-widest border border-[#2a2a2a] bg-[#1a1a1a] text-[#888]">
-                  · {d.badge_past.replace("{count}", String(past.length))}
+                  {d.badge_past.replace("{count}", String(past.length))}
                 </span>
               )}
               {cancelled.length > 0 && (
                 <span className="inline-flex items-center px-3 py-1.5 text-xs font-medium font-figtree tracking-widest border border-[#3a1010] bg-[#1a0505] text-[#f87171]">
-                  · {d.badge_cancelled.replace("{count}", String(cancelled.length))}
+                  {d.badge_cancelled.replace("{count}", String(cancelled.length))}
                 </span>
               )}
             </div>
@@ -309,7 +309,7 @@ function EventRow({
         {/* Status row — mobile only */}
         <div className="flex items-center gap-2 mt-1 sm:hidden">
           <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-medium font-figtree tracking-widest ${stateBadgeClass(state)}`}>
-            · {stateLabel(state, d)}
+            {stateLabel(state, d)}
           </span>
           {subText && (
             <span className="text-[12px] text-[#666] font-figtree tracking-tight">{subText}</span>
@@ -320,7 +320,7 @@ function EventRow({
       {/* Status — desktop only */}
       <div className="hidden sm:flex shrink-0 flex-col items-start gap-1 min-w-35">
         <span className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest ${stateBadgeClass(state)}`}>
-          · {stateLabel(state, d)}
+          {stateLabel(state, d)}
         </span>
         {subText && (
           <span className="text-[12px] text-[#666] font-figtree tracking-tight">{subText}</span>

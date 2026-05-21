@@ -36,10 +36,7 @@ export default function AccountTopBar({
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     }
@@ -57,68 +54,71 @@ export default function AccountTopBar({
     if (typeof window === "undefined") return;
     const segments = window.location.pathname.split("/");
     segments[1] = next;
-    const newPath = segments.join("/") + window.location.search;
-    router.push(newPath);
+    router.push(segments.join("/") + window.location.search);
     setOpen(false);
   }
 
-  return (
-    <header className="w-full bg-[#080808] border-b border-[#1a1a1a] h-18 flex items-center shrink-0 z-30">
-      <div className="w-full max-w-432 mx-auto px-0 flex items-center">
-        {/* Left spacer to align with content */}
-        <div className="w-68.5 shrink-0" />
+  const navLinks = [
+    { key: "events" as const,    href: `/${locale}/account` },
+    { key: "contracts" as const, href: `/${locale}/account/contracts` },
+    { key: "profile" as const,   href: `/${locale}/account/profile` },
+  ];
 
-        {/* Inner 1180px area */}
-        <div className="flex-1 flex items-center justify-between px-0 max-w-295">
-          <Link href={`/${locale}`} className="relative h-10 w-27">
-            <Image
-              src="/logos/LeCercle.svg"
-              alt="Le Cercle"
-              fill
-              className="object-contain object-left"
-            />
-          </Link>
+  return (
+    <header className="w-full bg-[#080808] border-b border-[#141414] shrink-0 z-30">
+      <div className="flex items-center justify-between px-5 py-3.5 sm:px-9 sm:py-4">
+
+        {/* Logo */}
+        <Link href={`/${locale}`} className="shrink-0">
+          <Image
+            src="/logos/LeCercle.svg"
+            alt="Le Cercle"
+            width={120}
+            height={44}
+            priority
+            className="w-24 sm:w-28 h-auto drop-shadow-[0_1px_12px_rgba(0,0,0,0.4)]"
+          />
+        </Link>
+
+        {/* Right cluster */}
+        <div className="flex items-center gap-4 sm:gap-6">
 
           {/* Avatar + dropdown */}
           <div ref={dropdownRef} className="relative">
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
-              className="size-8.5 rounded-full bg-[#1e1e1e] border border-[#2a2a2a] hover:border-[#444] transition-colors flex items-center justify-center cursor-pointer"
+              className="size-9 rounded-full flex items-center justify-center border border-white/20 hover:border-white/50 transition-all duration-200 shrink-0 cursor-pointer"
+              style={{ backgroundColor: "rgba(196,151,63,0.85)" }}
             >
-              <span className="text-[12px] font-semibold text-[#f0f0f0] font-figtree tracking-tight select-none">
+              <span className="text-[11px] font-semibold text-[#0d0d0d] font-figtree leading-none select-none">
                 {initials}
               </span>
             </button>
 
             {open && (
-              <div className="absolute right-0 top-[calc(100%+8px)] w-55 bg-[#111] border border-[#2a2a2a] shadow-xl z-50 py-1">
+              <div className="absolute right-0 top-[calc(100%+10px)] w-56 bg-[#111] border border-[#2a2a2a] shadow-2xl z-50">
+
                 {/* User info */}
-                <div className="px-4 py-3 border-b border-[#1e1e1e]">
+                <div className="px-4 py-3.5 border-b border-[#1e1e1e]">
                   <p className="text-sm font-medium text-[#f0f0f0] font-figtree tracking-tight truncate">
                     {displayName}
                   </p>
                   {email && (
-                    <p className="text-xs text-[#666] font-figtree tracking-tight truncate mt-0.5">
+                    <p className="text-xs text-[#555] font-figtree tracking-tight truncate mt-0.5">
                       {email}
                     </p>
                   )}
                 </div>
 
-                {/* Navigation */}
+                {/* Nav links (all screens — desktop still has them here for convenience) */}
                 <div className="py-1">
-                  {(
-                    [
-                      ["events", `/${locale}/account`],
-                      ["contracts", `/${locale}/account/contracts`],
-                      ["profile", `/${locale}/account/profile`],
-                    ] as [keyof NavDict, string][]
-                  ).map(([key, href]) => (
+                  {navLinks.map(({ key, href }) => (
                     <Link
                       key={key}
                       href={href}
                       onClick={() => setOpen(false)}
-                      className="flex items-center px-4 py-2.5 text-sm text-[#c0c0c0] font-figtree tracking-tight hover:text-[#f0f0f0] hover:bg-[#1a1a1a] transition-colors"
+                      className="flex items-center px-4 py-2.5 text-[13px] text-[#c0c0c0] font-figtree tracking-tight hover:text-[#f0f0f0] hover:bg-[#1a1a1a] transition-colors"
                     >
                       {navDict[key]}
                     </Link>
@@ -132,10 +132,10 @@ export default function AccountTopBar({
                       key={l}
                       type="button"
                       onClick={() => switchLocale(l)}
-                      className={`text-xs font-medium font-figtree tracking-wide uppercase px-2 py-1 transition-colors cursor-pointer ${
+                      className={`text-[11px] font-medium font-figtree tracking-widest uppercase px-2.5 py-1 transition-colors cursor-pointer ${
                         l === locale
                           ? "text-[#f0f0f0] bg-[#222] border border-[#333]"
-                          : "text-[#666] hover:text-[#f0f0f0]"
+                          : "text-[#555] hover:text-[#f0f0f0]"
                       }`}
                     >
                       {l}
@@ -144,22 +144,20 @@ export default function AccountTopBar({
                 </div>
 
                 {/* Logout */}
-                <div className="border-t border-[#1e1e1e] py-1">
+                <div className="border-t border-[#1e1e1e]">
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="w-full flex items-center px-4 py-2.5 text-sm text-[#888] font-figtree tracking-tight hover:text-[#f87171] hover:bg-[#1a0a0a] transition-colors cursor-pointer text-left"
+                    className="w-full flex items-center px-4 py-2.5 text-[13px] text-[#666] font-figtree tracking-tight hover:text-[#f87171] hover:bg-[#120808] transition-colors cursor-pointer text-left"
                   >
                     {navDict.logout}
                   </button>
                 </div>
+
               </div>
             )}
           </div>
         </div>
-
-        {/* Right spacer */}
-        <div className="w-68.5 shrink-0" />
       </div>
     </header>
   );
