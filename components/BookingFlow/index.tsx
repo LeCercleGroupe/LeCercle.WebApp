@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { BookingState } from "./types";
 import type { BookingDict } from "./dict";
 import { loadAuth } from "./utils/auth";
@@ -54,19 +55,21 @@ const INITIAL_STATE: BookingState = {
   customerId: "",
   bookingRef: "",
   reservationToken: "",
+  existingEventId: "",
 };
 
-function loadSaved(): { step: number; state: BookingState } | null {
+function loadSaved(): { step: number; state: BookingState; isAddOrder: boolean; returnUrl: string } | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    // Step 7 = pay-later confirmed — user finished, start fresh next time
     if (parsed.step === 7) return null;
     const d = parsed.state?.date;
     return {
       step: parsed.step ?? 1,
+      isAddOrder: !!(parsed.isAddOrder),
+      returnUrl: parsed.returnUrl ?? "",
       state: {
         ...INITIAL_STATE,
         ...parsed.state,
@@ -78,17 +81,18 @@ function loadSaved(): { step: number; state: BookingState } | null {
   }
 }
 
-function getInitialFlow(): { step: number; state: BookingState } {
+function getInitialFlow(): { step: number; state: BookingState; isAddOrder: boolean; returnUrl: string } {
   const saved = loadSaved();
   const authResult = loadAuth();
 
   if (saved) {
+    const { isAddOrder, returnUrl } = saved;
     if (authResult) {
       const { auth, tokensValid } = authResult;
-      // Keep booking progress from the session but always overlay the logged-in
-      // user's contact details and fresh tokens so stale session data never wins.
       return {
         step: saved.step,
+        isAddOrder,
+        returnUrl,
         state: {
           ...saved.state,
           email: auth.user.email ?? "",
@@ -98,9 +102,6 @@ function getInitialFlow(): { step: number; state: BookingState } {
           companyName: auth.user.companyName ?? "",
           idno: auth.user.idno ?? "",
           contactType: auth.user.isCompany ? "company" : "person",
-          // Only count email/sms as verified if the access token is still valid.
-          // Expired tokens mean the user must re-authenticate, even if the email
-          // address is still present in localStorage.
           emailVerified: !!auth.user.email && tokensValid,
           smsVerified: !!auth.user.phoneNumber && tokensValid,
           userAccessToken: tokensValid ? auth.accessToken : "",
@@ -110,10 +111,10 @@ function getInitialFlow(): { step: number; state: BookingState } {
         },
       };
     }
-    // Session exists but no auth in localStorage — preserve booking progress
-    // but clear auth fields and cap step at 5 so the user must re-authenticate.
     return {
-      step: Math.min(saved.step, 5),
+      step: Math.min(saved.step, isAddOrder ? 2 : 5),
+      isAddOrder,
+      returnUrl,
       state: {
         ...saved.state,
         emailVerified: false,
@@ -126,11 +127,12 @@ function getInitialFlow(): { step: number; state: BookingState } {
     };
   }
 
-  // No saved flow — pre-fill from auth profile
   if (authResult) {
     const { auth, tokensValid } = authResult;
     return {
       step: 1,
+      isAddOrder: false,
+      returnUrl: "",
       state: {
         ...INITIAL_STATE,
         ...(tokensValid && {
@@ -152,16 +154,18 @@ function getInitialFlow(): { step: number; state: BookingState } {
     };
   }
 
-  return { step: 1, state: INITIAL_STATE };
+  return { step: 1, isAddOrder: false, returnUrl: "", state: INITIAL_STATE };
 }
 
-function saveFlow(step: number, state: BookingState) {
+function saveFlow(step: number, state: BookingState, isAddOrder: boolean, returnUrl: string) {
   try {
     const d = state.date;
     sessionStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({
         step,
+        isAddOrder,
+        returnUrl,
         state: {
           ...state,
           date: d ? { y: d.getFullYear(), m: d.getMonth(), d: d.getDate() } : null,
@@ -178,9 +182,24 @@ function stepLabel(dict: BookingDict, current: number, total = 6): string {
 }
 
 export default function BookingFlow({ locale, dict }: BookingFlowProps) {
+  const router = useRouter();
   const [step, setStep] = useState(() => getInitialFlow().step);
   const [state, setState] = useState<BookingState>(() => getInitialFlow().state);
+  const [isAddOrder] = useState(() => getInitialFlow().isAddOrder);
+  const [returnUrl] = useState(() => getInitialFlow().returnUrl);
   const { tokenRef, tokenReady, error: tokenError } = useBookingToken();
+
+  const isAddOrderRef = useRef(isAddOrder);
+  useEffect(() => {
+    return () => {
+      if (isAddOrderRef.current) {
+        try {
+          sessionStorage.removeItem(STORAGE_KEY);
+          sessionStorage.removeItem("lecercle_booking_summary");
+        } catch {}
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (step === 7) {
@@ -190,25 +209,35 @@ export default function BookingFlow({ locale, dict }: BookingFlowProps) {
       } catch {}
       return;
     }
-    saveFlow(step, state);
-  }, [step, state]);
+    saveFlow(step, state, isAddOrder, returnUrl);
+  }, [step, state, isAddOrder, returnUrl]);
 
   function patch(update: Partial<BookingState>) {
     setState((prev) => ({ ...prev, ...update }));
   }
 
   function goNext() {
-    setStep((s) => Math.min(s + 1, 7));
+    setStep((s) => {
+      if (isAddOrder && s === 3) return 6;
+      return Math.min(s + 1, 7);
+    });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function goBack() {
-    // Going back from Step 6 means the current order is being abandoned;
-    // clear it so the next finalize creates a fresh event and order.
+    if (isAddOrder && step === 2) {
+      router.push(returnUrl || `/${locale}/account`);
+      return;
+    }
     if (step === 6) {
       patch({ bookingRef: "", reservationToken: "" });
     }
-    setStep((s) => Math.max(s - 1, 1));
+    if (isAddOrder && step === 6) {
+      setStep(3);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    setStep((s) => Math.max(s - 1, isAddOrder ? 2 : 1));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 

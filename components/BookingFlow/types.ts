@@ -1,7 +1,7 @@
 export const SERVICE_IDS = {
   lebureau: "aaaaaaaa-0001-0001-0001-aaaaaaaaaaaa",
   maisondufeu: "aaaaaaaa-0002-0002-0002-aaaaaaaaaaaa",
-  // lafonte: "aaaaaaaa-0003-0003-0003-aaaaaaaaaaaa",
+  lafonte: "aaaaaaaa-0003-0003-0003-aaaaaaaaaaaa",
   laperle: "aaaaaaaa-0004-0004-0004-aaaaaaaaaaaa",
 } as const;
 
@@ -53,9 +53,10 @@ export interface BookingState {
   customerId: string;
   bookingRef: string;
   reservationToken: string;
+  existingEventId: string;
 }
 
-export const VENUE_INFO: Record<ServiceId, { name: string; description: string; logo: string }> = {
+export const VENUE_INFO: Record<ServiceId, { name: string; description: string; logo?: string }> = {
   [SERVICE_IDS.lebureau]: {
     name: "Le Bureau",
     description: "Cigar lounge cu aer retro și clasic",
@@ -66,11 +67,11 @@ export const VENUE_INFO: Record<ServiceId, { name: string; description: string; 
     description: "Desert franțuzesc servit ca moment live",
     logo: "/logos/MaisonDuFeu.svg",
   },
-  // [SERVICE_IDS.lafonte]: {
-  //   name: "La Fonte",
-  //   description: "Chocolate fondue în stil elvețian",
-  //   logo: "/logos/LaFonte.svg",
-  // },
+  [SERVICE_IDS.lafonte]: {
+    name: "La Fonte",
+    description: "Fântână de ciocolată belgiană pentru evenimente",
+    logo: "/logos/LaFonte.svg",
+  },
   [SERVICE_IDS.laperle]: {
     name: "La Perle",
     description: "Tuktuk cu gelato italian pentru evenimente",
@@ -81,6 +82,6 @@ export const VENUE_INFO: Record<ServiceId, { name: string; description: string; 
 export const ALL_VENUES: ServiceId[] = [
   SERVICE_IDS.lebureau,
   SERVICE_IDS.maisondufeu,
-  // SERVICE_IDS.lafonte,
+  SERVICE_IDS.lafonte,
   SERVICE_IDS.laperle,
 ];

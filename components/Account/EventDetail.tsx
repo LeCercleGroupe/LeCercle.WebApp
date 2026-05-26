@@ -124,6 +124,7 @@ interface EventDetailDict {
   loading: string;
   error: string;
   view_order: string;
+  add_order: string;
 }
 
 interface NavDict {
@@ -272,6 +273,64 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
 
   const eventState = deriveEventState(event);
 
+  function handleBookOrder() {
+    if (!event || eventState === "cancelled") return;
+    const authResult = loadAuth();
+    const tokens = authResult?.auth;
+    const tokensValid = authResult?.tokensValid ?? false;
+
+    const [y, m, day] = event.eventDate.split("-").map(Number);
+    const date = y && m && day ? new Date(y, m - 1, day) : null;
+
+    const prefilledState = {
+      date: date ? { y: date.getFullYear(), m: date.getMonth(), d: date.getDate() } : null,
+      guests: event.guestCount || 1,
+      selectedServices: [],
+      selectedPackages: {},
+      guestsPerService: {},
+      city: event.city || "",
+      address: event.venueAddress || "",
+      postalCode: event.postalCode || "",
+      venueName: event.venueTitle || "",
+      latitude: null,
+      longitude: null,
+      distanceKm: event.distanceKm ?? null,
+      startTime: event.eventStartTime || "",
+      notes: event.notes ?? "",
+      contactType: tokens?.user.isCompany ? "company" : "person",
+      companyName: tokens?.user.companyName ?? "",
+      idno: tokens?.user.idno ?? "",
+      firstName: tokens?.user.firstName ?? "",
+      lastName: tokens?.user.lastName ?? "",
+      email: tokens?.user.email ?? "",
+      phone: tokens?.user.phoneNumber ?? "+373",
+      paymentOption: "now",
+      smsSent: false,
+      smsVerified: tokensValid && !!(tokens?.user.phoneNumber),
+      emailSent: false,
+      emailVerified: tokensValid && !!(tokens?.user.email),
+      userAccessToken: tokensValid ? (tokens?.accessToken ?? "") : "",
+      userRefreshToken: tokensValid ? (tokens?.refreshToken ?? "") : "",
+      userId: tokensValid ? (tokens?.user.userId ?? "") : "",
+      customerId: tokensValid ? (tokens?.user.customerId ?? "") : "",
+      bookingRef: "",
+      reservationToken: "",
+      existingEventId: event.id,
+    };
+
+    try {
+      sessionStorage.removeItem("lecercle_booking_flow");
+      sessionStorage.setItem("lecercle_booking_flow", JSON.stringify({
+        step: 2,
+        isAddOrder: true,
+        returnUrl: `/${locale}/account/events/${eventId}`,
+        state: prefilledState,
+      }));
+    } catch {}
+
+    router.push(`/${locale}/booking`);
+  }
+
   const stateBadgeClasses: Record<EventState, string> = {
     pending:   "bg-[#1f1400] border-[#3a2a00] text-[#fbbf24]",
     confirmed: "bg-[#0a2010] border-[#1a4a2a] text-[#4ade80]",
@@ -302,9 +361,19 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
                 <h1 className="text-[28px] sm:text-[40px] font-semibold text-[#f0f0f0] font-figtree tracking-tight leading-none">
                   {event.venueTitle || "—"}
                 </h1>
-                <span className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest border shrink-0 ${stateBadgeClasses[eventState]}`}>
-                  {stateLabel(eventState, d)}
-                </span>
+                {eventState !== "cancelled" ? (
+                  <button
+                    type="button"
+                    onClick={handleBookOrder}
+                    className="shrink-0 px-3 sm:px-4 py-2 sm:py-2.5 border border-[#3a3a3a] text-[13px] sm:text-sm font-medium text-[#f0f0f0] font-figtree tracking-tight hover:bg-[#1a1a1a] transition-colors cursor-pointer"
+                  >
+                    {d.add_order}
+                  </button>
+                ) : (
+                  <span className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest border shrink-0 ${stateBadgeClasses[eventState]}`}>
+                    {stateLabel(eventState, d)}
+                  </span>
+                )}
               </div>
               <p className="text-[13px] sm:text-[15px] text-[#888] font-figtree tracking-tight">
                 {[
@@ -336,6 +405,7 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
                 ))}
               </div>
             )}
+
           </div>
         </div>
       </main>

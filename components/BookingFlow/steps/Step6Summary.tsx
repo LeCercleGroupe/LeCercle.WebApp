@@ -303,33 +303,39 @@ export default function Step6Summary({
           onChange({ reservationToken });
         }
 
-        const eventDate = state.date
-          ? `${state.date.getFullYear()}-${String(state.date.getMonth() + 1).padStart(2, "0")}-${String(state.date.getDate()).padStart(2, "0")}`
-          : undefined;
-        const eventRes = await fetchWithRefresh("/api/booking/event", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            eventDate,
-            venueTitle: state.venueName,
-            venueAddress: state.address,
-            city: state.city,
-            postalCode: state.postalCode || null,
-            eventStartTime: normalizeTime(state.startTime),
-            guestCount: state.guests,
-            notes: state.notes,
-            latitude: state.latitude,
-            longitude: state.longitude,
-            distanceKm: state.distanceKm != null ? Math.trunc(state.distanceKm) : null,
-            customerId: state.customerId,
-          }),
-        });
-        if (!eventRes.ok) {
-          const body = await eventRes.text().catch(() => "");
-          console.error(`[finalize] event failed ${eventRes.status}:`, body);
-          throw new Error(`event ${eventRes.status}`);
+        let eventId: string;
+        if (state.existingEventId) {
+          eventId = state.existingEventId;
+        } else {
+          const eventDate = state.date
+            ? `${state.date.getFullYear()}-${String(state.date.getMonth() + 1).padStart(2, "0")}-${String(state.date.getDate()).padStart(2, "0")}`
+            : undefined;
+          const eventRes = await fetchWithRefresh("/api/booking/event", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              eventDate,
+              venueTitle: state.venueName,
+              venueAddress: state.address,
+              city: state.city,
+              postalCode: state.postalCode || null,
+              eventStartTime: normalizeTime(state.startTime),
+              guestCount: state.guests,
+              notes: state.notes,
+              latitude: state.latitude,
+              longitude: state.longitude,
+              distanceKm: state.distanceKm != null ? Math.trunc(state.distanceKm) : null,
+              customerId: state.customerId,
+            }),
+          });
+          if (!eventRes.ok) {
+            const body = await eventRes.text().catch(() => "");
+            console.error(`[finalize] event failed ${eventRes.status}:`, body);
+            throw new Error(`event ${eventRes.status}`);
+          }
+          const { id } = await eventRes.json();
+          eventId = id;
         }
-        const { id: eventId } = await eventRes.json();
 
         const items = state.selectedServices
           .filter((sid) => state.selectedPackages[sid])
@@ -480,13 +486,19 @@ export default function Step6Summary({
                   {/* Package info */}
                   <div className="flex flex-col gap-2.5 px-3 py-3">
                     <div className="flex justify-between items-start gap-3">
-                      <Image
-                        src={info.logo}
-                        alt={info.name}
-                        width={100}
-                        height={40}
-                        className="object-contain object-left h-10 w-auto"
-                      />
+                      {info.logo ? (
+                        <Image
+                          src={info.logo}
+                          alt={info.name}
+                          width={100}
+                          height={40}
+                          className="object-contain object-left h-10 w-auto"
+                        />
+                      ) : (
+                        <span className="text-base font-medium text-[#f1f1f1] font-figtree tracking-tight h-10 flex items-center">
+                          {info.name}
+                        </span>
+                      )}
                       <p className="text-base font-medium text-[#f1f1f1] font-figtree tracking-tight shrink-0">
                         {pkg ? formatMDL(pkg.basePrice + (pkg.additionalCost ?? 0)) : "—"}
                       </p>

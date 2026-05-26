@@ -3,9 +3,10 @@ import Link from "next/link";
 import { phone } from "@/data/venues/constants/links";
 
 const VENUES = [
-  { key: "bureau", logo: "/logos/LeBureau.svg", slug: "lebureau", tagline: "Cigar lounge cu aer retro și clasic." },
-  { key: "maison", logo: "/logos/MaisonDuFeu.svg", slug: "maisondufeu", tagline: "Desert francez servit ca moment live." },
-  { key: "perle", logo: "/logos/LaPerle.svg", slug: "laperle", tagline: "Tuktuk cu gelato italian pentru evenimente." },
+  { key: "bureau", logo: "/logos/LeBureau.svg", name: "Le Bureau", slug: "lebureau", tagline: "Cigar lounge cu aer retro și clasic." },
+  { key: "maison", logo: "/logos/MaisonDuFeu.svg", name: "Maison du Feu", slug: "maisondufeu", tagline: "Desert francez servit ca moment live." },
+  { key: "perle", logo: "/logos/LaPerle.svg", name: "La Perle", slug: "laperle", tagline: "Tuktuk cu gelato italian pentru evenimente." },
+  { key: "fonte", logo: "/logos/LaFonte.svg", name: "La Fonte", slug: "lafonte", tagline: "Fântână de ciocolată belgiană pentru evenimente elegante." },
 ];
 
 interface VenueFooterProps {
@@ -69,8 +70,8 @@ export default function VenueFooter({ locale, activeSlug, social }: VenueFooterP
         </div>
       </div>
 
-      {/* 3 venue cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto mb-10">
+      {/* venue cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto mb-10">
         {VENUES.map((venue) => {
           const isActive = venue.slug === activeSlug;
           return (
@@ -83,13 +84,19 @@ export default function VenueFooter({ locale, activeSlug, social }: VenueFooterP
                   : "border-transparent hover:border-white/10"
               }`}
             >
-              <Image
-                src={venue.logo}
-                alt={venue.key}
-                width={100}
-                height={30}
-                className="w-20 h-auto mb-2.5 opacity-90"
-              />
+              {"logo" in venue && venue.logo ? (
+                <Image
+                  src={venue.logo}
+                  alt={venue.name}
+                  width={100}
+                  height={30}
+                  className="w-20 h-auto mb-2.5 opacity-90"
+                />
+              ) : (
+                <span className="text-white/90 text-[13px] font-light tracking-[0.14em] uppercase mb-2.5 font-figtree">
+                  {venue.name}
+                </span>
+              )}
               <p className="text-white/40 text-[11px] leading-normal font-figtree">
                 {venue.tagline}
               </p>

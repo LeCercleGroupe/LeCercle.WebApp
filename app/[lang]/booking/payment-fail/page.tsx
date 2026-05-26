@@ -57,7 +57,7 @@ export default async function PaymentFailPage({ params, searchParams }: Props) {
         </Link>
 
         <Link
-          href={`/${lang}`}
+          href={`/${lang}/account`}
           className="flex items-center justify-center w-full py-4 bg-[#1b1b1b] border border-[#303030] text-base font-medium text-[#f1f1f1] font-figtree tracking-tight hover:border-[#474747] transition-colors"
         >
           {d.back_home}

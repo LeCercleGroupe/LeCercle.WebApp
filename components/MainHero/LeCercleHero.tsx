@@ -21,7 +21,7 @@ type TransitionPreset =
   | "08 Glitch Spikes";
 type EasePreset = "Expo Out" | "Power3 Out" | "Sine InOut" | "Linear";
 
-type VenueKey = "bureau" | "maison" | "perle";
+type VenueKey = "bureau" | "maison" | "perle" | "fonte";
 
 interface VenueDict {
   tagline: string;
@@ -41,10 +41,11 @@ interface LeCercleHeroProps {
 
 const LOCALES = ["ro", "en", "ru"] as const;
 
-const VENUES: { key: VenueKey; logo: string; slug: string }[] = [
-  { key: "bureau", logo: "/logos/LeBureau.svg", slug: "lebureau" },
-  { key: "maison", logo: "/logos/MaisonDuFeu.svg", slug: "maisondufeu" },
-  { key: "perle", logo: "/logos/LaPerle.svg", slug: "laperle" },
+const VENUES: { key: VenueKey; logo?: string; name: string; slug: string }[] = [
+  { key: "bureau", logo: "/logos/LeBureau.svg", name: "Le Bureau", slug: "lebureau" },
+  { key: "maison", logo: "/logos/MaisonDuFeu.svg", name: "Maison du Feu", slug: "maisondufeu" },
+  { key: "perle", logo: "/logos/LaPerle.svg", name: "La Perle", slug: "laperle" },
+  { key: "fonte", logo: "/logos/LaFonte.svg", name: "La Fonte", slug: "lafonte" },
 ];
 
 export default function LeCercleHero({ dict, locale }: LeCercleHeroProps) {
@@ -80,6 +81,9 @@ export default function LeCercleHero({ dict, locale }: LeCercleHeroProps) {
   const video3 = isMobile
     ? "/videos/laperle-vertical.mp4"
     : "/videos/laperle-horizontal.mp4";
+  const video4 = isMobile
+    ? "/videos/lafonte-vertical.mp4"
+    : "/videos/lafonte-horizontal.mp4";
 
   const router = useRouter();
   const pathname = usePathname();
@@ -96,9 +100,7 @@ export default function LeCercleHero({ dict, locale }: LeCercleHeroProps) {
       {/* ── Full-screen video background ─────────────────────────────────── */}
       <div className="absolute inset-0 z-0">
         <VideoShowcase
-          video1={video1}
-          video2={video2}
-          video3={video3}
+          videos={[video1, video2, video3, video4]}
           defaultActive={activeVenue + 1}
           fitMode={"Crop" as FitMode}
           quality={"High" as Quality}
@@ -237,7 +239,7 @@ export default function LeCercleHero({ dict, locale }: LeCercleHeroProps) {
       </div>
 
       {/* ── Bottom venue strip ───────────────────────────────────────────── */}
-      <div className="relative shrink-0 sm:absolute sm:bottom-0 sm:inset-x-0 z-6 grid grid-cols-1 sm:grid-cols-3">
+      <div className="relative shrink-0 sm:absolute sm:bottom-0 sm:inset-x-0 z-6 grid grid-cols-1 sm:grid-cols-4">
         {VENUES.map((venue, idx) => {
           const isActive = activeVenue === idx;
           const venueDict = dict.venues[venue.key];
@@ -269,14 +271,20 @@ export default function LeCercleHero({ dict, locale }: LeCercleHeroProps) {
 
               {/* Content — z-[1] keeps it above the black fill overlay (z-0) */}
               <div className="relative z-1">
-                {/* Venue name SVG */}
-                <Image
-                  src={venue.logo}
-                  alt={venue.key}
-                  width={240}
-                  height={72}
-                  className="w-[clamp(140px,32vw,150px)] sm:w-[clamp(100px,12vw,170px)] h-auto block mx-auto mb-1.25 sm:mb-2.5 drop-shadow-[0_1px_20px_rgba(0,0,0,0.55)]"
-                />
+                {/* Venue name logo or text fallback */}
+                {venue.logo ? (
+                  <Image
+                    src={venue.logo}
+                    alt={venue.name}
+                    width={240}
+                    height={72}
+                    className="w-[clamp(140px,32vw,150px)] sm:w-[clamp(100px,12vw,170px)] h-auto block mx-auto mb-1.25 sm:mb-2.5 drop-shadow-[0_1px_20px_rgba(0,0,0,0.55)]"
+                  />
+                ) : (
+                  <span className="block text-white text-xl sm:text-2xl font-light tracking-[0.18em] uppercase mx-auto mb-1.25 sm:mb-2.5 drop-shadow-[0_1px_20px_rgba(0,0,0,0.55)]">
+                    {venue.name}
+                  </span>
+                )}
 
                 {/* Tagline */}
                 <p

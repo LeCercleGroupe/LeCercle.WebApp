@@ -19,7 +19,7 @@ function renderBody(parts: TextPart[], accentColor: string) {
 
 interface Props extends ClosingCtaSectionProps {
   accentColor: string;
-  logo: string;
+  logo?: string;
   name: string;
 }
 
@@ -40,13 +40,19 @@ export default function ClosingCtaSection({
     >
       <div className="max-w-2xl mx-auto">
         {showLogo && (
-          <Image
-            src={logo}
-            alt={name}
-            width={200}
-            height={60}
-            className={`w-72 sm:w-80 h-auto mx-auto mb-10 ${isDark ? "opacity-90" : "invert opacity-75"}`}
-          />
+          logo ? (
+            <Image
+              src={logo}
+              alt={name}
+              width={200}
+              height={60}
+              className={`w-72 sm:w-80 h-auto mx-auto mb-10 ${isDark ? "opacity-90" : "invert opacity-75"}`}
+            />
+          ) : (
+            <p className={`text-3xl font-light tracking-[0.2em] uppercase mb-10 font-figtree ${isDark ? "text-white/90" : "text-[#1a1208]/75"}`}>
+              {name}
+            </p>
+          )
         )}
 
         <p

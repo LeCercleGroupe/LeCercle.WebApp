@@ -18,6 +18,10 @@
     "perle": {
       "tagline": "Piaggio Ape with Italian gelato and refreshing cocktails.",
       "cta": "Discover the Service"
+    },
+    "fonte": {
+      "tagline": "Belgian chocolate fountain, fresh fruit and carefully chosen toppings.",
+      "cta": "Discover the Service"
     }
   },
   "booking": {
@@ -463,7 +467,9 @@
       "draft_step5": "Step 5 · Contact and verification",
       "draft_step6": "Step 6 · Summary and advance payment",
       "loading": "Loading...",
-      "error": "An error occurred. Please try again."
+      "error": "An error occurred. Please try again.",
+      "view_order": "Details",
+      "add_order": "Add Order"
     },
     "contracts_page": {
       "title": "Contracts",

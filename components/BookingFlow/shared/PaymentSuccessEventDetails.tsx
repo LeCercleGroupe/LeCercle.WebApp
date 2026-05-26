@@ -24,7 +24,11 @@ interface Props {
   daysFull: string[];
 }
 
-function formatDateFull(dateStr: string, months: string[], daysFull: string[]): string {
+function formatDateFull(
+  dateStr: string,
+  months: string[],
+  daysFull: string[],
+): string {
   const [year, month, day] = dateStr.split("-").map(Number);
   if (!year || !month || !day) return "—";
   const date = new Date(year, month - 1, day); // local date — no UTC conversion
@@ -32,18 +36,19 @@ function formatDateFull(dateStr: string, months: string[], daysFull: string[]): 
   return `${dayName}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
 }
 
-export default function PaymentSuccessEventDetails({ labels, months, daysFull }: Props) {
-  const [summary, setSummary] = useState<BookingSummary | null>(null);
-
-  useEffect(() => {
+export default function PaymentSuccessEventDetails({
+  labels,
+  months,
+  daysFull,
+}: Props) {
+  const [summary, setSummary] = useState<BookingSummary | null>(() => {
     try {
-      // Read event details from the booking flow before clearing it
       const raw = sessionStorage.getItem("lecercle_booking_flow");
       if (raw) {
         const flow = JSON.parse(raw);
         const s = flow?.state;
         if (s) {
-          setSummary({
+          const summary: BookingSummary = {
             date: s.date
               ? `${s.date.y}-${String(s.date.m + 1).padStart(2, "0")}-${String(s.date.d).padStart(2, "0")}`
               : undefined,
@@ -51,12 +56,18 @@ export default function PaymentSuccessEventDetails({ labels, months, daysFull }:
             venueName: s.venueName,
             address: s.address,
             city: s.city,
-          });
+          };
+          return summary;
         }
       }
-      // Payment confirmed — clear the booking flow so a new booking starts fresh
+    } catch {}
+    return null;
+  });
+
+  useEffect(() => {
+    // Clear after reading so a new booking starts fresh
+    try {
       sessionStorage.removeItem("lecercle_booking_flow");
-      // Remove legacy key from older sessions
       sessionStorage.removeItem("lecercle_booking_summary");
     } catch {}
   }, []);
@@ -85,15 +96,20 @@ export default function PaymentSuccessEventDetails({ labels, months, daysFull }:
         )}
         {summary.venueName && (
           <div>
-            <p className="text-[#747474] leading-[1.4]">{labels.location_label}</p>
+            <p className="text-[#747474] leading-[1.4]">
+              {labels.location_label}
+            </p>
             <p className="text-[#f1f1f1] leading-[1.4]">{summary.venueName}</p>
           </div>
         )}
         {summary.address && (
           <div>
-            <p className="text-[#747474] leading-[1.4]">{labels.address_label}</p>
+            <p className="text-[#747474] leading-[1.4]">
+              {labels.address_label}
+            </p>
             <p className="text-[#f1f1f1] leading-[1.4]">
-              {summary.address}{summary.city ? `, ${summary.city}` : ""}
+              {summary.address}
+              {summary.city ? `, ${summary.city}` : ""}
             </p>
           </div>
         )}

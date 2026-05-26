@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import BookingTokenProvider from "@/components/BookingTokenProvider";
+import NavigationLoadingOverlay from "@/components/shared/NavigationLoadingOverlay";
 import {
   Cinzel,
   Cinzel_Decorative,
@@ -67,6 +69,9 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${figtree.variable} ${ebGaramond.variable} ${dancingScript.variable} ${cinzel.variable} ${cinzelDecorative.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col select-none">
+        <Suspense fallback={null}>
+          <NavigationLoadingOverlay />
+        </Suspense>
         <BookingTokenProvider>{children}</BookingTokenProvider>
       </body>
     </html>

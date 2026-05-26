@@ -132,7 +132,7 @@ export type SharedSection =
 
 export interface VenueShared {
   name: string;
-  logo: string;
+  logo?: string;
   accentColor: string;
   hero: { video: string; videoMobile?: string };
   social?: { instagram?: string; facebook?: string };
@@ -173,7 +173,7 @@ export interface VenueHeroData {
 
 export interface VenuePageData {
   name: string;
-  logo: string;
+  logo?: string;
   accentColor: string;
   hero: VenueHeroData;
   sections: VenueSection[];

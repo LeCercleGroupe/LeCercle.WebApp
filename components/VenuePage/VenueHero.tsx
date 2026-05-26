@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 
 interface VenueHeroProps {
   hero: VenueHeroData;
-  logo: string;
+  logo?: string;
   name: string;
   contactLabel: string;
 }
@@ -46,14 +46,20 @@ export default function VenueHero({
 
       {/* Venue logo + tagline — centered */}
       <div className="absolute inset-0 flex flex-col justify-end items-center sm:justify-center text-center px-6 pb-24 sm:pb-0">
-        <Image
-          src={logo}
-          alt={name}
-          width={300}
-          height={90}
-          priority
-          className="w-48 sm:w-72 h-auto drop-shadow-[0_2px_40px_rgba(0,0,0,0.5)]"
-        />
+        {logo ? (
+          <Image
+            src={logo}
+            alt={name}
+            width={300}
+            height={90}
+            priority
+            className="w-48 sm:w-72 h-auto drop-shadow-[0_2px_40px_rgba(0,0,0,0.5)]"
+          />
+        ) : (
+          <span className="text-white text-4xl sm:text-5xl font-light tracking-[0.2em] uppercase drop-shadow-[0_2px_40px_rgba(0,0,0,0.5)] font-figtree">
+            {name}
+          </span>
+        )}
         <p className="mt-5 text-white/65 text-[12px] sm:text-[13px] tracking-[0.16em] uppercase font-figtree max-w-3xl pb-4">
           {hero.tagline}
         </p>

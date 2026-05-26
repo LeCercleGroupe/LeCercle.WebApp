@@ -18,6 +18,10 @@
     "perle": {
       "tagline": "Piaggio Ape cu gelato italian și cocktail-uri răcoritoare.",
       "cta": "Descoperă Serviciul"
+    },
+    "fonte": {
+      "tagline": "Fântână de ciocolată belgiană, fructe proaspete și topping-uri atent alese.",
+      "cta": "Descoperă Serviciul"
     }
   },
   "booking": {
@@ -463,7 +467,9 @@
       "draft_step5": "Pasul 5 · Contact și verificare",
       "draft_step6": "Pasul 6 · Sumar și plata avansului",
       "loading": "Se încarcă...",
-      "error": "A apărut o eroare. Încearcă din nou."
+      "error": "A apărut o eroare. Încearcă din nou.",
+      "view_order": "Detalii",
+      "add_order": "Adaugă comandă"
     },
     "contracts_page": {
       "title": "Contracte",

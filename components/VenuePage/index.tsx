@@ -22,6 +22,7 @@ const SLUG_MAP: Record<string, string> = {
   "/logos/LeBureau.svg": "lebureau",
   "/logos/MaisonDuFeu.svg": "maisondufeu",
   "/logos/LaPerle.svg": "laperle",
+  "/logos/LaFonte.svg": "lafonte",
 };
 
 export default function VenuePage({
@@ -149,7 +150,7 @@ export default function VenuePage({
         }
       })}
 
-      <VenueFooter locale={locale} activeSlug={SLUG_MAP[logo] ?? ""} social={data.social} />
+      <VenueFooter locale={locale} activeSlug={logo ? (SLUG_MAP[logo] ?? "") : name.toLowerCase().replace(/\s+/g, "")} social={data.social} />
     </div>
   );
 }

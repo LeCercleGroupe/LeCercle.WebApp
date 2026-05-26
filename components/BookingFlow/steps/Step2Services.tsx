@@ -102,7 +102,13 @@ export default function Step2Services({ state, onChange, onNext, onBack, dict, s
                 }`}
               >
                 <div className="flex items-center justify-center size-12 shrink-0 bg-[#1b1b1b] border border-[#303030]">
-                  <Image src={info.logo} alt={info.name} width={32} height={32} className="object-contain" />
+                  {info.logo ? (
+                    <Image src={info.logo} alt={info.name} width={32} height={32} className="object-contain" />
+                  ) : (
+                    <span className="text-[9px] font-medium text-[#a8a8a8] font-figtree tracking-wide text-center leading-tight px-1">
+                      {info.name}
+                    </span>
+                  )}
                 </div>
                 <div className="flex flex-col flex-1 min-w-0">
                   <p className="text-base font-medium text-[#f1f1f1] font-figtree tracking-tight">{info.name}</p>

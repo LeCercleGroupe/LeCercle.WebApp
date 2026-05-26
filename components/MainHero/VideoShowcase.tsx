@@ -17,9 +17,7 @@ type TransitionPreset =
   | "08 Glitch Spikes";
 
 interface VideoShowcaseProps {
-  video1: string;
-  video2: string;
-  video3: string;
+  videos: string[];
   quality?: Quality;
   transition?: TransitionPreset;
   duration?: number;
@@ -198,12 +196,8 @@ void main() {
 }
 `;
 
-const SLOTS = [0, 1, 2] as const;
-
 export default function VideoShowcase({
-  video1,
-  video2,
-  video3,
+  videos,
   quality = "Medium",
   transition = "01 Classic Liquid",
   duration = 0.9,
@@ -218,7 +212,8 @@ export default function VideoShowcase({
   posY = 0,
   className = "",
 }: VideoShowcaseProps) {
-  const initIdx = Math.max(0, Math.min(2, (defaultActive || 1) - 1));
+  const count = videos.length;
+  const initIdx = Math.max(0, Math.min(count - 1, (defaultActive || 1) - 1));
   const [activeIdx, setActiveIdx] = useState(initIdx);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -231,13 +226,9 @@ export default function VideoShowcase({
   const roRef = useRef<ResizeObserver | null>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
   const dispRef = useRef<THREE.DataTexture | null>(null);
-  const videoElemsRef = useRef<(HTMLVideoElement | null)[]>([null, null, null]);
-  const videoTexsRef = useRef<(THREE.VideoTexture | null)[]>([
-    null,
-    null,
-    null,
-  ]);
-  const videoAspectsRef = useRef<number[]>([1, 1, 1]);
+  const videoElemsRef = useRef<(HTMLVideoElement | null)[]>(videos.map(() => null));
+  const videoTexsRef = useRef<(THREE.VideoTexture | null)[]>(videos.map(() => null));
+  const videoAspectsRef = useRef<number[]>(videos.map(() => 1));
   const activeIdxRef = useRef(initIdx);
   const inProgressIdxRef = useRef<number | null>(null);
   const isTransRef = useRef(false);
@@ -251,27 +242,13 @@ export default function VideoShowcase({
   const posXRef = useRef(posX);
   const posYRef = useRef(posY);
 
-  useEffect(() => {
-    qualityRef.current = quality;
-  }, [quality]);
-  useEffect(() => {
-    durationRef.current = duration;
-  }, [duration]);
-  useEffect(() => {
-    easeRef.current = ease;
-  }, [ease]);
-  useEffect(() => {
-    fitModeRef.current = fitMode;
-  }, [fitMode]);
-  useEffect(() => {
-    scaleRef.current = scale;
-  }, [scale]);
-  useEffect(() => {
-    posXRef.current = posX;
-  }, [posX]);
-  useEffect(() => {
-    posYRef.current = posY;
-  }, [posY]);
+  useEffect(() => { qualityRef.current = quality; }, [quality]);
+  useEffect(() => { durationRef.current = duration; }, [duration]);
+  useEffect(() => { easeRef.current = ease; }, [ease]);
+  useEffect(() => { fitModeRef.current = fitMode; }, [fitMode]);
+  useEffect(() => { scaleRef.current = scale; }, [scale]);
+  useEffect(() => { posXRef.current = posX; }, [posX]);
+  useEffect(() => { posYRef.current = posY; }, [posY]);
 
   const dispKind = useMemo(() => presetToKind(transition), [transition]);
 
@@ -475,8 +452,13 @@ export default function VideoShowcase({
     m.needsUpdate = true;
   }, [dispKind]);
 
+  // Stable key so the effect only re-runs when video paths actually change
+  const videosKey = videos.join("|");
+
   useEffect(() => {
-    const srcs = [video1, video2, video3];
+    const newCount = videos.length;
+
+    // Cleanup all existing video elements and textures
     videoElemsRef.current.forEach((v, i) => {
       if (v) {
         v.pause();
@@ -489,7 +471,13 @@ export default function VideoShowcase({
       } catch {}
       videoTexsRef.current[i] = null;
     });
-    srcs.forEach((src, i) => {
+
+    // Reset arrays to match new count
+    videoElemsRef.current = Array(newCount).fill(null);
+    videoTexsRef.current = Array(newCount).fill(null);
+    videoAspectsRef.current = Array(newCount).fill(1);
+
+    videos.forEach((src, i) => {
       if (!src) return;
       const vid = document.createElement("video");
       vid.src = src;
@@ -520,10 +508,12 @@ export default function VideoShowcase({
       );
       vid.load();
     });
-  }, [video1, video2, video3]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videosKey]);
 
   useEffect(() => {
-    const newIdx = Math.max(0, Math.min(2, (defaultActive || 1) - 1));
+    const maxIdx = videos.length - 1;
+    const newIdx = Math.max(0, Math.min(maxIdx, (defaultActive || 1) - 1));
     // No-op if we're already at or transitioning to this index
     if (newIdx === (inProgressIdxRef.current ?? activeIdxRef.current)) return;
     const m = materialRef.current;
@@ -563,35 +553,7 @@ export default function VideoShowcase({
         isTransRef.current = false;
       },
     });
-  }, [defaultActive]);
-
-  const handleSelect = (idx: number) => {
-    if (idx === activeIdxRef.current || isTransRef.current) return;
-    const m = materialRef.current;
-    if (!m) return;
-    const fromTex = videoTexsRef.current[activeIdxRef.current] ?? null;
-    const toTex = videoTexsRef.current[idx] ?? null;
-    m.uniforms.texture1.value = fromTex;
-    m.uniforms.texture2.value = toTex;
-    m.uniforms.dispFactor.value = 0;
-    m.needsUpdate = true;
-    isTransRef.current = true;
-    setActiveIdx(idx);
-    if (tweenRef.current) tweenRef.current.kill();
-    tweenRef.current = gsap.to(m.uniforms.dispFactor, {
-      value: 1,
-      duration: Math.max(0.05, durationRef.current),
-      ease: easeToGsap(easeRef.current),
-      onComplete: () => {
-        m.uniforms.texture1.value = toTex;
-        m.uniforms.dispFactor.value = 0;
-        m.needsUpdate = true;
-        activeIdxRef.current = idx;
-        if (videoAspectsRef.current[idx]) updateUvTransform();
-        isTransRef.current = false;
-      },
-    });
-  };
+  }, [defaultActive, videos.length]);
 
   return (
     <div

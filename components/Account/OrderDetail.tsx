@@ -201,10 +201,10 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                   {stateBadgeLabels[orderState]}
                 </span>
                 <a
-                  href="{whatsapp}"
+                  href={whatsapp}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-2 border border-[#2a2a2a] text-[13px] font-medium text-[#c0c0c0] font-figtree tracking-tight hover:border-[#4a4a4a] hover:text-[#f0f0f0] transition-colors"
+                  className="inline-flex items-center px-3 py-1 border border-[#2a2a2a] text-[13px] font-medium text-[#c0c0c0] font-figtree tracking-tight hover:border-[#4a4a4a] hover:text-[#f0f0f0] transition-colors"
                 >
                   {d.contact_us}
                 </a>
@@ -241,7 +241,7 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                           {payingOnline ? "···" : d.pay_online.replace("{amount}", formatMDL(advance))}
                         </button>
                         <a
-                          href="{whatsapp}"
+                          href={whatsapp}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="w-full sm:w-auto text-center px-5 py-3 sm:py-2.5 border border-[#3a2a00] text-[#fbbf24] text-[13px] font-medium font-figtree tracking-tight hover:bg-[#1f1400] transition-colors"
@@ -269,7 +269,7 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                       {d.confirmed_banner_sub}
                     </p>
                     <a
-                      href="{whatsapp}"
+                      href={whatsapp}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex px-5 py-2.5 border border-[#1a4a2a] text-[#4ade80] text-[13px] font-medium font-figtree tracking-tight hover:bg-[#0a2010] transition-colors"

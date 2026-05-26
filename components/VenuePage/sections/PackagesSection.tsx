@@ -4,7 +4,7 @@ import Link from "next/link";
 
 interface Props extends PackagesSectionProps {
   accentColor: string;
-  logo: string;
+  logo?: string;
   projectName: string;
 }
 
@@ -49,7 +49,7 @@ export default function PackagesSection({
 interface CardProps {
   pkg: PackagesSectionProps["items"][number];
   fallbackColor: string;
-  logo: string;
+  logo?: string;
   projectName: string;
 }
 
@@ -113,9 +113,15 @@ function PackageCard({ pkg, fallbackColor, logo, projectName }: CardProps) {
           </p>
 
           {/* Venue logo */}
-          <div className="relative w-28 h-10 mb-6 opacity-80">
-            <Image src={logo} alt="" fill className="object-contain invert" />
-          </div>
+          {logo ? (
+            <div className="relative w-28 h-10 mb-6 opacity-80">
+              <Image src={logo} alt="" fill className="object-contain invert" />
+            </div>
+          ) : (
+            <p className="font-cinzel-deco text-[10px] font-bold tracking-widest text-(--card-color) mb-6 opacity-80">
+              {projectName}
+            </p>
+          )}
 
           {/* CTA — corner-bracket style */}
           <Link

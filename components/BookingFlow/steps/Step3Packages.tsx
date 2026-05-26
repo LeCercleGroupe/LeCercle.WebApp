@@ -588,7 +588,9 @@ export default function Step3Packages({
                     : "bg-transparent border-[#303030] text-[#a8a8a8] hover:border-[#474747]"
                 }`}
               >
-                <Image src={info.logo} alt={info.name} width={16} height={16} className="object-contain" />
+                {info.logo && (
+                  <Image src={info.logo} alt={info.name} width={16} height={16} className="object-contain" />
+                )}
                 {info.name}
                 {hasPackage && <div className="size-1.5 rounded-full bg-[#37a067]" />}
               </button>
