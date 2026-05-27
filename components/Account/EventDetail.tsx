@@ -81,6 +81,7 @@ interface EventDetailDict {
   confirmed_badge: string;
   taxes_label: string;
   transport_label: string;
+  transport_included: string;
   no_docs: string;
   no_docs_sub: string;
   download: string;

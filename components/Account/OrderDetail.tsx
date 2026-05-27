@@ -7,13 +7,27 @@ import Image from "next/image";
 import { loadAuth, clearAuth, fetchWithRefresh, StoredAuth } from "@/components/BookingFlow/utils/auth";
 import AccountTopBar from "./shared/AccountTopBar";
 import { formatDate, formatDateShort, formatMDL, formatTime, pickAmount } from "./shared/format";
-import { OrderDetail as OrderDetailType, Contract, deriveOrderState, type EventState } from "./shared/types";
+import { OrderDetail as OrderDetailType, Contract, deriveOrderState, type EventState, type OrderItemSelection } from "./shared/types";
 import { VENUE_INFO } from "@/components/BookingFlow/types";
 import type { EventDetailPageDict } from "./EventDetail";
 import { whatsapp } from "@/data/venues/constants/links";
 
 function getVenueInfo(serviceId: string) {
   return (VENUE_INFO as Record<string, { name: string; logo: string } | undefined>)[serviceId];
+}
+
+function groupSelections(selections?: OrderItemSelection[]) {
+  if (!selections?.length) return [];
+  const map = new Map<string, { featureLabel: string; options: OrderItemSelection[] }>();
+  for (const sel of selections) {
+    const existing = map.get(sel.featureLabel);
+    if (existing) {
+      existing.options.push(sel);
+    } else {
+      map.set(sel.featureLabel, { featureLabel: sel.featureLabel, options: [sel] });
+    }
+  }
+  return Array.from(map.values());
 }
 
 interface Props {
@@ -32,14 +46,6 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
   );
 }
 
-function contractStatusClass(status: string): string {
-  const s = (status ?? "").toLowerCase();
-  if (s === "signed" || s === "semnat" || s === "paid" || s === "platita") return "bg-[#0a2010] border-[#1a4a2a] text-[#4ade80]";
-  if (s === "issued" || s === "emis") return "bg-[#111] border-[#2a2a2a] text-[#888]";
-  if (s === "awaiting_signature" || s === "pending_signature") return "bg-[#1a0f00] border-[#3a2000] text-[#fb923c]";
-  if (s === "cancelled" || s === "canceled" || s === "anulat") return "bg-[#1a0505] border-[#3a1010] text-[#f87171]";
-  return "bg-[#1f1400] border-[#3a2a00] text-[#fbbf24]";
-}
 
 export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
   const router = useRouter();
@@ -150,8 +156,6 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
   const total   = pickAmount(order.totalAmount);
   const advance = pickAmount(order.advanceAmount) || (total > 0 ? Math.round(total * 0.1) : 0);
   const rest    = total - advance;
-  const roadTotal = (order.items ?? []).reduce((s, it) => s + pickAmount(it.roadPrice), 0);
-
   const stateBadgeLabels: Record<EventState, string> = {
     pending:   d.badge_pending,
     confirmed: d.badge_confirmed,
@@ -286,6 +290,7 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                       {order.items.map((item) => {
                         const info = getVenueInfo(item.serviceId);
                         const lineTotal = pickAmount(item.unitPrice) * (item.quantity ?? 1);
+                        const groupedSelections = groupSelections(item.selections);
                         return (
                           <div key={item.id} className="border border-[#1e1e1e] p-4">
                             <div className="flex items-start justify-between gap-4">
@@ -306,19 +311,34 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                                 <p className="text-[11px] text-[#666] font-figtree tracking-tight">incl. TVA</p>
                               </div>
                             </div>
+                            <div className="mt-3 pt-3 border-t border-[#1e1e1e] flex flex-col gap-2.5">
+                              {groupedSelections.map((group) => (
+                                <div key={group.featureLabel}>
+                                  <p className="text-[11px] font-medium text-[#555] font-figtree tracking-[0.08em] uppercase mb-1">
+                                    {group.featureLabel}
+                                  </p>
+                                  {group.options.map((sel) => (
+                                    <div key={sel.selectedOptionId} className="flex items-start justify-between gap-3">
+                                      <p className="text-[12px] text-[#888] font-figtree tracking-tight leading-snug">{sel.selectedOptionLabel}</p>
+                                      {sel.additionalCost > 0 && (
+                                        <p className="text-[12px] text-[#c0c0c0] font-figtree tracking-tight shrink-0">+{formatMDL(sel.additionalCost)}</p>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              ))}
+                              <div className={`flex items-center justify-between gap-3 pt-1 ${groupedSelections.length > 0 ? "border-t border-[#1e1e1e]" : ""}`}>
+                                <p className="text-[11px] font-medium text-[#555] font-figtree tracking-[0.08em] uppercase">{d.transport_label}</p>
+                                {pickAmount(item.roadPrice) > 0 ? (
+                                  <p className="text-[12px] text-[#c0c0c0] font-figtree tracking-tight shrink-0">+{formatMDL(pickAmount(item.roadPrice))}</p>
+                                ) : (
+                                  <p className="text-[12px] text-[#4ade80] font-figtree tracking-tight shrink-0">{d.transport_included}</p>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         );
                       })}
-                      {roadTotal > 0 && (
-                        <div className="border border-[#1e1e1e] bg-[#0c0c0c] p-4 flex items-center justify-between">
-                          <p className="text-[14px] font-medium text-[#f0f0f0] font-figtree tracking-tight">
-                            {d.transport_label}
-                          </p>
-                          <p className="text-[16px] font-semibold text-[#f0f0f0] font-figtree tracking-tight">
-                            {formatMDL(roadTotal)}
-                          </p>
-                        </div>
-                      )}
                     </div>
                   </Section>
                 )}
@@ -399,14 +419,11 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                               </div>
                             )}
                           </div>
-                          <div className="flex items-center gap-2 mt-1.5 ml-11">
-                            <span className={`text-[11px] font-medium font-figtree tracking-widest border px-2 py-0.5 ${contractStatusClass(c.status)}`}>
-                              {c.status?.toUpperCase() ?? "—"}
-                            </span>
-                            <p className="text-[12px] text-[#666] font-figtree tracking-tight truncate">
-                              {c.contractNumber} {c.generatedAt ? `· ${formatDate(c.generatedAt)}` : ""}
+                          {c.generatedAt && (
+                            <p className="text-[12px] text-[#666] font-figtree tracking-tight mt-1 ml-11">
+                              {formatDate(c.generatedAt)}
                             </p>
-                          </div>
+                          )}
                         </div>
                       ))}
                     </div>

@@ -103,7 +103,7 @@
       "transport_free_title": "Transport gratuit în Chișinău",
       "transport_free_body": "În Chișinău, transportul și logistica nu se taxează separat. Echipa vine la locația ta fără cost suplimentar de deplasare.",
       "transport_fee_title": "Locația se află în afara Chișinăului",
-      "transport_fee_body": "Costul deplasării și logisticii echipei noastre până la locație este calculat automat și adăugat la totalul rezervării."
+      "transport_fee_body": "Costul deplasării și logisticii se calculează automat pentru fiecare serviciu selectat și se adaugă la totalul rezervării."
     },
     "step5": {
       "title": "Date de contact",
@@ -167,7 +167,9 @@
       "finalize": "Achită acum",
       "submit_error": "Ceva nu a mers bine. Te rugăm să încerci din nou.",
       "upgrade_package": "Îmbunătățește pachetul",
-      "select_upgrade": "Selectează"
+      "select_upgrade": "Selectează",
+      "order_locked_notice": "Comanda ta a fost înregistrată. Poți relua plata sau continua fără a plăti acum.",
+      "start_new_order": "Comandă nouă"
     },
     "step7": {
       "title": "Rezervare în așteptare",
@@ -229,13 +231,13 @@
       "time_label": "Ora de începere:",
       "location_label": "Locație:",
       "address_label": "Adresă:",
-      "back_home": "← Înapoi acasă"
+      "back_home": "Mergi la contul tău"
     },
     "payment_fail": {
       "title": "Plata nu a fost procesată",
       "subtitle": "A apărut o problemă la procesarea plății. Rezervarea ta este salvată — poți relua plata oricând.",
       "retry": "Încearcă din nou",
-      "back_home": "← Înapoi acasă"
+      "back_home": "Mergi la contul tău"
     }
   },
   "account": {
@@ -426,6 +428,7 @@
       "confirmed_badge": "confirmat",
       "taxes_label": "Taxe incluse",
       "transport_label": "Transport",
+      "transport_included": "Inclus",
       "no_docs": "Nicio documentație încă",
       "no_docs_sub": "Confirmarea de rezervare se generează automat după plata avansului la pasul 6.",
       "download": "Vizualizează",

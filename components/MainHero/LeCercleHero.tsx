@@ -136,7 +136,7 @@ export default function LeCercleHero({ dict, locale }: LeCercleHeroProps) {
           <div className="relative">
             <button
               onClick={() => setLangOpen((o) => !o)}
-              className="bg-transparent border-0 text-gray-100 text-[13px] tracking-widest cursor-pointer flex items-center gap-1.25 uppercase"
+              className="bg-transparent border-0 text-gray-100 text-[11px] sm:text-[13px] tracking-widest cursor-pointer flex items-center gap-1.25 uppercase"
             >
               {dict.nav.lang}
               <span
@@ -152,7 +152,7 @@ export default function LeCercleHero({ dict, locale }: LeCercleHeroProps) {
                   <button
                     key={l}
                     onClick={() => switchLocale(l)}
-                    className="bg-transparent border-0 text-white/72 text-[13px] tracking-widest cursor-pointer px-4.5 py-1.5 text-left uppercase transition-colors duration-200 hover:text-white"
+                    className="bg-transparent border-0 text-white/72 text-[11px] sm:text-[13px] tracking-widest cursor-pointer px-4.5 py-1.5 text-left uppercase transition-colors duration-200 hover:text-white"
                   >
                     {l}
                   </button>
@@ -222,13 +222,13 @@ export default function LeCercleHero({ dict, locale }: LeCercleHeroProps) {
           priority
           className="hidden sm:block w-60 h-auto mx-auto drop-shadow-[0_2px_40px_rgba(0,0,0,0.4)]"
         />
-        <p className="pointer-events-none mt-3.5 sm:mt-5.5 text-[15px] font-normal sm:text-[16px] text-[#E2E2E2] leading-[1.75] max-w-[90vw] sm:leading-[1.8] sm:max-w-140 mx-auto not-italic tracking-[0.02em]">
+        <p className="pointer-events-none mt-3.5 sm:mt-5.5 text-[13px] font-normal sm:text-[16px] text-[#E2E2E2] leading-[1.75] max-w-[90vw] sm:leading-[1.8] sm:max-w-140 mx-auto not-italic tracking-[0.02em]">
           {dict.hero.description}
         </p>
         {/* Contact CTA — mobile only, under description */}
         <Link
           href={contact_link}
-          className="sm:hidden group border-0 bg-gray-100/20 text-gray-100 text-[12px] tracking-[0.12em] cursor-pointer px-4 py-2 mt-6 transition-all duration-250 relative hover:bg-gray-100/40 hover:text-white"
+          className="sm:hidden group border-0 bg-gray-100/20 text-gray-100 text-[11px] tracking-[0.12em] cursor-pointer px-4 py-2 mt-5 transition-all duration-250 relative hover:bg-gray-100/40 hover:text-white"
         >
           <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
           <span className="absolute top-0 right-0 w-2.5 h-2.5 border-t border-r border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
@@ -239,7 +239,7 @@ export default function LeCercleHero({ dict, locale }: LeCercleHeroProps) {
       </div>
 
       {/* ── Bottom venue strip ───────────────────────────────────────────── */}
-      <div className="relative shrink-0 sm:absolute sm:bottom-0 sm:inset-x-0 z-6 grid grid-cols-1 sm:grid-cols-4">
+      <div className="relative shrink-0 sm:absolute sm:bottom-0 sm:inset-x-0 z-6 grid grid-cols-2 sm:grid-cols-4">
         {VENUES.map((venue, idx) => {
           const isActive = activeVenue === idx;
           const venueDict = dict.venues[venue.key];
@@ -248,25 +248,25 @@ export default function LeCercleHero({ dict, locale }: LeCercleHeroProps) {
             <div
               key={venue.key}
               onClick={() => setActiveVenue(idx)}
-              className="pt-6 px-7 pb-5 sm:pt-6.5 sm:px-7.5 sm:pb-12.5 cursor-pointer relative text-center"
+              className="pt-4 px-3.5 pb-4 sm:pt-6.5 sm:px-7.5 sm:pb-12.5 cursor-pointer relative text-center"
             >
               {/* 4-corner brackets */}
               <div
-                className={`absolute top-3.5 left-4 w-3.5 h-3.5 border-t border-l transition-[border-color] duration-350 pointer-events-none ${isActive ? "border-white/72" : "border-transparent"}`}
+                className={`absolute top-2 left-2 w-3 h-3 sm:top-3.5 sm:left-4 sm:w-3.5 sm:h-3.5 border-t border-l transition-[border-color] duration-350 pointer-events-none ${isActive ? "border-white/72" : "border-transparent"}`}
               />
               <div
-                className={`absolute top-3.5 right-4 w-3.5 h-3.5 border-t border-r transition-[border-color] duration-350 pointer-events-none ${isActive ? "border-white/72" : "border-transparent"}`}
+                className={`absolute top-2 right-2 w-3 h-3 sm:top-3.5 sm:right-4 sm:w-3.5 sm:h-3.5 border-t border-r transition-[border-color] duration-350 pointer-events-none ${isActive ? "border-white/72" : "border-transparent"}`}
               />
               <div
-                className={`absolute bottom-3.5 left-4 w-3.5 h-3.5 border-b border-l transition-[border-color] duration-350 pointer-events-none ${isActive ? "border-white/72" : "border-transparent"}`}
+                className={`absolute bottom-2 left-2 w-3 h-3 sm:bottom-3.5 sm:left-4 sm:w-3.5 sm:h-3.5 border-b border-l transition-[border-color] duration-350 pointer-events-none ${isActive ? "border-white/72" : "border-transparent"}`}
               />
               <div
-                className={`absolute bottom-3.5 right-4 w-3.5 h-3.5 border-b border-r transition-[border-color] duration-350 pointer-events-none ${isActive ? "border-white/72" : "border-transparent"}`}
+                className={`absolute bottom-2 right-2 w-3 h-3 sm:bottom-3.5 sm:right-4 sm:w-3.5 sm:h-3.5 border-b border-r transition-[border-color] duration-350 pointer-events-none ${isActive ? "border-white/72" : "border-transparent"}`}
               />
 
               {/* Active mobile fill — inset to match corner brackets */}
               <div
-                className={`absolute top-3.5 left-4 right-4 bottom-3.5 bg-black/40 pointer-events-none z-0 transition-opacity duration-350 sm:hidden ${isActive ? "opacity-100" : "opacity-0"}`}
+                className={`absolute top-2 left-2 right-2 bottom-2 sm:top-3.5 sm:left-4 sm:right-4 sm:bottom-3.5 bg-black/40 pointer-events-none z-0 transition-opacity duration-350 sm:hidden ${isActive ? "opacity-100" : "opacity-0"}`}
               />
 
               {/* Content — z-[1] keeps it above the black fill overlay (z-0) */}
@@ -278,7 +278,7 @@ export default function LeCercleHero({ dict, locale }: LeCercleHeroProps) {
                     alt={venue.name}
                     width={240}
                     height={72}
-                    className="w-[clamp(140px,32vw,150px)] sm:w-[clamp(100px,12vw,170px)] h-auto block mx-auto mb-1.25 sm:mb-2.5 drop-shadow-[0_1px_20px_rgba(0,0,0,0.55)]"
+                    className="w-[clamp(70px,22vw,100px)] sm:w-[clamp(100px,12vw,170px)] h-auto block mx-auto mb-1 sm:mb-2.5 drop-shadow-[0_1px_20px_rgba(0,0,0,0.55)]"
                   />
                 ) : (
                   <span className="block text-white text-xl sm:text-2xl font-light tracking-[0.18em] uppercase mx-auto mb-1.25 sm:mb-2.5 drop-shadow-[0_1px_20px_rgba(0,0,0,0.55)]">
@@ -288,7 +288,7 @@ export default function LeCercleHero({ dict, locale }: LeCercleHeroProps) {
 
                 {/* Tagline */}
                 <p
-                  className={`text-[12px] sm:text-[14px] text-white not-italic leading-[1.55] tracking-[0.01em] sm:mb-5 ${isActive ? "mb-2" : "mb-0"}`}
+                  className={`text-[10px] sm:text-[14px] text-white/80 sm:text-white not-italic leading-[1.5] tracking-[0.01em] sm:mb-5 ${isActive ? "mb-1.5" : "mb-0"}`}
                 >
                   {venueDict.tagline}
                 </p>
@@ -296,7 +296,7 @@ export default function LeCercleHero({ dict, locale }: LeCercleHeroProps) {
                 {/* CTA — hidden on mobile when inactive, invisible on desktop when inactive */}
                 <Link
                   href={`/${locale}/${venue.slug}`}
-                  className={`backdrop-blur-[10px] bg-white/10 border-0 font-medium text-white text-[10px] sm:text-[12px] tracking-widest py-1.75 px-4 sm:py-2 sm:px-4.5 uppercase relative hover:text-white sm:inline-block mt-2 sm:mt-0 [transition:opacity_0.35s_ease,color_0.25s] ${isActive ? "inline-block opacity-100 pointer-events-auto cursor-pointer" : "hidden opacity-0 pointer-events-none cursor-default"}`}
+                  className={`backdrop-blur-[10px] bg-white/10 border-0 font-medium text-white text-[9px] sm:text-[12px] tracking-widest py-1.5 px-3 sm:py-2 sm:px-4.5 uppercase relative hover:text-white sm:inline-block mt-1.5 sm:mt-0 [transition:opacity_0.35s_ease,color_0.25s] ${isActive ? "inline-block opacity-100 pointer-events-auto cursor-pointer" : "hidden opacity-0 pointer-events-none cursor-default"}`}
                 >
                   <span className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white/[0.55]" />
                   <span className="absolute top-0 right-0 w-2 h-2 border-t border-r border-white/[0.55]" />

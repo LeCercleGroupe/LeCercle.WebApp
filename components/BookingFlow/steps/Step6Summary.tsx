@@ -49,6 +49,7 @@ interface Props {
   onChange: (patch: Partial<BookingState>) => void;
   onNext: () => void;
   onBack: () => void;
+  onReset: () => void;
   dict: BookingDict;
   locale: string;
   stepLabel: string;
@@ -111,6 +112,18 @@ function computeAdditionalCostFromIds(features: ApiFeature[], selectedOptionIds:
   return total;
 }
 
+// Always derive price from live featuresMap when available so that
+// toggling options in Step6 is immediately reflected in the display.
+function getLiveAdditionalCost(
+  pkg: { id: string; additionalCost?: number; selectedOptionIds?: string[] } | undefined,
+  featuresMap: Map<string, ApiFeature[]>
+): number {
+  if (!pkg) return 0;
+  const features = featuresMap.get(pkg.id);
+  if (!features || features.length === 0) return pkg.additionalCost ?? 0;
+  return computeAdditionalCostFromIds(features, pkg.selectedOptionIds ?? []);
+}
+
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -139,6 +152,7 @@ export default function Step6Summary({
   onChange,
   onNext,
   onBack,
+  onReset,
   dict,
   locale,
   stepLabel,
@@ -148,12 +162,12 @@ export default function Step6Summary({
   const d = dict.step6;
   const months = dict.step1.months;
   const daysFull = dict.step1.days_full;
+  const isLocked = !!state.bookingRef;
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
 
-  // On bfcache restore (browser back from payment page), React's scheduler may not
-  // resume correctly and state updates won't commit — force a fresh load instead,
-  // which is exactly what the user does manually with F5.
+  // When the page is restored from bfcache after a payment redirect, React's
+  // scheduler is frozen. Reload so the flow reinitialises from sessionStorage.
   useEffect(() => {
     const handlePageshow = (e: PageTransitionEvent) => {
       if (e.persisted) window.location.reload();
@@ -161,6 +175,7 @@ export default function Step6Summary({
     window.addEventListener("pageshow", handlePageshow);
     return () => window.removeEventListener("pageshow", handlePageshow);
   }, []);
+
   const [packagesMap, setPackagesMap] = useState<Map<ServiceId, ApiPackage[]> | null>(null);
   const [featuresMap, setFeaturesMap] = useState<Map<string, ApiFeature[]>>(new Map());
   const [expandedUpgrade, setExpandedUpgrade] = useState<ServiceId | null>(null);
@@ -260,13 +275,17 @@ export default function Step6Summary({
   const isChisinau = cityNorm === "chisinau" || cityNorm === "kishinev";
   const rawKm = !isChisinau && state.distanceKm ? Math.trunc(state.distanceKm) : 0;
   const transportKm = rawKm >= 15 ? rawKm : 0;
-  const transportCost = Math.round(transportKm * TRANSPORT_RATE_PER_KM);
+  const transportCostPerService = Math.round(transportKm * TRANSPORT_RATE_PER_KM);
+  const totalTransportCost = transportCostPerService * state.selectedServices.length;
 
   const serviceTotal = state.selectedServices.reduce(
-    (sum, v) => sum + (state.selectedPackages[v]?.basePrice ?? 0) + (state.selectedPackages[v]?.additionalCost ?? 0),
+    (sum, v) =>
+      sum +
+      (state.selectedPackages[v]?.basePrice ?? 0) +
+      getLiveAdditionalCost(state.selectedPackages[v], featuresMap),
     0
   );
-  const totalPrice = serviceTotal + transportCost;
+  const totalPrice = serviceTotal + totalTransportCost;
   const advanceAmount = Math.round(totalPrice * 0.1);
   const advanceFormatted = formatMDL(advanceAmount);
 
@@ -344,6 +363,7 @@ export default function Step6Summary({
             serviceId: sid,
             quantity: 1,
             selectedOptionIds: state.selectedPackages[sid]!.selectedOptionIds ?? [],
+            roadPrice: transportCostPerService,
           }));
 
         const orderRes = await fetchWithRefresh("/api/booking/order", {
@@ -427,7 +447,11 @@ export default function Step6Summary({
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between">
           <BookingStepper currentStep={6} label={stepLabel} />
-          <BackButton label={dict.back} onClick={onBack} />
+          <BackButton
+            label={isLocked ? d.start_new_order : dict.back}
+            onClick={isLocked ? onReset : onBack}
+            danger={isLocked}
+          />
         </div>
         <h2 className="text-2xl font-medium text-[#f1f1f1] font-figtree tracking-tight mt-3">
           {d.title}
@@ -436,6 +460,18 @@ export default function Step6Summary({
           {d.subtitle}
         </p>
       </div>
+
+      {/* Locked notice — shown when order already exists */}
+      {isLocked && (
+        <div className="flex items-start gap-3 px-4 py-3 border border-[#c4973f]/40 bg-[#c4973f]/10">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0 mt-0.5">
+            <path d="M8 1.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13zm0 5v4.5M8 5.5v.5" stroke="#c4973f" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          <p className="text-sm text-[#c4973f] font-figtree tracking-tight leading-snug">
+            {d.order_locked_notice}
+          </p>
+        </div>
+      )}
 
       {/* Summary card */}
       <div className="bg-[#161616] border border-[#2a2a2a]">
@@ -500,7 +536,7 @@ export default function Step6Summary({
                         </span>
                       )}
                       <p className="text-base font-medium text-[#f1f1f1] font-figtree tracking-tight shrink-0">
-                        {pkg ? formatMDL(pkg.basePrice + (pkg.additionalCost ?? 0)) : "—"}
+                        {pkg ? formatMDL(pkg.basePrice + getLiveAdditionalCost(pkg, featuresMap)) : "—"}
                       </p>
                     </div>
                     {pkg && (
@@ -555,8 +591,9 @@ export default function Step6Summary({
                                     <button
                                       key={option.id}
                                       type="button"
-                                      onClick={() => toggleOption(v, feature.id, option.id)}
-                                      className="flex items-center gap-3 px-3 py-2.5 bg-[#111] border border-[#303030] hover:border-[#474747] transition-colors text-left w-full"
+                                      onClick={() => !isLocked && toggleOption(v, feature.id, option.id)}
+                                      disabled={isLocked}
+                                      className={`flex items-center gap-3 px-3 py-2.5 bg-[#111] border border-[#303030] transition-colors text-left w-full ${isLocked ? "cursor-not-allowed opacity-60" : "hover:border-[#474747]"}`}
                                     >
                                       <div className={`size-4 shrink-0 border flex items-center justify-center transition-colors ${
                                         isChecked ? "bg-[#37a067] border-[#37a067]" : "bg-transparent border-[#474747]"
@@ -585,8 +622,8 @@ export default function Step6Summary({
                     </div>
                   )}
 
-                  {/* Upgrade section — only if higher-tier packages exist */}
-                  {pkg && upgradeOptions.length > 0 && (
+                  {/* Upgrade section — only if higher-tier packages exist and order not yet created */}
+                  {!isLocked && pkg && upgradeOptions.length > 0 && (
                     <div className="border-t border-[#2a2a2a]">
                       <button
                         type="button"
@@ -680,6 +717,18 @@ export default function Step6Summary({
                       )}
                     </div>
                   )}
+
+                  {/* Transport cost per service */}
+                  {transportCostPerService > 0 && (
+                    <div className="border-t border-[#2a2a2a] px-3 py-2.5 flex justify-between items-center bg-[#0a0a0a]">
+                      <p className="text-xs text-[#747474] font-figtree tracking-tight">
+                        {d.transport_label.replace("{km}", String(transportKm))}
+                      </p>
+                      <p className="text-xs font-medium text-[#a8a8a8] font-figtree tracking-tight">
+                        +{formatMDL(transportCostPerService)}
+                      </p>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -700,23 +749,28 @@ export default function Step6Summary({
         <div className="flex flex-col gap-3 px-4 py-4">
           <SectionLabel>{d.cost_section}</SectionLabel>
           <div className="flex flex-col gap-2">
-            {state.selectedServices.map((v) => {
+            {state.selectedServices.flatMap((v) => {
               const info = VENUE_INFO[v];
               const pkg = state.selectedPackages[v];
-              return (
+              const rows = [
                 <Row
                   key={v}
                   label={`${info.name}: ${pkg?.name ?? ""}`}
-                  value={pkg ? formatMDL(pkg.basePrice + (pkg.additionalCost ?? 0)) : "—"}
-                />
-              );
+                  value={pkg ? formatMDL(pkg.basePrice + getLiveAdditionalCost(pkg, featuresMap)) : "—"}
+                />,
+              ];
+              if (transportCostPerService > 0) {
+                rows.push(
+                  <Row
+                    key={`${v}-transport`}
+                    label={d.transport_label.replace("{km}", String(transportKm))}
+                    value={formatMDL(transportCostPerService)}
+                    dimValue
+                  />
+                );
+              }
+              return rows;
             })}
-            {transportCost > 0 && (
-              <Row
-                label={d.transport_label.replace("{km}", String(transportKm))}
-                value={formatMDL(transportCost)}
-              />
-            )}
             <Row label={d.taxes_label} value="—" dimValue />
           </div>
           <div className="border-t border-[#303030] pt-3 flex justify-between items-center">
@@ -796,6 +850,15 @@ export default function Step6Summary({
         disabled={submitting}
         loading={submitting}
       />
+      {isLocked && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="w-full py-3 text-sm text-[#747474] font-figtree tracking-tight hover:text-[#a8a8a8] transition-colors border border-[#2a2a2a] hover:border-[#3a3a3a]"
+        >
+          {d.start_new_order}
+        </button>
+      )}
     </div>
   );
 }

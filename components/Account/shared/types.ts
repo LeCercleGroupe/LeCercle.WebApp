@@ -30,6 +30,14 @@ export interface EventBooking {
   orders: OrderSummary[];
 }
 
+export interface OrderItemSelection {
+  packageFeatureId: string;
+  featureLabel: string;
+  selectedOptionId: string;
+  selectedOptionLabel: string;
+  additionalCost: number;
+}
+
 export interface OrderItem {
   id: string;
   orderId: string;
@@ -41,6 +49,7 @@ export interface OrderItem {
   roadPrice: number;
   quantity: number;
   createdAt?: string;
+  selections?: OrderItemSelection[];
 }
 
 export interface OrderDetail {

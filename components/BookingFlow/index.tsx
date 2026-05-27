@@ -241,6 +241,16 @@ export default function BookingFlow({ locale, dict }: BookingFlowProps) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function resetFlow() {
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem("lecercle_booking_summary");
+    } catch {}
+    setState(INITIAL_STATE);
+    setStep(1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
 
   const commonProps = { state, onChange: patch, onNext: goNext, onBack: goBack, dict, locale };
 
@@ -298,6 +308,7 @@ export default function BookingFlow({ locale, dict }: BookingFlowProps) {
               stepLabel={stepLabel(dict, 6)}
               tokenRef={tokenRef}
               tokenReady={tokenReady}
+              onReset={resetFlow}
             />
           )}
           {step === 7 && (

@@ -103,7 +103,7 @@
       "transport_free_title": "Free transport in Chișinău",
       "transport_free_body": "In Chișinău, transport and logistics are not charged separately. Our team comes to your venue at no extra travel cost.",
       "transport_fee_title": "Venue is outside Chișinău",
-      "transport_fee_body": "The travel and logistics cost for our team is calculated automatically and added to the total booking amount."
+      "transport_fee_body": "Logistics cost is calculated automatically per service selected and added to the booking total."
     },
     "step5": {
       "title": "Contact details",
@@ -167,7 +167,9 @@
       "finalize": "Confirm now",
       "submit_error": "Something went wrong. Please try again.",
       "upgrade_package": "Upgrade package",
-      "select_upgrade": "Select"
+      "select_upgrade": "Select",
+      "order_locked_notice": "Your order has been saved. You can retry the payment or continue without paying now.",
+      "start_new_order": "New order"
     },
     "step7": {
       "title": "Booking pending",
@@ -229,13 +231,13 @@
       "time_label": "Start time:",
       "location_label": "Location:",
       "address_label": "Address:",
-      "back_home": "← Back to homepage"
+      "back_home": "Go to your account"
     },
     "payment_fail": {
       "title": "Payment not processed",
       "subtitle": "There was a problem processing your payment. Your booking is saved — you can retry at any time.",
       "retry": "Try again",
-      "back_home": "← Back to homepage"
+      "back_home": "Go to your account"
     }
   },
   "account": {
@@ -426,6 +428,7 @@
       "confirmed_badge": "confirmed",
       "taxes_label": "Taxes included",
       "transport_label": "Transport",
+      "transport_included": "Included",
       "no_docs": "No documentation yet",
       "no_docs_sub": "Booking confirmation is automatically generated after paying the advance at step 6.",
       "download": "View",

@@ -113,6 +113,8 @@ export interface BookingDict {
     submit_error: string;
     upgrade_package: string;
     select_upgrade: string;
+    order_locked_notice: string;
+    start_new_order: string;
   };
   step7: {
     title: string;
