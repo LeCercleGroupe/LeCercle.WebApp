@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { loadAuth, clearAuth, fetchWithRefresh, StoredAuth } from "@/components/BookingFlow/utils/auth";
+import { sessionGet, sessionSet, TTL } from "@/lib/sessionCache";
 import AccountTopBar from "./shared/AccountTopBar";
 import { formatDay, formatYear, formatDateShort, formatTime, formatMDL, pickAmount } from "./shared/format";
 import { EventBooking, OrderDetail, deriveEventState, deriveOrderState, type EventState } from "./shared/types";
@@ -185,9 +186,22 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
   const d = dict.event_detail;
 
   const [auth] = useState<StoredAuth | null>(() => loadAuth()?.auth ?? null);
-  const [event, setEvent] = useState<EventBooking | null>(null);
-  const [orders, setOrders] = useState<OrderDetail[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [event, setEvent] = useState<EventBooking | null>(() => {
+    const a = loadAuth()?.auth ?? null;
+    if (!a?.user.customerId) return null;
+    const cached = sessionGet<EventBooking[]>(`events:${a.user.customerId}`, TTL.MEDIUM);
+    return cached?.find((e) => e.id === eventId) ?? null;
+  });
+  const [orders, setOrders] = useState<OrderDetail[]>(() =>
+    sessionGet<OrderDetail[]>(`orders:event:${eventId}`, TTL.SHORT) ?? []
+  );
+  const [loading, setLoading] = useState(() => {
+    const a = loadAuth()?.auth ?? null;
+    if (!a?.user.customerId) return false;
+    const eventsWarm = sessionGet<EventBooking[]>(`events:${a.user.customerId}`, TTL.MEDIUM) !== null;
+    const ordersWarm = sessionGet<OrderDetail[]>(`orders:event:${eventId}`, TTL.SHORT) !== null;
+    return !eventsWarm || !ordersWarm;
+  });
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -195,38 +209,50 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
     const customerId = auth.user.customerId;
     if (!customerId) { setError(true); setLoading(false); return; }
 
+    const eventsWarm = sessionGet<EventBooking[]>(`events:${customerId}`, TTL.MEDIUM) !== null;
+    const ordersWarm = sessionGet<OrderDetail[]>(`orders:event:${eventId}`, TTL.SHORT) !== null;
+    if (eventsWarm && ordersWarm) return;
+
     async function load() {
       try {
-        const [evRes, ordRes] = await Promise.all([
-          fetchWithRefresh(`/api/account/events?customerId=${encodeURIComponent(customerId!)}`),
-          fetchWithRefresh(`/api/account/orders?eventId=${encodeURIComponent(eventId)}`),
-        ]);
+        const fetchEv: Promise<Response | null> = eventsWarm
+          ? Promise.resolve(null)
+          : fetchWithRefresh(`/api/account/events?customerId=${encodeURIComponent(customerId!)}`);
+        const fetchOrd: Promise<Response | null> = ordersWarm
+          ? Promise.resolve(null)
+          : fetchWithRefresh(`/api/account/orders?eventId=${encodeURIComponent(eventId)}`);
 
-        if (evRes.status === 401) {
-          clearAuth();
-          router.replace(`/${locale}/account/login`);
-          return;
+        const [evRes, ordRes] = await Promise.all([fetchEv, fetchOrd]);
+
+        if (evRes !== null) {
+          if (evRes.status === 401) {
+            clearAuth();
+            router.replace(`/${locale}/account/login`);
+            return;
+          }
+          if (evRes.ok) {
+            const evData = await evRes.json();
+            const list: EventBooking[] = Array.isArray(evData)
+              ? evData
+              : (evData?.items ?? evData?.events ?? []);
+            list.sort((a, b) => (b.eventDate || "").localeCompare(a.eventDate || ""));
+            sessionSet(`events:${customerId}`, list);
+            const found = list.find((e) => e.id === eventId);
+            if (!found) { setError(true); setLoading(false); return; }
+            setEvent(found);
+          } else {
+            setError(true);
+            setLoading(false);
+            return;
+          }
         }
 
-        if (evRes.ok) {
-          const evData = await evRes.json();
-          const list: EventBooking[] = Array.isArray(evData)
-            ? evData
-            : (evData?.items ?? evData?.events ?? []);
-          const found = list.find((e) => e.id === eventId);
-          if (!found) { setError(true); setLoading(false); return; }
-          setEvent(found);
-        } else {
-          setError(true);
-          setLoading(false);
-          return;
-        }
-
-        if (ordRes.ok) {
+        if (ordRes !== null && ordRes.ok) {
           const ordData = await ordRes.json();
           const list: OrderDetail[] = Array.isArray(ordData)
             ? ordData
             : (ordData?.items ?? ordData?.orders ?? []);
+          sessionSet(`orders:event:${eventId}`, list);
           setOrders(list);
         }
       } catch {

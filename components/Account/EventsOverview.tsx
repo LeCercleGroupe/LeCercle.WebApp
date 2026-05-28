@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { loadAuth, clearAuth, fetchWithRefresh, StoredAuth } from "@/components/BookingFlow/utils/auth";
+import { sessionGet, sessionSet, TTL } from "@/lib/sessionCache";
 import AccountTopBar from "./shared/AccountTopBar";
 import { formatDay, formatYear, pickAmount } from "./shared/format";
 import { EventBooking, deriveEventState, type EventState } from "./shared/types";
@@ -84,10 +85,16 @@ export default function EventsOverview({ locale, dict }: Props) {
   const d = dict.events_page;
 
   const [auth] = useState<StoredAuth | null>(() => loadAuth()?.auth ?? null);
-  const [events, setEvents] = useState<EventBooking[] | null>(() =>
-    auth && !auth.user.customerId ? [] : null
-  );
-  const [loading, setLoading] = useState(() => !!auth?.user.customerId);
+  const [events, setEvents] = useState<EventBooking[] | null>(() => {
+    const a = loadAuth()?.auth ?? null;
+    if (!a?.user.customerId) return a ? [] : null;
+    return sessionGet<EventBooking[]>(`events:${a.user.customerId}`, TTL.MEDIUM) ?? null;
+  });
+  const [loading, setLoading] = useState(() => {
+    const a = loadAuth()?.auth ?? null;
+    if (!a?.user.customerId) return false;
+    return sessionGet<EventBooking[]>(`events:${a.user.customerId}`, TTL.MEDIUM) === null;
+  });
   const [error, setError] = useState(false);
   const [filter, setFilter] = useState<FilterTab>("all");
 
@@ -98,6 +105,9 @@ export default function EventsOverview({ locale, dict }: Props) {
     }
     const customerId = auth.user.customerId;
     if (!customerId) return;
+
+    // Skip fetch if cache is still warm
+    if (sessionGet<EventBooking[]>(`events:${customerId}`, TTL.MEDIUM) !== null) return;
 
     fetchWithRefresh(`/api/account/events?customerId=${encodeURIComponent(customerId)}`)
       .then(async (r) => {
@@ -115,6 +125,7 @@ export default function EventsOverview({ locale, dict }: Props) {
           ? data
           : (data?.items ?? data?.events ?? []);
         list.sort((a, b) => (b.eventDate || "").localeCompare(a.eventDate || ""));
+        sessionSet(`events:${customerId}`, list);
         setEvents(list);
       })
       .catch(() => setError(true))

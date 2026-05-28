@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { loadAuth, clearAuth, fetchWithRefresh, StoredAuth } from "@/components/BookingFlow/utils/auth";
+import { sessionGet, sessionSet, sessionInvalidate, TTL } from "@/lib/sessionCache";
 import AccountTopBar from "./shared/AccountTopBar";
 import { formatDate, formatDateShort, formatMDL, formatTime, pickAmount } from "./shared/format";
 import { OrderDetail as OrderDetailType, Contract, deriveOrderState, type EventState, type OrderItemSelection } from "./shared/types";
@@ -52,9 +53,17 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
   const d = dict.event_detail;
 
   const [auth] = useState<StoredAuth | null>(() => loadAuth()?.auth ?? null);
-  const [order, setOrder] = useState<OrderDetailType | null>(null);
-  const [contracts, setContracts] = useState<Contract[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [order, setOrder] = useState<OrderDetailType | null>(() =>
+    sessionGet<OrderDetailType>(`order:${orderId}`, TTL.SHORT) ?? null
+  );
+  const [contracts, setContracts] = useState<Contract[]>(() =>
+    sessionGet<Contract[]>(`contracts:order:${orderId}`, TTL.MEDIUM) ?? []
+  );
+  const [loading, setLoading] = useState(() => {
+    const orderWarm = sessionGet<OrderDetailType>(`order:${orderId}`, TTL.SHORT) !== null;
+    const contractsWarm = sessionGet<Contract[]>(`contracts:order:${orderId}`, TTL.MEDIUM) !== null;
+    return !orderWarm || !contractsWarm;
+  });
   const [error, setError] = useState(false);
   const [payingOnline, setPayingOnline] = useState(false);
   const [payOnlineError, setPayOnlineError] = useState(false);
@@ -62,31 +71,42 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
   useEffect(() => {
     if (!auth) { router.replace(`/${locale}/account/login`); return; }
 
+    const orderWarm = sessionGet<OrderDetailType>(`order:${orderId}`, TTL.SHORT) !== null;
+    const contractsWarm = sessionGet<Contract[]>(`contracts:order:${orderId}`, TTL.MEDIUM) !== null;
+    if (orderWarm && contractsWarm) return;
+
     async function load() {
       try {
-        const [ordRes, cRes] = await Promise.all([
-          fetchWithRefresh(`/api/account/orders/${orderId}`),
-          fetchWithRefresh(`/api/account/contracts/${orderId}`),
-        ]);
+        const fetchOrd: Promise<Response | null> = orderWarm
+          ? Promise.resolve(null)
+          : fetchWithRefresh(`/api/account/orders/${orderId}`);
+        const fetchC: Promise<Response | null> = contractsWarm
+          ? Promise.resolve(null)
+          : fetchWithRefresh(`/api/account/contracts/${orderId}`);
 
-        if (ordRes.status === 401) {
-          clearAuth();
-          router.replace(`/${locale}/account/login`);
-          return;
+        const [ordRes, cRes] = await Promise.all([fetchOrd, fetchC]);
+
+        if (ordRes !== null) {
+          if (ordRes.status === 401) {
+            clearAuth();
+            router.replace(`/${locale}/account/login`);
+            return;
+          }
+          if (ordRes.ok) {
+            const ordData: OrderDetailType = await ordRes.json();
+            sessionSet(`order:${orderId}`, ordData);
+            setOrder(ordData);
+          } else {
+            setError(true);
+            setLoading(false);
+            return;
+          }
         }
 
-        if (ordRes.ok) {
-          const ordData: OrderDetailType = await ordRes.json();
-          setOrder(ordData);
-        } else {
-          setError(true);
-          setLoading(false);
-          return;
-        }
-
-        if (cRes.ok) {
+        if (cRes !== null && cRes.ok) {
           const cData = await cRes.json();
           const list: Contract[] = Array.isArray(cData) ? cData : (cData ? [cData] : []);
+          sessionSet(`contracts:order:${orderId}`, list);
           setContracts(list);
         }
       } catch {
@@ -116,6 +136,7 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
       });
       if (!payRes.ok) throw new Error(`${payRes.status}`);
       const { paymentUrl } = await payRes.json();
+      sessionInvalidate(`order:${orderId}`);
       window.location.href = paymentUrl;
     } catch {
       setPayOnlineError(true);
@@ -312,22 +333,31 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                               </div>
                             </div>
                             <div className="mt-3 pt-3 border-t border-[#1e1e1e] flex flex-col gap-2.5">
+                              {item.fixedFeatures && item.fixedFeatures.length > 0 && (
+                                <ul className="flex flex-col gap-1.5">
+                                  {[...item.fixedFeatures]
+                                    .sort((a, b) => a.sortOrder - b.sortOrder)
+                                    .map((f) => (
+                                      <li key={f.featureId} className="flex items-start gap-2">
+                                        <svg width="12" height="10" viewBox="0 0 12 10" fill="none" className="shrink-0 mt-0.5">
+                                          <path d="M1 5l3.5 3.5L11 1" stroke="#37a067" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                        <span className="text-[12px] text-[#888] font-figtree tracking-tight leading-snug">{f.label}</span>
+                                      </li>
+                                    ))}
+                                </ul>
+                              )}
                               {groupedSelections.map((group) => (
-                                <div key={group.featureLabel}>
+                                <div key={group.featureLabel} className={item.fixedFeatures?.length ? "border-t border-[#1e1e1e] pt-2" : ""}>
                                   <p className="text-[11px] font-medium text-[#555] font-figtree tracking-[0.08em] uppercase mb-1">
                                     {group.featureLabel}
                                   </p>
                                   {group.options.map((sel) => (
-                                    <div key={sel.selectedOptionId} className="flex items-start justify-between gap-3">
-                                      <p className="text-[12px] text-[#888] font-figtree tracking-tight leading-snug">{sel.selectedOptionLabel}</p>
-                                      {sel.additionalCost > 0 && (
-                                        <p className="text-[12px] text-[#c0c0c0] font-figtree tracking-tight shrink-0">+{formatMDL(sel.additionalCost)}</p>
-                                      )}
-                                    </div>
+                                    <p key={sel.selectedOptionId} className="text-[12px] text-[#888] font-figtree tracking-tight leading-snug">{sel.selectedOptionLabel}</p>
                                   ))}
                                 </div>
                               ))}
-                              <div className={`flex items-center justify-between gap-3 pt-1 ${groupedSelections.length > 0 ? "border-t border-[#1e1e1e]" : ""}`}>
+                              <div className={`flex items-center justify-between gap-3 pt-1 ${(item.fixedFeatures?.length || groupedSelections.length > 0) ? "border-t border-[#1e1e1e]" : ""}`}>
                                 <p className="text-[11px] font-medium text-[#555] font-figtree tracking-[0.08em] uppercase">{d.transport_label}</p>
                                 {pickAmount(item.roadPrice) > 0 ? (
                                   <p className="text-[12px] text-[#c0c0c0] font-figtree tracking-tight shrink-0">+{formatMDL(pickAmount(item.roadPrice))}</p>

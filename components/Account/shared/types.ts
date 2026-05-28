@@ -30,6 +30,12 @@ export interface EventBooking {
   orders: OrderSummary[];
 }
 
+export interface OrderItemFixedFeature {
+  featureId: string;
+  label: string;
+  sortOrder: number;
+}
+
 export interface OrderItemSelection {
   packageFeatureId: string;
   featureLabel: string;
@@ -49,6 +55,7 @@ export interface OrderItem {
   roadPrice: number;
   quantity: number;
   createdAt?: string;
+  fixedFeatures?: OrderItemFixedFeature[];
   selections?: OrderItemSelection[];
 }
 
