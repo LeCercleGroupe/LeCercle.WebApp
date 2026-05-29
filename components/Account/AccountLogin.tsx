@@ -238,9 +238,6 @@ export default function AccountLogin({ locale, dict }: Props) {
       const [derivedFirst = "", ...restParts] = display.split(/\s+/);
       const derivedLast = restParts.join(" ");
       saveAuth({
-        accessToken: data.accessToken ?? "",
-        refreshToken: data.refreshToken ?? "",
-        expiresIn: data.expiresIn ?? 3600,
         userId,
         customerId,
         email: data.user?.email ?? email ?? "",
@@ -289,9 +286,6 @@ export default function AccountLogin({ locale, dict }: Props) {
       const userId = data.user?.userId ?? data.userId ?? "";
       const customerId = data.user?.customerId ?? data.customerId ?? "";
       saveAuth({
-        accessToken: data.accessToken ?? "",
-        refreshToken: data.refreshToken ?? "",
-        expiresIn: data.expiresIn ?? 3600,
         userId,
         customerId,
         email: data.user?.email ?? email ?? "",

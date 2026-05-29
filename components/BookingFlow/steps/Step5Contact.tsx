@@ -84,17 +84,8 @@ export default function Step5Contact({
     const data = await res.json();
     const userId = data.user?.userId ?? data.userId ?? "";
     const customerId = data.user?.customerId ?? data.customerId ?? "";
-    onChange({
-      smsVerified: true,
-      userAccessToken: data.accessToken,
-      userRefreshToken: data.refreshToken,
-      userId,
-      customerId,
-    });
+    onChange({ smsVerified: true, userId, customerId });
     saveAuth({
-      accessToken: data.accessToken,
-      refreshToken: data.refreshToken,
-      expiresIn: data.expiresIn ?? 3600,
       userId,
       customerId,
       email: state.email,
@@ -148,17 +139,8 @@ export default function Step5Contact({
       data.user?.userId ??
       data.user?.userID ??
       "";
-    onChange({
-      emailVerified: true,
-      userAccessToken: data.accessToken ?? "",
-      userRefreshToken: data.refreshToken ?? "",
-      userId,
-      customerId,
-    });
+    onChange({ emailVerified: true, userId, customerId });
     saveAuth({
-      accessToken: data.accessToken ?? "",
-      refreshToken: data.refreshToken ?? "",
-      expiresIn: data.expiresIn ?? 3600,
       userId,
       customerId,
       email: state.email,

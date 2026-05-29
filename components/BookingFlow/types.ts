@@ -47,8 +47,6 @@ export interface BookingState {
   smsVerified: boolean;
   emailSent: boolean;
   emailVerified: boolean;
-  userAccessToken: string;
-  userRefreshToken: string;
   userId: string;
   customerId: string;
   bookingRef: string;

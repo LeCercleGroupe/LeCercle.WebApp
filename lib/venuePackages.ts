@@ -62,10 +62,14 @@ async function fetchServicePackagesRaw(serviceId: string): Promise<LivePackageIt
       headers,
       cache: "no-store",
     });
-    if (!pkgsRes.ok) return [];
+    if (!pkgsRes.ok) {
+      console.error(`[venuePackages] packages fetch failed: ${pkgsRes.status} for service ${serviceId}`);
+      return [];
+    }
 
     const packages: Array<{ id: string; name: string; basePrice: number; isActive: boolean }> =
       await pkgsRes.json();
+    console.log(`[venuePackages] service=${serviceId} packages:`, packages.map(p => ({ name: p.name, isActive: p.isActive })));
     const active = packages.filter((p) => p.isActive);
 
     return Promise.all(
@@ -85,6 +89,7 @@ async function fetchServicePackagesRaw(serviceId: string): Promise<LivePackageIt
             .sort((a, b) => a.sortOrder - b.sortOrder)
             .map((f) => ({ featureId: f.id, label: f.label, sortOrder: f.sortOrder }));
 
+          console.log(`[venuePackages] package "${pkg.name}" features: fixed=${fixedFeatures.length} total=${features.length}`);
           return { id: pkg.id, name: pkg.name, basePrice: pkg.basePrice, fixedFeatures };
         } catch {
           return { id: pkg.id, name: pkg.name, basePrice: pkg.basePrice, fixedFeatures: [] };
@@ -107,8 +112,11 @@ export const fetchServicePackages = unstable_cache(
 // ─── Patcher — merges live data into already-merged VenuePageData ─────────────
 
 /**
- * Replaces bullets (fixed features) and price in each PackagesSection item
- * by index. Falls back to the static value when the live package is missing.
+ * Rebuilds each PackagesSection using live packages as the source of truth.
+ * - Count and order follow the backend (no extra static-only packages shown).
+ * - Static metadata (subtitle, accentColor, cta) is matched by package name.
+ * - Price and bullets always come from the live backend data.
+ * Falls back to static data entirely when the backend returns nothing.
  */
 export function applyLivePackages(data: VenuePageData, live: LivePackageItem[]): VenuePageData {
   if (!live.length) return data;
@@ -117,18 +125,31 @@ export function applyLivePackages(data: VenuePageData, live: LivePackageItem[]):
     ...data,
     sections: data.sections.map((section) => {
       if (section.type !== "packages") return section;
-      return {
-        ...section,
-        items: section.items.map((item, i) => {
-          const pkg = live[i];
-          if (!pkg) return item;
-          return {
-            ...item,
-            price: formatMDL(pkg.basePrice),
-            bullets: pkg.fixedFeatures.map((f) => f.label),
-          };
-        }),
-      };
+
+      const staticByName = new Map(
+        section.items.map((item) => [item.name.toLowerCase(), item])
+      );
+
+      const items = live.map((pkg, idx) => {
+        // Try name match first, fall back to positional match
+        const staticItem = staticByName.get(pkg.name.toLowerCase()) ?? section.items[idx];
+        const fallbackCta = section.items[0]?.cta ?? { label: "", href: "" };
+        if (!staticByName.has(pkg.name.toLowerCase())) {
+          console.warn(`[venuePackages] no name match for "${pkg.name}", using index ${idx} fallback`);
+        }
+        return {
+          name:         pkg.name,
+          subtitle:     staticItem?.subtitle     ?? "",
+          accentColor:  staticItem?.accentColor,
+          cta:          staticItem?.cta          ?? fallbackCta,
+          price:        formatMDL(pkg.basePrice),
+          bullets:      pkg.fixedFeatures.length > 0
+                          ? pkg.fixedFeatures.map((f) => f.label)
+                          : (staticItem?.bullets ?? []),
+        };
+      });
+
+      return { ...section, items };
     }),
   };
 }

@@ -202,7 +202,7 @@
       "time_label": "Время начала:",
       "location_label": "Место:",
       "address_label": "Адрес:",
-      "back_home": "← На главную"
+      "back_home": "Перейти в аккаунт"
     },
     "payment_success": {
       "title": "Бронирование подтверждено",

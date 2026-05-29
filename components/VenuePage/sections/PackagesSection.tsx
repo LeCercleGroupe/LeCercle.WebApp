@@ -30,7 +30,9 @@ export default function PackagesSection({
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div
+          className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${items.length <= 3 ? "lg:grid-cols-3" : "lg:grid-cols-4"}`}
+        >
           {items.map((pkg) => (
             <PackageCard
               key={pkg.name}
@@ -71,7 +73,7 @@ function PackageCard({ pkg, fallbackColor, logo, projectName }: CardProps) {
       </div>
 
       {/* Card */}
-      <div className="relative flex flex-col flex-1 pt-10 pb-8 px-5 bg-[url('/images/invite.png')] bg-cover bg-center border-3 border-(--card-color) overflow-hidden">
+      <div className="relative flex flex-col flex-1 min-h-170 pt-10 pb-8 px-5 bg-[url('/images/invite.png')] bg-cover bg-center border-3 border-(--card-color) overflow-hidden">
         {/* Warm parchment overlay */}
         <div className="absolute inset-0 bg-[#f5ede0]/55 pointer-events-none" />
 

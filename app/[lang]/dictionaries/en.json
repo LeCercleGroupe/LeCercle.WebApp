@@ -202,7 +202,7 @@
       "time_label": "Start time:",
       "location_label": "Location:",
       "address_label": "Address:",
-      "back_home": "← Back to homepage"
+      "back_home": "Go to your account"
     },
     "payment_success": {
       "title": "Booking confirmed",

@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { loadAuth, clearAuth, fetchWithRefresh, StoredAuth } from "@/components/BookingFlow/utils/auth";
-import { sessionGet, sessionSet, TTL } from "@/lib/sessionCache";
 import AccountTopBar from "./shared/AccountTopBar";
 import { formatDay, formatYear } from "./shared/format";
 import { Contract } from "./shared/types";
@@ -99,12 +98,8 @@ export default function ContractsPage({ locale, dict }: Props) {
   const d = dict.contracts_page;
 
   const [auth] = useState<StoredAuth | null>(() => loadAuth()?.auth ?? null);
-  const [contracts, setContracts] = useState<Contract[] | null>(() =>
-    sessionGet<Contract[]>("contracts:all", TTL.MEDIUM)
-  );
-  const [loading, setLoading] = useState(() =>
-    sessionGet<Contract[]>("contracts:all", TTL.MEDIUM) === null
-  );
+  const [contracts, setContracts] = useState<Contract[] | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [filter, setFilter] = useState<ContractFilter>("all");
   const [search, setSearch] = useState("");
@@ -114,8 +109,6 @@ export default function ContractsPage({ locale, dict }: Props) {
       router.replace(`/${locale}/account/login`);
       return;
     }
-
-    if (sessionGet<Contract[]>("contracts:all", TTL.MEDIUM) !== null) return;
 
     fetchWithRefresh("/api/account/contracts")
       .then(async (r) => {
@@ -130,7 +123,6 @@ export default function ContractsPage({ locale, dict }: Props) {
       .then((data) => {
         if (data == null) return;
         const list: Contract[] = Array.isArray(data) ? data : (data?.items ?? data?.contracts ?? []);
-        sessionSet("contracts:all", list);
         setContracts(list);
       })
       .catch(() => setError(true))

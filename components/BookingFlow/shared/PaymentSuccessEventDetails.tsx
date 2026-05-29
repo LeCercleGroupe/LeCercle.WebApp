@@ -41,14 +41,16 @@ export default function PaymentSuccessEventDetails({
   months,
   daysFull,
 }: Props) {
-  const [summary, setSummary] = useState<BookingSummary | null>(() => {
+  const [summary, setSummary] = useState<BookingSummary | null>(null);
+
+  useEffect(() => {
     try {
       const raw = sessionStorage.getItem("lecercle_booking_flow");
       if (raw) {
         const flow = JSON.parse(raw);
         const s = flow?.state;
         if (s) {
-          const summary: BookingSummary = {
+          setSummary({
             date: s.date
               ? `${s.date.y}-${String(s.date.m + 1).padStart(2, "0")}-${String(s.date.d).padStart(2, "0")}`
               : undefined,
@@ -56,15 +58,10 @@ export default function PaymentSuccessEventDetails({
             venueName: s.venueName,
             address: s.address,
             city: s.city,
-          };
-          return summary;
+          });
         }
       }
     } catch {}
-    return null;
-  });
-
-  useEffect(() => {
     // Clear after reading so a new booking starts fresh
     try {
       sessionStorage.removeItem("lecercle_booking_flow");

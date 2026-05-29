@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { loadAuth, clearAuth, fetchWithRefresh, StoredAuth } from "@/components/BookingFlow/utils/auth";
-import { sessionGet, sessionSet, sessionInvalidate, TTL } from "@/lib/sessionCache";
 import AccountTopBar from "./shared/AccountTopBar";
 import { formatDate, formatDateShort, formatMDL, formatTime, pickAmount } from "./shared/format";
 import { OrderDetail as OrderDetailType, Contract, deriveOrderState, type EventState, type OrderItemSelection } from "./shared/types";
@@ -53,17 +52,9 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
   const d = dict.event_detail;
 
   const [auth] = useState<StoredAuth | null>(() => loadAuth()?.auth ?? null);
-  const [order, setOrder] = useState<OrderDetailType | null>(() =>
-    sessionGet<OrderDetailType>(`order:${orderId}`, TTL.SHORT) ?? null
-  );
-  const [contracts, setContracts] = useState<Contract[]>(() =>
-    sessionGet<Contract[]>(`contracts:order:${orderId}`, TTL.MEDIUM) ?? []
-  );
-  const [loading, setLoading] = useState(() => {
-    const orderWarm = sessionGet<OrderDetailType>(`order:${orderId}`, TTL.SHORT) !== null;
-    const contractsWarm = sessionGet<Contract[]>(`contracts:order:${orderId}`, TTL.MEDIUM) !== null;
-    return !orderWarm || !contractsWarm;
-  });
+  const [order, setOrder] = useState<OrderDetailType | null>(null);
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [payingOnline, setPayingOnline] = useState(false);
   const [payOnlineError, setPayOnlineError] = useState(false);
@@ -71,42 +62,31 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
   useEffect(() => {
     if (!auth) { router.replace(`/${locale}/account/login`); return; }
 
-    const orderWarm = sessionGet<OrderDetailType>(`order:${orderId}`, TTL.SHORT) !== null;
-    const contractsWarm = sessionGet<Contract[]>(`contracts:order:${orderId}`, TTL.MEDIUM) !== null;
-    if (orderWarm && contractsWarm) return;
-
     async function load() {
       try {
-        const fetchOrd: Promise<Response | null> = orderWarm
-          ? Promise.resolve(null)
-          : fetchWithRefresh(`/api/account/orders/${orderId}`);
-        const fetchC: Promise<Response | null> = contractsWarm
-          ? Promise.resolve(null)
-          : fetchWithRefresh(`/api/account/contracts/${orderId}`);
+        const [ordRes, cRes] = await Promise.all([
+          fetchWithRefresh(`/api/account/orders/${orderId}`),
+          fetchWithRefresh(`/api/account/contracts/${orderId}`),
+        ]);
 
-        const [ordRes, cRes] = await Promise.all([fetchOrd, fetchC]);
-
-        if (ordRes !== null) {
-          if (ordRes.status === 401) {
-            clearAuth();
-            router.replace(`/${locale}/account/login`);
-            return;
-          }
-          if (ordRes.ok) {
-            const ordData: OrderDetailType = await ordRes.json();
-            sessionSet(`order:${orderId}`, ordData);
-            setOrder(ordData);
-          } else {
-            setError(true);
-            setLoading(false);
-            return;
-          }
+        if (ordRes.status === 401) {
+          clearAuth();
+          router.replace(`/${locale}/account/login`);
+          return;
         }
 
-        if (cRes !== null && cRes.ok) {
+        if (ordRes.ok) {
+          const ordData: OrderDetailType = await ordRes.json();
+          setOrder(ordData);
+        } else {
+          setError(true);
+          setLoading(false);
+          return;
+        }
+
+        if (cRes.ok) {
           const cData = await cRes.json();
           const list: Contract[] = Array.isArray(cData) ? cData : (cData ? [cData] : []);
-          sessionSet(`contracts:order:${orderId}`, list);
           setContracts(list);
         }
       } catch {
@@ -136,7 +116,6 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
       });
       if (!payRes.ok) throw new Error(`${payRes.status}`);
       const { paymentUrl } = await payRes.json();
-      sessionInvalidate(`order:${orderId}`);
       window.location.href = paymentUrl;
     } catch {
       setPayOnlineError(true);
