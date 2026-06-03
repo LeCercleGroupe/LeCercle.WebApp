@@ -190,6 +190,7 @@ export default function Step4Location({
           placeholder={d.time_placeholder}
           type="time"
         />
+        <p className="text-xs text-[#747474] font-figtree tracking-tight -mt-3">{d.time_disclaimer}</p>
         <BookingInput
           label={d.notes_label}
           value={state.notes}

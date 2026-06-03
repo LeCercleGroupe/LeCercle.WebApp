@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BookingNavbar from "@/components/BookingFlow/shared/BookingNavbar";
+import OtpDigitInput from "@/components/BookingFlow/shared/OtpDigitInput";
 import PrimaryButton from "@/components/BookingFlow/shared/PrimaryButton";
 import { saveAuth, loadAuth } from "@/components/BookingFlow/utils/auth";
 
@@ -77,28 +78,6 @@ interface Props {
 
 // ─── Shared sub-components ────────────────────────────────────────────────────
 
-function OtpCodeInput({
-  value, onChange, hasError, placeholder,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  hasError: boolean;
-  placeholder: string;
-}) {
-  return (
-    <input
-      type="text"
-      inputMode="numeric"
-      maxLength={6}
-      value={value}
-      onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, 6))}
-      placeholder={placeholder}
-      className={`w-full bg-[#111] border px-3 py-3.5 text-base text-[#f1f1f1] placeholder:text-[#747474] font-figtree tracking-[0.3em] text-center focus:outline-none transition-colors ${
-        hasError ? "border-red-500" : "border-[#303030] focus:border-[#474747]"
-      }`}
-    />
-  );
-}
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -535,11 +514,10 @@ export default function AccountLogin({ locale, dict }: Props) {
               </div>
 
               <div className="flex flex-col gap-2">
-                <OtpCodeInput
+                <OtpDigitInput
                   value={otpCode}
                   onChange={(v) => { setOtpCode(v); setCodeError(false); }}
                   hasError={codeError}
-                  placeholder="000000"
                 />
                 {codeError && (
                   <p className="text-xs text-red-400 font-figtree tracking-tight">{d.code_error}</p>

@@ -24,6 +24,7 @@ export interface BookingDict {
     progress: string;
     guests_for_service: string;
     guests_hint: string;
+    guests_min_error: string;
     reserve_error: string;
     recommended: string;
     feature_included: string;
@@ -42,6 +43,7 @@ export interface BookingDict {
     venue_label: string;
     venue_placeholder: string;
     time_label: string;
+    time_disclaimer: string;
     time_placeholder: string;
     notes_label: string;
     notes_placeholder: string;

@@ -83,11 +83,7 @@ export default function Step1DateGuests({ state, onChange, onNext, dict, stepLab
     return d < today;
   }
 
-  function setGuests(val: number) {
-    onChange({ guests: Math.max(1, Math.min(99999, val)) });
-  }
-
-  const canProceed = state.date !== null && state.guests >= 1;
+  const canProceed = state.date !== null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -216,38 +212,6 @@ export default function Step1DateGuests({ state, onChange, onNext, dict, stepLab
             </div>
           </>
         )}
-      </div>
-
-      {/* Guest counter */}
-      <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-[#a8a8a8] font-figtree tracking-tight">
-          {d1.guests_label}
-        </label>
-        <div className="flex items-stretch bg-[#111] border border-[#303030]">
-          <input
-            type="number"
-            min={1}
-            max={99999}
-            value={state.guests}
-            onChange={(e) => setGuests(parseInt(e.target.value) || 1)}
-            className="flex-1 bg-transparent px-3 py-3.5 text-base text-[#f1f1f1] font-figtree tracking-tight focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-          />
-          <div className="flex border-l border-[#303030] shrink-0">
-            <button
-              onClick={() => setGuests(state.guests - 1)}
-              className="flex items-center justify-center w-11 text-[#f1f1f1] hover:bg-white/10 transition-colors text-lg font-medium border-r border-[#303030]"
-            >
-              −
-            </button>
-            <button
-              onClick={() => setGuests(state.guests + 1)}
-              disabled={state.guests >= 99999}
-              className="flex items-center justify-center w-11 text-[#f1f1f1] hover:bg-white/10 transition-colors text-lg font-medium disabled:opacity-30"
-            >
-              +
-            </button>
-          </div>
-        </div>
       </div>
 
       <PrimaryButton label={dict.continue} onClick={onNext} disabled={!canProceed} />

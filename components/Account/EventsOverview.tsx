@@ -8,7 +8,7 @@ import AccountTopBar from "./shared/AccountTopBar";
 import { formatDay, formatYear, pickAmount } from "./shared/format";
 import { EventBooking, deriveEventState, type EventState } from "./shared/types";
 
-type FilterTab = "all" | "confirmed" | "pending" | "draft";
+type FilterTab = "all" | "confirmed" | "pending" | "cancelled" | "completed";
 
 interface EventsPageDict {
   title: string;
@@ -20,7 +20,8 @@ interface EventsPageDict {
   filter_all: string;
   filter_confirmed: string;
   filter_pending: string;
-  filter_draft: string;
+  filter_cancelled: string;
+  filter_completed: string;
   filter_sort: string;
   view_details: string;
   empty: string;
@@ -52,30 +53,33 @@ function stateBadgeClass(state: EventState): string {
     case "draft":      return "bg-[#1a0f00] border border-[#3a2000] text-[#fb923c]";
     case "past":       return "bg-[#1a1a1a] border border-[#2a2a2a] text-[#888]";
     case "cancelled":  return "bg-[#1a0505] border border-[#3a1010] text-[#f87171]";
+    case "completed":  return "bg-[#0a0f1f] border border-[#1a2a4a] text-[#60a5fa]";
     default:           return "bg-[#1f1400] border border-[#3a2a00] text-[#fbbf24]";
   }
 }
 
 function stateLabel(state: EventState, d: EventsPageDict): string {
   switch (state) {
-    case "confirmed": return d.filter_confirmed.toUpperCase();
-    case "pending":   return d.filter_pending.toUpperCase();
-    case "draft":     return d.filter_draft.toUpperCase();
-    case "past":      return "TRECUT";
-    case "cancelled": return "ANULAT";
-    default:          return d.filter_pending.toUpperCase();
+    case "confirmed":  return d.filter_confirmed.toUpperCase();
+    case "pending":    return d.filter_pending.toUpperCase();
+    case "cancelled":  return d.filter_cancelled.toUpperCase();
+    case "completed":  return d.filter_completed.toUpperCase();
+    case "draft":      return d.filter_pending.toUpperCase();
+    case "past":       return d.filter_completed.toUpperCase();
+    default:           return d.filter_pending.toUpperCase();
   }
 }
 
 function stateSubText(state: EventState, event: EventBooking): string {
   const total = pickAmount(event.orders?.[0]?.totalAmount);
   switch (state) {
-    case "confirmed": return "Tot este în regulă";
-    case "pending":   return "Avans neplătit";
-    case "draft":     return "Rezervare în progres";
-    case "past":      return total > 0 ? "Plăți finalizate" : "Eveniment finalizat";
-    case "cancelled": return "Anulat";
-    default:          return "";
+    case "confirmed":  return "Tot este în regulă";
+    case "pending":    return "Avans neplătit";
+    case "draft":      return "Rezervare în progres";
+    case "past":       return total > 0 ? "Plăți finalizate" : "Eveniment finalizat";
+    case "cancelled":  return "Anulat";
+    case "completed":  return total > 0 ? "Plăți finalizate" : "Eveniment finalizat";
+    default:           return "";
   }
 }
 
@@ -136,18 +140,20 @@ export default function EventsOverview({ locale, dict }: Props) {
   const cancelled = eventsWithState.filter(({ state }) => state === "cancelled");
 
   const filtered = useMemo(() => {
-    if (filter === "all")       return eventsWithState;
-    if (filter === "confirmed") return eventsWithState.filter(({ state }) => state === "confirmed");
-    if (filter === "pending")   return eventsWithState.filter(({ state }) => state === "pending");
-    if (filter === "draft")     return eventsWithState.filter(({ state }) => state === "draft");
+    if (filter === "all")        return eventsWithState;
+    if (filter === "confirmed")  return eventsWithState.filter(({ state }) => state === "confirmed");
+    if (filter === "pending")    return eventsWithState.filter(({ state }) => state === "pending");
+    if (filter === "cancelled")  return eventsWithState.filter(({ state }) => state === "cancelled");
+    if (filter === "completed")  return eventsWithState.filter(({ state }) => state === "completed" || state === "past");
     return eventsWithState;
   }, [eventsWithState, filter]);
 
   const tabs: { key: FilterTab; label: string }[] = [
-    { key: "all",       label: d.filter_all },
-    { key: "confirmed", label: d.filter_confirmed },
-    { key: "pending",   label: d.filter_pending },
-    { key: "draft",     label: d.filter_draft },
+    { key: "all",        label: d.filter_all },
+    { key: "confirmed",  label: d.filter_confirmed },
+    { key: "pending",    label: d.filter_pending },
+    { key: "cancelled",  label: d.filter_cancelled },
+    { key: "completed",  label: d.filter_completed },
   ];
 
   return (

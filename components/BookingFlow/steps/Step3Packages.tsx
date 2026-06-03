@@ -5,7 +5,6 @@ import type { RefObject } from "react";
 import Image from "next/image";
 import { BookingState, ServiceId, SelectedPackage, VENUE_INFO } from "../types";
 import type { BookingDict } from "../dict";
-import { fetchWithRefresh, loadAuth } from "../utils/auth";
 import BookingStepper from "../shared/BookingStepper";
 import BackButton from "../shared/BackButton";
 import PrimaryButton from "../shared/PrimaryButton";
@@ -87,44 +86,71 @@ function computeAdditionalCost(
 /**
  * Build default selections for a package from isDefault flags.
  */
-function buildDefaultSelections(features: ApiFeature[]): Map<string, Set<string>> {
-  const featureMap = new Map<string, Set<string>>();
-  for (const feature of features) {
-    if (feature.type !== 1) continue;
-    const defaults = feature.options.filter((o) => o.isDefault).map((o) => o.id);
-    if (defaults.length > 0) {
-      featureMap.set(feature.id, new Set(defaults));
-    }
-  }
-  return featureMap;
+function buildDefaultSelections(_features: ApiFeature[]): Map<string, Set<string>> {
+  return new Map();
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-function GuestInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+function GuestInput({
+  value,
+  onChange,
+  errorMessage,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  errorMessage: string;
+}) {
+  const [raw, setRaw] = useState(String(value));
+  const hasError = value < 5;
+
+  function handleChange(str: string) {
+    setRaw(str);
+    const parsed = parseInt(str, 10);
+    if (!isNaN(parsed) && parsed > 0) onChange(parsed);
+  }
+
+  function handleStepDown() {
+    const next = Math.max(1, value - 1);
+    onChange(next);
+    setRaw(String(next));
+  }
+
+  function handleStepUp() {
+    const next = value + 1;
+    onChange(next);
+    setRaw(String(next));
+  }
+
   return (
-    <div className="flex items-stretch bg-[#111] border border-[#303030]">
-      <input
-        type="number"
-        min={1}
-        value={value}
-        onChange={(e) => onChange(Math.max(1, parseInt(e.target.value) || 1))}
-        className="flex-1 bg-transparent px-3 py-3 text-base text-[#f1f1f1] font-figtree tracking-tight focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-      />
-      <div className="flex border-l border-[#303030] shrink-0">
-        <button
-          onClick={() => onChange(Math.max(1, value - 1))}
-          className="flex items-center justify-center w-11 text-[#f1f1f1] hover:bg-white/10 transition-colors text-lg font-medium border-r border-[#303030]"
-        >
-          −
-        </button>
-        <button
-          onClick={() => onChange(value + 1)}
-          className="flex items-center justify-center w-11 text-[#f1f1f1] hover:bg-white/10 transition-colors text-lg font-medium"
-        >
-          +
-        </button>
+    <div className="flex flex-col gap-1.5">
+      <div className={`flex items-stretch bg-[#111] border ${hasError ? "border-red-500" : "border-[#303030]"}`}>
+        <input
+          type="text"
+          inputMode="numeric"
+          placeholder="5+"
+          value={raw}
+          onChange={(e) => handleChange(e.target.value)}
+          className="flex-1 bg-transparent px-3 py-3 text-base text-[#f1f1f1] font-figtree tracking-tight focus:outline-none placeholder:text-[#474747]"
+        />
+        <div className="flex border-l border-[#303030] shrink-0">
+          <button
+            onClick={handleStepDown}
+            className="flex items-center justify-center w-11 text-[#f1f1f1] hover:bg-white/10 transition-colors text-lg font-medium border-r border-[#303030]"
+          >
+            −
+          </button>
+          <button
+            onClick={handleStepUp}
+            className="flex items-center justify-center w-11 text-[#f1f1f1] hover:bg-white/10 transition-colors text-lg font-medium"
+          >
+            +
+          </button>
+        </div>
       </div>
+      {hasError && (
+        <p className="text-xs text-red-400 font-figtree tracking-tight">{errorMessage}</p>
+      )}
     </div>
   );
 }
@@ -141,6 +167,9 @@ interface PackageCardProps {
   selectedBadge: string;
   recommendedLabel: string;
   featureIncluded: string;
+  featureFree: string;
+  firstFreeHint: string;
+  accentColor: string;
 }
 
 function PackageCard({
@@ -155,148 +184,167 @@ function PackageCard({
   selectedBadge,
   recommendedLabel,
   featureIncluded,
+  featureFree,
+  firstFreeHint,
+  accentColor,
 }: PackageCardProps) {
   const allFeatures = [...features].sort((a, b) => a.sortOrder - b.sortOrder);
+  const fixedFeatures = allFeatures.filter((f) => f.type === 0);
   const multiFeatures = allFeatures.filter((f) => f.type === 1);
 
-  return (
-    <div className={`flex flex-col border transition-all duration-200 ${
-      selected ? "border-[#37a067]" : "border-[#303030] hover:border-[#474747]"
-    }`}>
+  const accent = selected ? accentColor : "transparent";
 
-      {/* ── Recommended strip — full width, above the button ── */}
+  return (
+    <div className="relative flex flex-col flex-1 pt-7">
+
+      {/* ── Recommended label ── */}
       {isRecommended && (
-        <div className={`flex items-center gap-2 px-4 py-1.5 border-b ${
-          selected ? "bg-[#0b2a18] border-[#37a067]/40" : "bg-[#111] border-[#303030]"
-        }`}>
+        <div
+          className="absolute top-0 left-0 right-0 h-7 flex items-center gap-2 px-3 border-x border-t"
+          style={{ borderColor: `${accentColor}99`, backgroundColor: `${accentColor}14`, color: accentColor }}
+        >
           <svg width="10" height="8" viewBox="0 0 10 8" fill="none" className="shrink-0">
-            <path d="M1 4l3 3 5-6" stroke="#37a067" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M1 4l3 3 5-6" stroke={accentColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span className="text-xs font-medium text-[#37a067] font-figtree tracking-tight">
-            {recommendedLabel}
-          </span>
+          <span className="text-xs font-medium font-figtree tracking-tight">{recommendedLabel}</span>
         </div>
       )}
 
-      {/* ── Clickable card ── */}
-      <button
-        onClick={onSelect}
-        className={`relative flex flex-col gap-4 p-4 text-left w-full transition-colors duration-200 ${
-          selected ? "bg-[#0e1f17]" : "bg-[#111]"
-        }`}
+      {/* ── Fixed-height card ── */}
+      <div
+        className="flex flex-col h-90 border transition-colors duration-200 hover:border-[#474747]"
+        style={{ borderColor: selected ? accentColor : "#303030" }}
       >
-        <CornerBrackets color={selected ? "#37a067" : "rgba(255,255,255,0.12)"} size={12} />
+        <button
+          onClick={onSelect}
+          className="relative flex flex-col gap-4 p-4 text-left w-full h-full transition-colors duration-200 bg-[#111]"
+          style={selected ? { backgroundColor: `${accentColor}0d` } : undefined}
+        >
+          <CornerBrackets color={selected ? accentColor : "rgba(255,255,255,0.12)"} size={12} />
 
-        {/* Header: name / tier / price */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex flex-col gap-0.5">
-            <p className="text-lg font-medium text-[#f1f1f1] font-figtree tracking-tight">{pkg.name}</p>
-            <p className="text-xs text-[#747474] font-figtree tracking-tight uppercase">{pkg.tier}</p>
+          {/* Header: name / tier / price */}
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex flex-col gap-0.5">
+              <p className="text-lg font-medium text-[#f1f1f1] font-figtree tracking-tight">{pkg.name}</p>
+              <p className="text-xs text-[#747474] font-figtree tracking-tight uppercase">{pkg.tier}</p>
+            </div>
+            <div className="flex flex-col items-end gap-0.5 shrink-0">
+              <p className="text-base font-medium text-[#f1f1f1] font-figtree tracking-tight">
+                {formatMDL(displayPrice)}
+              </p>
+              <p className="text-xs text-[#747474] font-figtree tracking-tight">max. {pkg.maxGuests} pers.</p>
+            </div>
           </div>
-          <div className="flex flex-col items-end gap-0.5 shrink-0">
-            <p className="text-base font-medium text-[#f1f1f1] font-figtree tracking-tight">
-              {formatMDL(displayPrice)}
-            </p>
-            <p className="text-xs text-[#747474] font-figtree tracking-tight">max. {pkg.maxGuests} pers.</p>
-          </div>
-        </div>
 
-        {/* All features — shown as bullet list in every card */}
-        {allFeatures.length > 0 && (
-          <ul className="flex flex-col gap-1.5">
-            {allFeatures.map((feature) => (
-              <li key={feature.id} className="flex gap-2 items-start">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 mt-0.5">
-                  <path
-                    d="M2.5 7l3 3 6-6"
-                    stroke={selected ? "#37a067" : "#747474"}
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <span className="text-sm text-[#c4c4c4] font-figtree tracking-tight">
-                  {feature.label}
+          {/* Fixed features fill remaining space */}
+          {fixedFeatures.length === 0 && <div className="flex-1" />}
+          {fixedFeatures.length > 0 && (
+            <ul className="flex flex-col gap-1.5 flex-1 overflow-hidden">
+              {fixedFeatures.map((feature) => (
+                <li key={feature.id} className="flex gap-2 items-start">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 mt-0.5">
+                    <path
+                      d="M2.5 7l3 3 6-6"
+                      stroke={selected ? accentColor : "#747474"}
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span className="text-sm text-[#c4c4c4] font-figtree tracking-tight">
+                    {feature.label}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* Selected badge — always reserves space at bottom */}
+          <div className="h-5 flex items-center gap-1.5">
+            {selected && (
+              <>
+                <div className="size-2 rounded-full" style={{ backgroundColor: accentColor }} />
+                <span className="text-xs font-medium font-figtree tracking-tight" style={{ color: accentColor }}>
+                  {selectedBadge}
                 </span>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {/* Selected badge */}
-        {selected && (
-          <div className="flex items-center gap-1.5">
-            <div className="size-2 rounded-full bg-[#37a067]" />
-            <span className="text-xs font-medium text-[#37a067] font-figtree tracking-tight">
-              {selectedBadge}
-            </span>
+              </>
+            )}
           </div>
-        )}
-      </button>
+        </button>
+      </div>
 
-      {/* ── MultiSelectable options — always visible, interactive in all cards ── */}
+      {/* ── Extra features panel ── */}
       {multiFeatures.length > 0 && (
-        <div className={`flex flex-col gap-4 px-4 py-4 border-t ${
-          selected ? "bg-[#0e1f17] border-[#37a067]/40" : "bg-[#0d0d0d] border-[#303030]"
-        }`}>
-          {multiFeatures.map((feature) => {
-            const selectedIds = pkgSelections.get(feature.id) ?? new Set<string>();
-            // Sort by additionalCost ascending — cheapest option displayed first
-            const sortedOptions = [...feature.options].sort((a, b) => a.additionalCost - b.additionalCost);
-            // The cheapest currently-selected option is always free
-            const freeOptionId = sortedOptions.find((o) => selectedIds.has(o.id))?.id ?? null;
+        <div className="grid grid-rows-[1fr]">
+          <div className="overflow-hidden">
+            <div
+              className="flex flex-col gap-4 px-4 py-4 border-x border-b"
+              style={{
+                borderColor: selected ? `${accentColor}66` : "#303030",
+                backgroundColor: selected ? `${accentColor}0a` : "#111",
+              }}
+            >
+              {/* Disclaimer */}
+              <p className="text-xs text-[#747474] font-figtree tracking-tight">{firstFreeHint}</p>
 
-            return (
-              <div key={feature.id} className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-[#f1f1f1] font-figtree tracking-tight">
-                  {feature.label}
-                </p>
-                <div className="flex flex-col gap-1.5">
-                  {sortedOptions.map((option) => {
-                    const isChecked = selectedIds.has(option.id);
-                    const isFree = isChecked && option.id === freeOptionId;
-                    return (
-                      <button
-                        key={option.id}
-                        type="button"
-                        onClick={() => {
-                          if (!selected) onSelect();
-                          onToggleOption(feature.id, option.id);
-                        }}
-                        className="flex items-center gap-3 px-3 py-2.5 bg-[#111] border border-[#303030] hover:border-[#474747] transition-colors text-left w-full"
-                      >
-                        <div
-                          className={`size-4 shrink-0 border flex items-center justify-center transition-colors ${
-                            isChecked
-                              ? "bg-[#37a067] border-[#37a067]"
-                              : "bg-transparent border-[#474747]"
-                          }`}
-                        >
-                          {isChecked && (
-                            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                              <path
-                                d="M1 4l3 3 5-6"
-                                stroke="#fff"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          )}
-                        </div>
-                        <span className="flex-1 text-sm text-[#c4c4c4] font-figtree tracking-tight">
-                          {option.label}
-                        </span>
-                        <span className={`text-xs font-medium font-figtree tracking-tight shrink-0 ${isChecked ? "text-[#37a067]" : "text-[#a8a8a8]"}`}>
-                          {isFree ? featureIncluded : `+${formatMDL(option.additionalCost)}`}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+              {multiFeatures.map((feature) => {
+                const selectedIds = pkgSelections.get(feature.id) ?? new Set<string>();
+                const noneSelected = selectedIds.size === 0;
+                const sortedOptions = [...feature.options].sort((a, b) => a.additionalCost - b.additionalCost);
+                const freeOptionId = noneSelected
+                  ? null
+                  : sortedOptions.find((o) => selectedIds.has(o.id))?.id ?? null;
+
+                return (
+                  <div key={feature.id} className="flex flex-col gap-2">
+                    <p className="text-sm font-medium text-[#f1f1f1] font-figtree tracking-tight">
+                      {feature.label}
+                    </p>
+                    <div className="flex flex-col gap-1.5">
+                      {sortedOptions.map((option) => {
+                        const isChecked = selectedIds.has(option.id);
+                        const isFree = noneSelected || (isChecked && option.id === freeOptionId);
+                        const priceLabel = isFree
+                          ? (noneSelected ? featureFree : featureIncluded)
+                          : `+${formatMDL(option.additionalCost)}`;
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            onClick={() => onToggleOption(feature.id, option.id)}
+                            className="flex items-center gap-3 px-3 py-2.5 bg-[#111] border border-[#303030] hover:border-[#474747] transition-colors text-left w-full"
+                          >
+                            <div
+                              className="size-4 shrink-0 border flex items-center justify-center transition-colors"
+                              style={isChecked
+                                ? { backgroundColor: accentColor, borderColor: accentColor }
+                                : { backgroundColor: "transparent", borderColor: "#474747" }
+                              }
+                            >
+                              {isChecked && (
+                                <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                                  <path d="M1 4l3 3 5-6" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              )}
+                            </div>
+                            <span className="flex-1 text-sm text-[#c4c4c4] font-figtree tracking-tight">
+                              {option.label}
+                            </span>
+                            <span
+                              className="text-xs font-medium font-figtree tracking-tight shrink-0"
+                              style={{ color: isFree ? accentColor : "#a8a8a8" }}
+                            >
+                              {priceLabel}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -324,21 +372,18 @@ export default function Step3Packages({
   const [selections, setSelections] = useState<Map<string, Map<string, Set<string>>>>(new Map());
   const [error, setError] = useState(false);
   const [reserving, setReserving] = useState(false);
-  const [reserveError, setReserveError] = useState(false);
+  const [reserveError, setReserveError] = useState<string | boolean>(false);
 
   // ── Fetch packages + features in one go ──────────────────────────────────
 
   useEffect(() => {
-    const token = tokenRef.current;
-    if (!token || !state.selectedServices.length) return;
+    if (!state.selectedServices.length) return;
 
     let pMap: Map<ServiceId, ApiPackage[]>;
 
     Promise.all(
       state.selectedServices.map((serviceId) =>
-        fetch(`/api/booking/packages/${serviceId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        fetch(`/api/booking/packages/${serviceId}`)
           .then((r) => {
             if (!r.ok) throw new Error(`${r.status}`);
             return r.json() as Promise<ApiPackage[]>;
@@ -361,9 +406,7 @@ export default function Step3Packages({
         // Fetch features for each package — failures are silent (fallback to description)
         return Promise.all(
           allPackageIds.map((pkgId) =>
-            fetch(`/api/booking/packages/${pkgId}/features`, {
-              headers: { Authorization: `Bearer ${token}` },
-            })
+            fetch(`/api/booking/packages/${pkgId}/features`)
               .then((r) => (r.ok ? (r.json() as Promise<ApiFeature[]>) : ([] as ApiFeature[])))
               .then((feats): readonly [string, ApiFeature[]] => [pkgId, feats])
               .catch((): readonly [string, ApiFeature[]] => [pkgId, []])
@@ -434,13 +477,15 @@ export default function Step3Packages({
       })
       .catch(() => setError(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.selectedServices, tokenReady]);
+  }, [state.selectedServices]);
 
   // ── Derived state ─────────────────────────────────────────────────────────
 
   const loading = (packagesMap === null || featuresMap === null) && !error;
   const packages = packagesMap?.get(activeVenue) ?? [];
-  const canProceed = state.selectedServices.every((v) => state.selectedPackages[v]);
+  const canProceed =
+    state.selectedServices.every((v) => state.selectedPackages[v]) &&
+    state.selectedServices.every((v) => (state.guestsPerService[v] ?? state.guests) >= 5);
 
   // ── Event handlers ────────────────────────────────────────────────────────
 
@@ -501,8 +546,6 @@ export default function Step3Packages({
   // ── handleNext: bake selections into state before proceeding ─────────────
 
   async function handleNext() {
-    setReserveError(false);
-
     // Compute final additionalCost + selectedOptionIds for every selected package
     const updatedPackages = { ...state.selectedPackages };
     for (const serviceId of state.selectedServices) {
@@ -526,19 +569,19 @@ export default function Step3Packages({
     }
     onChange({ selectedPackages: updatedPackages });
 
-    // Reservation requires customer auth — skip here if the user hasn't
-    // authenticated yet (Step 5 comes later). Step 6 will make the call then.
-    if (!loadAuth()?.tokensValid) {
+    // Already have a reservation token — skip the API call
+    if (state.reservationToken) {
       onNext();
       return;
     }
 
+    setReserveError(false);
     setReserving(true);
     try {
       const eventDate = state.date
         ? `${state.date.getFullYear()}-${String(state.date.getMonth() + 1).padStart(2, "0")}-${String(state.date.getDate()).padStart(2, "0")}`
         : undefined;
-      const res = await fetchWithRefresh("/api/reservations", {
+      const res = await fetch("/api/reservations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -546,12 +589,19 @@ export default function Step3Packages({
           items: state.selectedServices.map((serviceId) => ({ serviceId, quantity: 1 })),
         }),
       });
-      if (!res.ok) throw new Error(`${res.status}`);
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        let detail: string | null = null;
+        try { detail = (JSON.parse(body) as { detail?: string }).detail ?? null; } catch {}
+        throw Object.assign(new Error(`${res.status}`), { detail });
+      }
       const { token } = await res.json();
       onChange({ reservationToken: token ?? "" });
       onNext();
-    } catch {
-      setReserveError(true);
+    } catch (err) {
+      const detail = (err as { detail?: string }).detail ?? null;
+      setReserveError(detail ?? true);
+    } finally {
       setReserving(false);
     }
   }
@@ -560,51 +610,58 @@ export default function Step3Packages({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center justify-between">
-          <BookingStepper currentStep={3} label={stepLabel} />
-          <BackButton label={dict.back} onClick={onBack} />
+
+      {/* ── Constrained header — same width as all other steps ── */}
+      <div className="flex flex-col gap-6 max-w-xl mx-auto w-full">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center justify-between">
+            <BookingStepper currentStep={3} label={stepLabel} />
+            <BackButton label={dict.back} onClick={onBack} />
+          </div>
+          <h2 className="text-2xl font-medium text-[#f1f1f1] font-figtree tracking-tight mt-3">
+            {d.title}
+          </h2>
+          <p className="text-sm text-[#a8a8a8] font-figtree tracking-tight">{d.subtitle}</p>
         </div>
-        <h2 className="text-2xl font-medium text-[#f1f1f1] font-figtree tracking-tight mt-3">
-          {d.title}
-        </h2>
-        <p className="text-sm text-[#a8a8a8] font-figtree tracking-tight">{d.subtitle}</p>
+
+        {/* Service tab switcher */}
+        {state.selectedServices.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto scrollbar-none">
+            {state.selectedServices.map((v) => {
+              const info = VENUE_INFO[v];
+              const hasPackage = !!state.selectedPackages[v];
+              const guestsInvalid = hasPackage && (state.guestsPerService[v] ?? state.guests) < 5;
+              const isActive = v === activeVenue;
+              return (
+                <button
+                  key={v}
+                  onClick={() => setActiveVenue(v)}
+                  className={`flex items-center gap-2 px-3 py-2 border rounded-full shrink-0 text-sm font-medium font-figtree tracking-tight transition-all duration-200 ${
+                    isActive
+                      ? "bg-[#1b1b1b] border-[#474747] text-[#f1f1f1]"
+                      : "bg-transparent border-[#303030] text-[#a8a8a8] hover:border-[#474747]"
+                  }`}
+                >
+                  {info.logo && (
+                    <Image src={info.logo} alt={info.name} width={16} height={16} className="object-contain" />
+                  )}
+                  {info.name}
+                  {guestsInvalid && <div className="size-1.5 rounded-full bg-red-500" />}
+                  {hasPackage && !guestsInvalid && <div className="size-1.5 rounded-full bg-[#37a067]" />}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Service tab switcher — shown only when multiple services selected */}
-      {state.selectedServices.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto scrollbar-none">
-          {state.selectedServices.map((v) => {
-            const info = VENUE_INFO[v];
-            const hasPackage = !!state.selectedPackages[v];
-            const isActive = v === activeVenue;
-            return (
-              <button
-                key={v}
-                onClick={() => setActiveVenue(v)}
-                className={`flex items-center gap-2 px-3 py-2 border rounded-full shrink-0 text-sm font-medium font-figtree tracking-tight transition-all duration-200 ${
-                  isActive
-                    ? "bg-[#1b1b1b] border-[#474747] text-[#f1f1f1]"
-                    : "bg-transparent border-[#303030] text-[#a8a8a8] hover:border-[#474747]"
-                }`}
-              >
-                {info.logo && (
-                  <Image src={info.logo} alt={info.name} width={16} height={16} className="object-contain" />
-                )}
-                {info.name}
-                {hasPackage && <div className="size-1.5 rounded-full bg-[#37a067]" />}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
+      {/* ── Full-width cards ── */}
       {loading ? (
         <div className="flex justify-center py-10">
           <div className="size-6 border-2 border-[#37a067] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col lg:flex-row lg:items-stretch gap-3 px-4 lg:px-32">
           {packages.map((pkg, index) => {
             const isRecommended =
               packages.length >= 2 && index === packages.length - 2;
@@ -634,45 +691,51 @@ export default function Step3Packages({
                 selectedBadge={d.selected_badge}
                 recommendedLabel={d.recommended}
                 featureIncluded={d.feature_included}
+                featureFree={d.feature_free}
+                firstFreeHint={d.first_free_hint}
+                accentColor={VENUE_INFO[activeVenue].accentColor}
               />
             );
           })}
         </div>
       )}
 
-      {/* Per-service guest count — shown after package is selected */}
-      {state.selectedPackages[activeVenue] && (
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-[#a8a8a8] font-figtree tracking-tight">
-            {d.guests_for_service}
-          </label>
-          <GuestInput
-            value={state.guestsPerService[activeVenue] ?? state.guests}
-            onChange={(v) => setServiceGuests(activeVenue, v)}
-          />
-          <p className="text-xs text-[#747474] font-figtree tracking-tight">{d.guests_hint}</p>
-        </div>
-      )}
+      {/* ── Constrained footer — guest input, progress, button ── */}
+      <div className="flex flex-col gap-4 max-w-xl mx-auto w-full">
+        {state.selectedPackages[activeVenue] && (
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-[#a8a8a8] font-figtree tracking-tight">
+              {d.guests_for_service}
+            </label>
+            <GuestInput
+              key={activeVenue}
+              value={state.guestsPerService[activeVenue] ?? state.guests}
+              onChange={(v) => setServiceGuests(activeVenue, v)}
+              errorMessage={d.guests_min_error}
+            />
+          </div>
+        )}
 
-      {state.selectedServices.length > 1 && (
-        <p className="text-sm text-[#a8a8a8] font-figtree tracking-tight">
-          {d.progress
-            .replace("{done}", String(state.selectedServices.filter((v) => state.selectedPackages[v]).length))
-            .replace("{total}", String(state.selectedServices.length))}
-        </p>
-      )}
+        {state.selectedServices.length > 1 && (
+          <p className="text-sm text-[#a8a8a8] font-figtree tracking-tight">
+            {d.progress
+              .replace("{done}", String(state.selectedServices.filter((v) => state.selectedPackages[v]).length))
+              .replace("{total}", String(state.selectedServices.length))}
+          </p>
+        )}
 
-      {reserveError && (
-        <p className="text-sm text-red-400 font-figtree tracking-tight text-center">
-          {d.reserve_error}
-        </p>
-      )}
-      <PrimaryButton
-        label={dict.continue}
-        onClick={handleNext}
-        disabled={!canProceed || reserving}
-        loading={reserving}
-      />
+        {reserveError && (
+          <p className="text-sm text-red-400 font-figtree tracking-tight text-center">
+            {typeof reserveError === "string" ? reserveError : d.reserve_error}
+          </p>
+        )}
+        <PrimaryButton
+          label={dict.continue}
+          onClick={handleNext}
+          disabled={!canProceed || reserving}
+          loading={reserving}
+        />
+      </div>
     </div>
   );
 }

@@ -72,6 +72,8 @@ function loadSaved(): { step: number; state: BookingState; isAddOrder: boolean; 
         ...INITIAL_STATE,
         ...parsed.state,
         date: d ? new Date(d.y, d.m, d.d) : null,
+        reservationToken: "",
+        bookingRef: "",
       },
     };
   } catch {
@@ -221,6 +223,9 @@ export default function BookingFlow({ locale, dict }: BookingFlowProps) {
       router.push(returnUrl || `/${locale}/account`);
       return;
     }
+    if (step === 4) {
+      patch({ reservationToken: "" });
+    }
     if (step === 6) {
       patch({ bookingRef: "", reservationToken: "" });
     }
@@ -250,7 +255,7 @@ export default function BookingFlow({ locale, dict }: BookingFlowProps) {
     <div className="flex flex-col min-h-svh bg-[#0d0d0d]">
       <BookingNavbar locale={locale} />
       <main className="flex-1 flex flex-col items-center px-4 py-8">
-        <div className="w-full max-w-lg">
+        <div className={`w-full ${step !== 3 ? "max-w-xl" : ""}`}>
           {tokenError && (
             <div className="mb-6 px-4 py-3 border border-red-500/40 bg-red-500/10 text-red-400 text-sm font-figtree tracking-tight">
               Service unavailable. Please refresh the page or try again later.

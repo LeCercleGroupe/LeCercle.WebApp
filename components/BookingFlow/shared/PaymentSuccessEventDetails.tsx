@@ -36,33 +36,36 @@ function formatDateFull(
   return `${dayName}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
 }
 
+function getBookingSummaryFromSession(): BookingSummary | null {
+  try {
+    const raw = sessionStorage.getItem("lecercle_booking_flow");
+    if (raw) {
+      const flow = JSON.parse(raw);
+      const s = flow?.state;
+      if (s) {
+        return {
+          date: s.date
+            ? `${s.date.y}-${String(s.date.m + 1).padStart(2, "0")}-${String(s.date.d).padStart(2, "0")}`
+            : undefined,
+          startTime: s.startTime,
+          venueName: s.venueName,
+          address: s.address,
+          city: s.city,
+        };
+      }
+    }
+  } catch {}
+  return null;
+}
+
 export default function PaymentSuccessEventDetails({
   labels,
   months,
   daysFull,
 }: Props) {
-  const [summary, setSummary] = useState<BookingSummary | null>(null);
+  const [summary] = useState<BookingSummary | null>(getBookingSummaryFromSession);
 
   useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem("lecercle_booking_flow");
-      if (raw) {
-        const flow = JSON.parse(raw);
-        const s = flow?.state;
-        if (s) {
-          setSummary({
-            date: s.date
-              ? `${s.date.y}-${String(s.date.m + 1).padStart(2, "0")}-${String(s.date.d).padStart(2, "0")}`
-              : undefined,
-            startTime: s.startTime,
-            venueName: s.venueName,
-            address: s.address,
-            city: s.city,
-          });
-        }
-      }
-    } catch {}
-    // Clear after reading so a new booking starts fresh
     try {
       sessionStorage.removeItem("lecercle_booking_flow");
       sessionStorage.removeItem("lecercle_booking_summary");

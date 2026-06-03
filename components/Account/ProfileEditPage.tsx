@@ -81,6 +81,7 @@ export default function ProfileEditPage({ locale, dict }: Props) {
   const [firstName, setFirstName] = useState(() => auth?.user.firstName ?? "");
   const [lastName, setLastName] = useState(() => auth?.user.lastName ?? "");
   const [email, setEmail] = useState(() => auth?.user.email ?? "");
+  const [phoneNumber, setPhoneNumber] = useState(() => auth?.user.phoneNumber ?? "");
   const [companyName, setCompanyName] = useState(() => auth?.user.companyName ?? "");
   const [idno, setIdno] = useState(() => auth?.user.idno ?? "");
   const [notes, setNotes] = useState("");
@@ -108,8 +109,28 @@ export default function ProfileEditPage({ locale, dict }: Props) {
     setSaving(true);
     setSaveError(false);
     try {
-      // Update localStorage profile immediately
-      updateAuthProfile({ firstName, lastName, email: email || null, companyName: companyName || null, idno: idno || null });
+      const res = await fetch("/api/account/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId:      auth!.user.userId,
+          firstName:   firstName   || undefined,
+          lastName:    lastName    || undefined,
+          displayName: `${firstName} ${lastName}`.trim() || undefined,
+          phoneNumber: phoneNumber || undefined,
+          companyName: companyName || undefined,
+          idno:        idno        || undefined,
+        }),
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+      updateAuthProfile({
+        firstName,
+        lastName,
+        email:       email       || null,
+        phoneNumber: phoneNumber || null,
+        companyName: companyName || null,
+        idno:        idno        || null,
+      });
       router.push(`/${locale}/account/profile`);
     } catch {
       setSaveError(true);
@@ -207,10 +228,7 @@ export default function ProfileEditPage({ locale, dict }: Props) {
                   </div>
                   <div>
                     <FieldLabel>{d.phone_label}</FieldLabel>
-                    <TextInput value={auth.user.phoneNumber ?? ""} onChange={() => {}} disabled />
-                    {d.phone_note && (
-                      <p className="text-[11px] text-[#555] font-figtree tracking-tight mt-1.5">{d.phone_note}</p>
-                    )}
+                    <TextInput value={phoneNumber} onChange={setPhoneNumber} placeholder="+37360123456" />
                   </div>
                 </div>
               </div>

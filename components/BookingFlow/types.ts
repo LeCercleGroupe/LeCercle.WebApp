@@ -54,26 +54,30 @@ export interface BookingState {
   existingEventId: string;
 }
 
-export const VENUE_INFO: Record<ServiceId, { name: string; description: string; logo?: string }> = {
+export const VENUE_INFO: Record<ServiceId, { name: string; description: string; logo?: string; accentColor: string }> = {
   [SERVICE_IDS.lebureau]: {
     name: "Le Bureau",
     description: "Cigar lounge cu aer retro și clasic",
     logo: "/logos/LeBureau.svg",
+    accentColor: "#B87333",
   },
   [SERVICE_IDS.maisondufeu]: {
     name: "Maison du Feu",
     description: "Desert franțuzesc servit ca moment live",
     logo: "/logos/MaisonDuFeu.svg",
+    accentColor: "#EADA63",
   },
   [SERVICE_IDS.lafonte]: {
     name: "La Fonte",
     description: "Fântână de ciocolată belgiană pentru evenimente",
     logo: "/logos/LaFonte.svg",
+    accentColor: "#C4973F",
   },
   [SERVICE_IDS.laperle]: {
     name: "La Perle",
     description: "Tuktuk cu gelato italian pentru evenimente",
     logo: "/logos/LaPerle.svg",
+    accentColor: "#64C8EA",
   },
 };
 

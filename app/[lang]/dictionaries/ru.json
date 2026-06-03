@@ -79,11 +79,12 @@
       "progress": "{done} из {total} услуг настроено",
       "guests_for_service": "Гостей для этой услуги",
       "guests_hint": "По умолчанию: общее количество гостей",
+      "guests_min_error": "Должно быть больше 5 гостей",
       "reserve_error": "Не удалось зарезервировать дату. Попробуйте снова.",
       "recommended": "Рекомендуем",
       "feature_included": "Включено",
       "feature_free": "Бесплатно",
-      "first_free_hint": "Первый выбор включён"
+      "first_free_hint": "Первый выбор включён бесплатно, каждый дополнительный выбор добавляет стоимость к итогу."
     },
     "step4": {
       "title": "Место проведения",
@@ -97,6 +98,7 @@
       "venue_label": "Название площадки *",
       "venue_placeholder": "напр. Национальный Дворец",
       "time_label": "Время начала *",
+      "time_disclaimer": "Вы можете изменить время начала позже",
       "time_placeholder": "напр. 18:00",
       "notes_label": "Дополнительные заметки",
       "notes_placeholder": "Любые детали, важные для нашей команды...",
@@ -348,8 +350,9 @@
       "badge_cancelled": "ОТМЕНЁННЫЕ {count}",
       "filter_all": "Все",
       "filter_confirmed": "Подтверждённые",
-      "filter_pending": "Ожидают оплаты",
-      "filter_draft": "В обработке",
+      "filter_pending": "В ожидании",
+      "filter_cancelled": "Отменённые",
+      "filter_completed": "Завершённые",
       "filter_sort": "По дате",
       "view_details": "Подробнее",
       "empty": "У вас ещё нет бронирований.",

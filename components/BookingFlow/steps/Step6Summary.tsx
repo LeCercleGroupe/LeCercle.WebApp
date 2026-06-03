@@ -164,7 +164,7 @@ export default function Step6Summary({
   const daysFull = dict.step1.days_full;
   const isLocked = !!state.bookingRef;
   const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // When the page is restored from bfcache after a payment redirect, React's
   // scheduler is frozen. Reload so the flow reinitialises from sessionStorage.
@@ -183,14 +183,11 @@ export default function Step6Summary({
   // ── Fetch all packages + features for display and upgrade options ─────────
 
   useEffect(() => {
-    const token = tokenRef.current;
-    if (!token || !state.selectedServices.length) return;
+    if (!state.selectedServices.length) return;
 
     Promise.all(
       state.selectedServices.map((serviceId) =>
-        fetch(`/api/booking/packages/${serviceId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        fetch(`/api/booking/packages/${serviceId}`)
           .then((r) => (r.ok ? (r.json() as Promise<ApiPackage[]>) : ([] as ApiPackage[])))
           .then((pkgs) => [serviceId, pkgs.filter((p) => p.isActive)] as const)
           .catch((): readonly [ServiceId, ApiPackage[]] => [serviceId, []])
@@ -203,9 +200,7 @@ export default function Step6Summary({
         const allPackageIds = [...pMap.values()].flat().map((p) => p.id);
         return Promise.all(
           allPackageIds.map((pkgId) =>
-            fetch(`/api/booking/packages/${pkgId}/features`, {
-              headers: { Authorization: `Bearer ${token}` },
-            })
+            fetch(`/api/booking/packages/${pkgId}/features`)
               .then((r) => (r.ok ? (r.json() as Promise<ApiFeature[]>) : ([] as ApiFeature[])))
               .then((feats): readonly [string, ApiFeature[]] => [pkgId, feats])
               .catch((): readonly [string, ApiFeature[]] => [pkgId, []])
@@ -216,7 +211,7 @@ export default function Step6Summary({
         setFeaturesMap(new Map(featResults));
       })
       .catch(() => {});
-  }, [state.selectedServices, tokenReady, tokenRef]);
+  }, [state.selectedServices]);
 
   // ── Upgrade handler ──────────────────────────────────────────────────────
 
@@ -293,7 +288,7 @@ export default function Step6Summary({
 
   async function handleFinalize() {
     setSubmitting(true);
-    setSubmitError(false);
+    setSubmitError(null);
 
     try {
       let orderId = state.bookingRef;
@@ -312,10 +307,19 @@ export default function Step6Summary({
               items: state.selectedServices.map((sid) => ({ serviceId: sid, quantity: 1 })),
             }),
           });
+          if (resRes.status === 401) {
+            // Session expired — clear auth state so Step 5 forces re-authentication
+            onChange({ emailVerified: false, smsVerified: false, userId: "", customerId: "" });
+            setSubmitting(false);
+            onBack();
+            return;
+          }
           if (!resRes.ok) {
             const body = await resRes.text().catch(() => "");
             console.error(`[finalize] reservation failed ${resRes.status}:`, body);
-            throw new Error(`reservation ${resRes.status}`);
+            let detail: string | null = null;
+            try { detail = (JSON.parse(body) as { detail?: string }).detail ?? null; } catch {}
+            throw Object.assign(new Error(`reservation ${resRes.status}`), { detail });
           }
           const { token } = await resRes.json();
           reservationToken = token ?? "";
@@ -412,7 +416,7 @@ export default function Step6Summary({
           sessionStorage.removeItem("lecercle_booking_flow");
           sessionStorage.removeItem("lecercle_booking_summary");
         } catch {}
-        window.location.href = paymentUrl;
+        window.location.assign(paymentUrl);
         return;
       }
 
@@ -420,7 +424,8 @@ export default function Step6Summary({
       onNext();
     } catch (err) {
       console.error("[finalize] caught:", err);
-      setSubmitError(true);
+      const detail = (err as { detail?: string }).detail ?? null;
+      setSubmitError(detail);
     } finally {
       setSubmitting(false);
     }
@@ -487,7 +492,6 @@ export default function Step6Summary({
           <div className="flex flex-col gap-2">
             <Row label={d.date_label} value={state.date ? formatDate(state.date, months, daysFull) : "—"} />
             <Row label={d.time_label} value={state.startTime || "—"} />
-            <Row label={d.guests_label} value={`${state.guests} ${d.guests_unit}`} />
           </div>
         </div>
 
@@ -545,6 +549,10 @@ export default function Step6Summary({
                           <div className="size-4 rounded-full bg-[#c4973f] shrink-0" />
                           <p className="text-sm text-[#d4d4d4] font-figtree tracking-tight">{pkg.name}</p>
                         </div>
+                        <Row
+                          label={d.guests_label}
+                          value={`${state.guestsPerService[v] ?? state.guests} ${d.guests_unit}`}
+                        />
                         {/* Fixed features — read-only bullet list */}
                         {pkgFeatures.some((f) => f.type === 0) && (
                           <ul className="flex flex-col gap-1.5">
@@ -839,9 +847,9 @@ export default function Step6Summary({
         </div>
       </div>
 
-      {submitError && (
+      {submitError !== null && (
         <p className="text-sm text-red-400 font-figtree tracking-tight text-center">
-          {d.submit_error}
+          {submitError || d.submit_error}
         </p>
       )}
       <PrimaryButton

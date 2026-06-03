@@ -79,11 +79,12 @@
       "progress": "{done} din {total} servicii configurate",
       "guests_for_service": "Invitați pentru acest serviciu",
       "guests_hint": "Implicit: numărul total de invitați",
+      "guests_min_error": "Trebuie să fie mai mare de 5 invitați",
       "reserve_error": "Nu s-a putut rezerva data. Încearcă din nou.",
       "recommended": "Recomandat",
       "feature_included": "Inclus",
       "feature_free": "Gratuit",
-      "first_free_hint": "Prima selecție este inclusă"
+      "first_free_hint": "Prima selecție este inclusă gratuit, fiecare selecție suplimentară adaugă un cost la total."
     },
     "step4": {
       "title": "Locația evenimentului",
@@ -97,6 +98,7 @@
       "venue_label": "Numele locației *",
       "venue_placeholder": "ex. Palatul Național",
       "time_label": "Ora de start *",
+      "time_disclaimer": "Poți schimba ora de început mai târziu",
       "time_placeholder": "ex. 18:00",
       "notes_label": "Mențiuni suplimentare",
       "notes_placeholder": "Orice detalii relevante pentru echipa noastră...",
@@ -349,7 +351,8 @@
       "filter_all": "Toate",
       "filter_confirmed": "Confirmate",
       "filter_pending": "În așteptare",
-      "filter_draft": "În procesare",
+      "filter_cancelled": "Anulate",
+      "filter_completed": "Finalizate",
       "filter_sort": "Data crescător",
       "view_details": "Vezi comenzi",
       "empty": "Nu ai nicio rezervare.",

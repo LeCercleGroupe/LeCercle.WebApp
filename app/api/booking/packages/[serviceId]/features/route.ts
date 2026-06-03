@@ -1,22 +1,27 @@
+import { getM2MToken } from "@/app/api/_lib/m2m";
+
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ serviceId: string }> }
 ) {
   const { serviceId } = await params;
 
-  const auth = request.headers.get("authorization");
-  if (!auth) return Response.json({ error: "Missing authorization" }, { status: 401 });
-
   const { BOOKING_API_BASE } = process.env;
   if (!BOOKING_API_BASE) return Response.json({ error: "Missing API base URL" }, { status: 500 });
 
+  let token: string;
+  try {
+    token = await getM2MToken();
+  } catch {
+    return Response.json({ error: "Failed to acquire M2M token" }, { status: 502 });
+  }
+
   const res = await fetch(`${BOOKING_API_BASE}/api/packages/${serviceId}/features`, {
-    headers: { Authorization: auth },
+    headers: { Authorization: `Bearer ${token}` },
     cache: "no-store",
   });
 
   const text = await res.text();
-  console.log(`[features] packageId=${serviceId} status=${res.status} body=`, text);
 
   if (!res.ok) return Response.json({ error: `Upstream error: ${res.statusText}` }, { status: res.status });
 

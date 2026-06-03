@@ -94,12 +94,12 @@ export interface Contract {
   eventTitle?: string;
 }
 
-export type EventState = "pending" | "confirmed" | "draft" | "past" | "cancelled";
+export type EventState = "pending" | "confirmed" | "draft" | "past" | "cancelled" | "completed";
 
 export function deriveEventState(event: EventBooking, order?: OrderDetail | null): EventState {
   const status = (order?.status ?? event.orders?.[0]?.status ?? event.status ?? "").toLowerCase();
   if (status === "cancelled" || status === "canceled") return "cancelled";
-  if (status === "completed") return "past";
+  if (status === "completed") return "completed";
   if (status === "draft" || status === "processing" || status === "inprogress" || status === "in_progress") return "draft";
   if (status === "confirmed") {
     const eventDate = event.eventDate ? new Date(event.eventDate) : null;
@@ -112,7 +112,7 @@ export function deriveEventState(event: EventBooking, order?: OrderDetail | null
 export function deriveOrderState(order: OrderDetail): EventState {
   const status = (order.status ?? "").toLowerCase();
   if (status === "cancelled" || status === "canceled") return "cancelled";
-  if (status === "completed") return "past";
+  if (status === "completed") return "completed";
   if (status === "draft" || status === "processing" || status === "inprogress" || status === "in_progress") return "draft";
   if (status === "confirmed") return "confirmed";
   return "pending";

@@ -22,6 +22,54 @@ interface Props {
   tokenRef: RefObject<string | null>;
 }
 
+// Extracts canonical profile data from the OTP verify response.
+// DB values always win over whatever the user typed in the form.
+function resolveVerifyResponse(
+  data: Record<string, unknown>,
+  state: BookingState,
+  formIsCompany: boolean,
+) {
+  const root = (data.user ?? data) as Record<string, unknown>;
+
+  const userId     = (root.userId     ?? root.userID     ?? "") as string;
+  const customerId = (root.customerId ?? root.customerID ?? "") as string;
+
+  const firstName   = ((root.firstName   as string | undefined) || state.firstName);
+  const lastName    = ((root.lastName    as string | undefined) || state.lastName);
+  const email       = ((root.email       as string | undefined) || state.email);
+  const phone       = ((root.phoneNumber as string | undefined) || state.phone);
+  const companyName = ((root.companyName as string | undefined) || state.companyName);
+  const idno        = ((root.idno        as string | undefined) || state.idno);
+
+  const dbType      = root.customerType as number | undefined;
+  const isCompany   = dbType === 1 ? true : dbType === 0 ? false : formIsCompany;
+
+  return {
+    statePatch: {
+      userId,
+      customerId,
+      firstName,
+      lastName,
+      email,
+      phone,
+      companyName,
+      idno,
+      contactType: (isCompany ? "company" : "person") as "company" | "person",
+    },
+    authParams: {
+      userId,
+      customerId,
+      email,
+      phone,
+      firstName,
+      lastName,
+      companyName,
+      idno,
+      isCompany,
+    },
+  };
+}
+
 export default function Step5Contact({
   state,
   onChange,
@@ -82,20 +130,9 @@ export default function Step5Contact({
     });
     if (!res.ok) throw new Error(`${res.status}`);
     const data = await res.json();
-    const userId = data.user?.userId ?? data.userId ?? "";
-    const customerId = data.user?.customerId ?? data.customerId ?? "";
-    onChange({ smsVerified: true, userId, customerId });
-    saveAuth({
-      userId,
-      customerId,
-      email: state.email,
-      phone: state.phone,
-      firstName: state.firstName,
-      lastName: state.lastName,
-      companyName: state.companyName,
-      idno: state.idno,
-      isCompany,
-    });
+    const resolved = resolveVerifyResponse(data, state, isCompany);
+    onChange({ smsVerified: true, ...resolved.statePatch });
+    saveAuth(resolved.authParams);
   }
 
   async function handleSendEmail() {
@@ -127,30 +164,9 @@ export default function Step5Contact({
     });
     if (!res.ok) throw new Error(`${res.status}`);
     const data = await res.json();
-    const customerId =
-      data.customerId ??
-      data.customerID ??
-      data.user?.customerId ??
-      data.user?.customerID ??
-      "";
-    const userId =
-      data.userId ??
-      data.userID ??
-      data.user?.userId ??
-      data.user?.userID ??
-      "";
-    onChange({ emailVerified: true, userId, customerId });
-    saveAuth({
-      userId,
-      customerId,
-      email: state.email,
-      phone: state.phone,
-      firstName: state.firstName,
-      lastName: state.lastName,
-      companyName: state.companyName,
-      idno: state.idno,
-      isCompany,
-    });
+    const resolved = resolveVerifyResponse(data, state, isCompany);
+    onChange({ emailVerified: true, ...resolved.statePatch });
+    saveAuth(resolved.authParams);
   }
 
   return (

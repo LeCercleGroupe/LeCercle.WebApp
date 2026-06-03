@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import OtpDigitInput from "./OtpDigitInput";
 
 interface OtpVerificationFieldProps {
   label: string;
@@ -123,28 +124,20 @@ export default function OtpVerificationField({
       {otpState === "sent" && (
         <div className="flex flex-col gap-2 mt-1">
           <p className="text-xs text-[#a8a8a8] font-figtree tracking-tight">{hint}</p>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              value={code}
-              onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setCodeError(false); }}
-              placeholder={codePlaceholder}
-              className={`flex-1 bg-[#111] border px-3 py-3.5 text-base text-[#f1f1f1] placeholder:text-[#747474] font-figtree tracking-tight focus:outline-none transition-colors ${
-                codeError ? "border-red-500" : "border-[#303030] focus:border-[#474747]"
-              }`}
-            />
-            <button
-              onClick={handleVerify}
-              disabled={verifyLoading}
-              className="shrink-0 px-4 bg-[#37a067] text-white text-sm font-medium font-figtree tracking-tight hover:bg-[#2d8a58] transition-colors cursor-pointer disabled:opacity-60"
-            >
-              {verifyLoading
-                ? <div className="size-4 border border-white/40 border-t-white rounded-full animate-spin mx-2" />
-                : verifyLabel}
-            </button>
-          </div>
+          <OtpDigitInput
+            value={code}
+            onChange={(v) => { setCode(v); setCodeError(false); }}
+            hasError={codeError}
+          />
+          <button
+            onClick={handleVerify}
+            disabled={verifyLoading}
+            className="w-full py-3.5 bg-[#37a067] text-white text-sm font-medium font-figtree tracking-tight hover:bg-[#2d8a58] transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center"
+          >
+            {verifyLoading
+              ? <div className="size-4 border border-white/40 border-t-white rounded-full animate-spin" />
+              : verifyLabel}
+          </button>
           {codeError && <p className="text-xs text-red-400 font-figtree tracking-tight">{codeError && codeErrorMessage}</p>}
           <button
             onClick={() => { setOtpState("idle"); setSendError(null); setCode(""); }}

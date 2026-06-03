@@ -162,6 +162,7 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
     draft:     d.badge_draft,
     past:      d.badge_past,
     cancelled: d.badge_cancelled,
+    completed: d.badge_past,
   };
 
   const stateClasses: Record<EventState, string> = {
@@ -170,6 +171,7 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
     draft:     "bg-[#1a0f00] border-[#3a2000] text-[#fb923c]",
     past:      "bg-[#1a1a1a] border-[#2a2a2a] text-[#888]",
     cancelled: "bg-[#1a0505] border-[#3a1010] text-[#f87171]",
+    completed: "bg-[#0a0f1f] border-[#1a2a4a] text-[#60a5fa]",
   };
 
   return (

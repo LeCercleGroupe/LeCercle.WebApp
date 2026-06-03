@@ -79,11 +79,12 @@
       "progress": "{done} of {total} services configured",
       "guests_for_service": "Guests for this service",
       "guests_hint": "Default: total number of guests",
+      "guests_min_error": "Must be greater than 5 guests",
       "reserve_error": "Could not reserve the date. Please try again.",
       "recommended": "Recommended",
       "feature_included": "Included",
       "feature_free": "Free",
-      "first_free_hint": "First selection is included"
+      "first_free_hint": "First selection is included for free, each additional selection adds a cost to the total."
     },
     "step4": {
       "title": "Event location",
@@ -97,6 +98,7 @@
       "venue_label": "Venue name *",
       "venue_placeholder": "e.g. National Palace",
       "time_label": "Start time *",
+      "time_disclaimer": "You can change the start time later",
       "time_placeholder": "e.g. 18:00",
       "notes_label": "Additional notes",
       "notes_placeholder": "Any details relevant to our team...",
@@ -348,8 +350,9 @@
       "badge_cancelled": "CANCELLED {count}",
       "filter_all": "All",
       "filter_confirmed": "Confirmed",
-      "filter_pending": "Pending payment",
-      "filter_draft": "In progress",
+      "filter_pending": "Pending",
+      "filter_cancelled": "Cancelled",
+      "filter_completed": "Completed",
       "filter_sort": "Date ascending",
       "view_details": "View orders",
       "empty": "No events yet.",
