@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import BookingTokenProvider from "@/components/BookingTokenProvider";
 import NavigationLoadingOverlay from "@/components/shared/NavigationLoadingOverlay";
 import {
@@ -75,6 +76,7 @@ export default async function RootLayout({
         </Suspense>
         <BookingTokenProvider>{children}</BookingTokenProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
