@@ -138,7 +138,7 @@ export default function AccountLogin({ locale, dict }: Props) {
   const [otpCode, setOtpCode] = useState("");
   const [isExistingUser, setIsExistingUser] = useState(true);
   const [otpState, setOtpState] = useState<OtpState>("idle");
-  const [sendError, setSendError] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const [codeError, setCodeError] = useState(false);
 
   // ── Profile form state (new users only) ──────────────────────────────────
@@ -164,7 +164,7 @@ export default function AccountLogin({ locale, dict }: Props) {
   // ── Handlers ──────────────────────────────────────────────────────────────
 
   async function handleSend() {
-    setSendError(false);
+    setSendError(null);
     setOtpState("sending");
     try {
       const res = await fetch("/api/otp/send", {
@@ -173,13 +173,16 @@ export default function AccountLogin({ locale, dict }: Props) {
         body: JSON.stringify({ email }),
         // body: JSON.stringify({ phoneNumber: phone }), // uncomment when switching back to phone login
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({})) as { detail?: string };
+        throw new Error(body.detail ?? `${res.status}`);
+      }
       const data = await res.json();
       setIsExistingUser(data.isExistingUser !== false);
       setOtpState("idle");
       setStep("otp");
-    } catch {
-      setSendError(true);
+    } catch (e) {
+      setSendError(e instanceof Error ? e.message : d.send_error);
       setOtpState("idle");
     }
   }
@@ -187,6 +190,7 @@ export default function AccountLogin({ locale, dict }: Props) {
   async function handleResend() {
     setOtpCode("");
     setCodeError(false);
+    setSendError(null);
     await handleSend();
   }
 
@@ -481,7 +485,7 @@ export default function AccountLogin({ locale, dict }: Props) {
                   <p className="text-xs text-[#747474] font-figtree tracking-tight">{d.code_valid}</p>
                 </div>
                 {sendError && (
-                  <p className="text-xs text-red-400 font-figtree tracking-tight">{d.send_error}</p>
+                  <p className="text-xs text-red-400 font-figtree tracking-tight">{sendError}</p>
                 )}
               </div>
 

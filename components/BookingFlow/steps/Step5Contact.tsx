@@ -109,7 +109,10 @@ export default function Step5Contact({
       headers: { ...authHeader(), "Content-Type": "application/json" },
       body: JSON.stringify({ phoneNumber: state.phone }),
     });
-    if (!res.ok) throw new Error(`${res.status}`);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({})) as { detail?: string };
+      throw new Error(body.detail ?? `${res.status}`);
+    }
     onChange({ smsSent: true });
   }
 
@@ -143,7 +146,10 @@ export default function Step5Contact({
       headers: { ...authHeader(), "Content-Type": "application/json" },
       body: JSON.stringify({ email: state.email }),
     });
-    if (!res.ok) throw new Error(`${res.status}`);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({})) as { detail?: string };
+      throw new Error(body.detail ?? `${res.status}`);
+    }
     onChange({ emailSent: true });
   }
 

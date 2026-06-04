@@ -485,7 +485,16 @@ export default function Step3Packages({
   const packages = packagesMap?.get(activeVenue) ?? [];
   const canProceed =
     state.selectedServices.every((v) => state.selectedPackages[v]) &&
-    state.selectedServices.every((v) => (state.guestsPerService[v] ?? state.guests) >= 5);
+    state.selectedServices.every((v) => (state.guestsPerService[v] ?? state.guests) >= 5) &&
+    featuresMap !== null &&
+    state.selectedServices.every((v) => {
+      const pkg = state.selectedPackages[v];
+      if (!pkg) return true;
+      const multiFeats = (featuresMap.get(pkg.id) ?? []).filter((f) => f.type === 1);
+      if (multiFeats.length === 0) return true;
+      const pkgSels = selections.get(pkg.id);
+      return multiFeats.every((f) => (pkgSels?.get(f.id)?.size ?? 0) > 0);
+    });
 
   // ── Event handlers ────────────────────────────────────────────────────────
 

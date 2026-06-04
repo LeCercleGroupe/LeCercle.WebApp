@@ -59,8 +59,9 @@ export default function OtpVerificationField({
     try {
       await onSend();
       setOtpState("sent");
-    } catch {
-      setSendError(sendErrorMessage);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : null;
+      setSendError(msg && msg !== "validation" ? msg : sendErrorMessage);
     } finally {
       setSendLoading(false);
     }
