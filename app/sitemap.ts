@@ -3,7 +3,7 @@ import type { MetadataRoute } from 'next'
 const BASE_URL = 'https://lecerclegroupe.md'
 
 const locales = ['ro', 'en', 'ru'] as const
-const venues = ['laperle', 'lebureau', 'maisondufeu'] as const
+const venues = ['laperle', 'lebureau', 'maisondufeu', 'lafonte'] as const
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date()

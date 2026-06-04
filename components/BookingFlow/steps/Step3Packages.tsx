@@ -640,6 +640,13 @@ export default function Step3Packages({
               const info = VENUE_INFO[v];
               const hasPackage = !!state.selectedPackages[v];
               const guestsInvalid = hasPackage && (state.guestsPerService[v] ?? state.guests) < 5;
+              const pkg = state.selectedPackages[v];
+              const featuresInvalid = hasPackage && featuresMap !== null && pkg
+                ? (featuresMap.get(pkg.id) ?? []).filter((f) => f.type === 1).some(
+                    (f) => (selections.get(pkg.id)?.get(f.id)?.size ?? 0) === 0
+                  )
+                : false;
+              const serviceInvalid = guestsInvalid || featuresInvalid;
               const isActive = v === activeVenue;
               return (
                 <button
@@ -655,8 +662,8 @@ export default function Step3Packages({
                     <Image src={info.logo} alt={info.name} width={16} height={16} className="object-contain" />
                   )}
                   {info.name}
-                  {guestsInvalid && <div className="size-1.5 rounded-full bg-red-500" />}
-                  {hasPackage && !guestsInvalid && <div className="size-1.5 rounded-full bg-[#37a067]" />}
+                  {serviceInvalid && <div className="size-1.5 rounded-full bg-red-500" />}
+                  {hasPackage && !serviceInvalid && <div className="size-1.5 rounded-full bg-[#37a067]" />}
                 </button>
               );
             })}
