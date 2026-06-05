@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { loadAuth, clearAuth, fetchWithRefresh, StoredAuth } from "@/components/BookingFlow/utils/auth";
@@ -126,6 +126,13 @@ interface EventDetailDict {
   error: string;
   view_order: string;
   add_order: string;
+  upgrade_package: string;
+  select_upgrade: string;
+  edit_event: string;
+  edit_event_date_unavailable: string;
+  edit_event_save: string;
+  edit_event_cancel: string;
+  edit_event_error: string;
 }
 
 interface NavDict {
@@ -189,6 +196,110 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
   const [orders, setOrders] = useState<OrderDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  // ── Edit modal state ──────────────────────────────────────────────────────
+  const [editOpen, setEditOpen] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState(false);
+  const [editForm, setEditForm] = useState({
+    eventDate: "",
+    venueTitle: "",
+    venueAddress: "",
+    city: "",
+    eventStartTime: "",
+    guestCount: "",
+    notes: "",
+  });
+
+  const [dateAvailable, setDateAvailable] = useState<boolean | null>(null);
+  const [checkingDate, setCheckingDate] = useState(false);
+  const dateCheckTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function checkDateAvailability(date: string) {
+    if (!date) { setDateAvailable(null); return; }
+    if (dateCheckTimeout.current) clearTimeout(dateCheckTimeout.current);
+
+    // Collect service IDs from orders fetched via /api/account/orders?eventId=
+    const serviceIds = [...new Set(
+      orders.flatMap((o) => (o.items ?? []).map((i) => i.serviceId)).filter(Boolean)
+    )];
+
+    // If orders haven't loaded yet or have no items, skip the check silently
+    if (!serviceIds.length) { setDateAvailable(null); return; }
+
+    setCheckingDate(true);
+    setDateAvailable(null);
+    dateCheckTimeout.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/booking/services?date=${date}`);
+        if (!res.ok) { setCheckingDate(false); return; }
+        const data: { serviceId: string; isAvailable: boolean }[] = await res.json();
+        const availMap = new Map(data.map((s) => [s.serviceId, s.isAvailable]));
+        const allAvailable = serviceIds.every((sid) => availMap.get(sid) !== false);
+        setDateAvailable(allAvailable);
+      } catch {
+        setDateAvailable(null);
+      } finally {
+        setCheckingDate(false);
+      }
+    }, 600);
+  }
+
+  function openEdit() {
+    if (!event) return;
+    setEditForm({
+      eventDate: event.eventDate ?? "",
+      venueTitle: event.venueTitle ?? "",
+      venueAddress: event.venueAddress ?? "",
+      city: event.city ?? "",
+      eventStartTime: (event.eventStartTime ?? "").slice(0, 5),
+      guestCount: String(event.guestCount ?? ""),
+      notes: event.notes ?? "",
+    });
+    setEditError(false);
+    setDateAvailable(null);
+    setCheckingDate(false);
+    setEditOpen(true);
+  }
+
+  async function handleSaveEdit() {
+    if (!event) return;
+    setEditSaving(true);
+    setEditError(false);
+    try {
+      const res = await fetchWithRefresh(`/api/events/${event.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: event.id,
+          eventDate: editForm.eventDate,
+          venueTitle: editForm.venueTitle,
+          venueAddress: editForm.venueAddress,
+          city: editForm.city,
+          eventStartTime: editForm.eventStartTime ? `${editForm.eventStartTime}:00` : undefined,
+          guestCount: parseInt(editForm.guestCount, 10) || event.guestCount,
+          notes: editForm.notes,
+          distanceKm: event.distanceKm,
+        }),
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+      setEvent((prev) => prev ? {
+        ...prev,
+        eventDate: editForm.eventDate,
+        venueTitle: editForm.venueTitle,
+        venueAddress: editForm.venueAddress,
+        city: editForm.city,
+        eventStartTime: editForm.eventStartTime ? `${editForm.eventStartTime}:00` : prev.eventStartTime,
+        guestCount: parseInt(editForm.guestCount, 10) || prev.guestCount,
+        notes: editForm.notes,
+      } : prev);
+      setEditOpen(false);
+    } catch {
+      setEditError(true);
+    } finally {
+      setEditSaving(false);
+    }
+  }
 
   useEffect(() => {
     if (!auth) { router.replace(`/${locale}/account/login`); return; }
@@ -362,13 +473,22 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
                   {event.venueTitle || "—"}
                 </h1>
                 {eventState !== "cancelled" ? (
-                  <button
-                    type="button"
-                    onClick={handleBookOrder}
-                    className="shrink-0 px-3 sm:px-4 py-2 sm:py-2.5 border border-[#3a3a3a] text-[13px] sm:text-sm font-medium text-[#f0f0f0] font-figtree tracking-tight hover:bg-[#1a1a1a] transition-colors cursor-pointer"
-                  >
-                    {d.add_order}
-                  </button>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={openEdit}
+                      className="px-3 sm:px-4 py-2 sm:py-2.5 border border-[#3a3a3a] text-[13px] sm:text-sm font-medium text-[#f0f0f0] font-figtree tracking-tight hover:bg-[#1a1a1a] transition-colors cursor-pointer"
+                    >
+                      {d.edit_event}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleBookOrder}
+                      className="px-3 sm:px-4 py-2 sm:py-2.5 border border-[#3a3a3a] text-[13px] sm:text-sm font-medium text-[#f0f0f0] font-figtree tracking-tight hover:bg-[#1a1a1a] transition-colors cursor-pointer"
+                    >
+                      {d.add_order}
+                    </button>
+                  </div>
                 ) : (
                   <span className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest border shrink-0 ${stateBadgeClasses[eventState]}`}>
                     {stateLabel(eventState, d)}
@@ -409,6 +529,90 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
           </div>
         </div>
       </main>
+
+      {/* ── Edit Event Modal ── */}
+      {editOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
+          <div className="w-full max-w-lg bg-[#0f0f0f] border border-[#222] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[#1e1e1e]">
+              <p className="text-sm font-medium text-[#f0f0f0] font-figtree tracking-tight">{d.edit_event}</p>
+              <button type="button" onClick={() => setEditOpen(false)} className="text-[#555] hover:text-[#c0c0c0] transition-colors text-lg leading-none cursor-pointer">✕</button>
+            </div>
+            <div className="flex flex-col gap-4 px-5 py-5 overflow-y-auto max-h-[70vh]">
+              {[
+                { key: "venueTitle",    label: "Venue name",    type: "text"   },
+                { key: "eventStartTime",label: "Start time",    type: "time"   },
+                { key: "city",          label: "City",          type: "text"   },
+                { key: "venueAddress",  label: "Address",       type: "text"   },
+                { key: "guestCount",    label: "Guests",        type: "number" },
+              ].map(({ key, label, type }) => (
+                <div key={key} className="flex flex-col gap-1.5">
+                  <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">{label}</label>
+                  <input
+                    type={type}
+                    value={editForm[key as keyof typeof editForm]}
+                    onChange={(e) => setEditForm((p) => ({ ...p, [key]: e.target.value }))}
+                    className="w-full px-3 py-2.5 bg-[#111] border border-[#2a2a2a] text-[14px] text-[#f0f0f0] font-figtree tracking-tight focus:outline-none focus:border-[#4a4a4a] transition-colors"
+                  />
+                </div>
+              ))}
+
+              {/* Date field — separate for availability check */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">Date</label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={editForm.eventDate}
+                    onChange={(e) => {
+                      setEditForm((p) => ({ ...p, eventDate: e.target.value }));
+                      checkDateAvailability(e.target.value);
+                    }}
+                    className={`w-full px-3 py-2.5 bg-[#111] border text-[14px] text-[#f0f0f0] font-figtree tracking-tight focus:outline-none transition-colors ${
+                      dateAvailable === false ? "border-red-500" : "border-[#2a2a2a] focus:border-[#4a4a4a]"
+                    }`}
+                  />
+                  {checkingDate && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 size-4 border-2 border-[#555] border-t-[#f0f0f0] rounded-full animate-spin" />
+                  )}
+                </div>
+                {dateAvailable === false && (
+                  <p className="text-xs text-red-400 font-figtree tracking-tight">{d.edit_event_date_unavailable}</p>
+                )}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">Notes</label>
+                <textarea
+                  rows={3}
+                  value={editForm.notes}
+                  onChange={(e) => setEditForm((p) => ({ ...p, notes: e.target.value }))}
+                  className="w-full px-3 py-2.5 bg-[#111] border border-[#2a2a2a] text-[14px] text-[#f0f0f0] font-figtree tracking-tight focus:outline-none focus:border-[#4a4a4a] transition-colors resize-none"
+                />
+              </div>
+              {editError && (
+                <p className="text-xs text-red-400 font-figtree tracking-tight">{d.edit_event_error}</p>
+              )}
+            </div>
+            <div className="flex gap-2 px-5 py-4 border-t border-[#1e1e1e]">
+              <button
+                type="button"
+                onClick={() => setEditOpen(false)}
+                className="flex-1 py-2.5 border border-[#2a2a2a] text-sm font-medium text-[#888] font-figtree tracking-tight hover:bg-[#1a1a1a] hover:text-[#c0c0c0] transition-colors cursor-pointer"
+              >
+                {d.edit_event_cancel}
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveEdit}
+                disabled={editSaving || dateAvailable === false || checkingDate}
+                className="flex-1 py-2.5 bg-[#f0f0f0] text-[#080808] text-sm font-medium font-figtree tracking-tight hover:bg-white transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {editSaving ? "..." : d.edit_event_save}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -475,6 +475,13 @@
       "loading": "Se încarcă...",
       "error": "A apărut o eroare. Încearcă din nou.",
       "view_order": "Detalii",
+      "upgrade_package": "Îmbunătățește pachetul",
+      "select_upgrade": "Selectează",
+      "edit_event_date_unavailable": "Unele servicii comandate nu sunt disponibile la data selectată.",
+      "edit_event": "Editează evenimentul",
+      "edit_event_save": "Salvează",
+      "edit_event_cancel": "Anulează",
+      "edit_event_error": "Nu s-a putut salva. Încearcă din nou.",
       "add_order": "Adaugă comandă"
     },
     "contracts_page": {

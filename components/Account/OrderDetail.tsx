@@ -58,6 +58,9 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
   const [error, setError] = useState(false);
   const [payingOnline, setPayingOnline] = useState(false);
   const [payOnlineError, setPayOnlineError] = useState(false);
+  const [packagesMap, setPackagesMap] = useState<Map<string, { id: string; name: string; tier: string; basePrice: number }[]>>(new Map());
+  const [featuresMap, setFeaturesMap] = useState<Map<string, { id: string; label: string; type: 0 | 1; sortOrder: number }[]>>(new Map());
+  const [expandedUpgrade, setExpandedUpgrade] = useState<string | null>(null);
 
   useEffect(() => {
     if (!auth) { router.replace(`/${locale}/account/login`); return; }
@@ -97,6 +100,35 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
     }
     load();
   }, [auth, locale, orderId, router]);
+
+  useEffect(() => {
+    if (!order?.items?.length) return;
+    const serviceIds = [...new Set(order.items.map((i) => i.serviceId).filter(Boolean))];
+
+    Promise.all(
+      serviceIds.map((sid) =>
+        fetch(`/api/booking/packages/${sid}`)
+          .then((r) => r.ok ? r.json() : [])
+          .then((pkgs: { id: string; name: string; tier: string; basePrice: number; isActive: boolean }[]) =>
+            [sid, pkgs.filter((p) => p.isActive)] as const
+          )
+          .catch((): readonly [string, { id: string; name: string; tier: string; basePrice: number; isActive: boolean }[]] => [sid, []])
+      )
+    ).then((results) => {
+      const pMap = new Map(results);
+      setPackagesMap(pMap);
+
+      const allPkgIds = [...pMap.values()].flat().map((p) => p.id);
+      Promise.all(
+        allPkgIds.map((pkgId) =>
+          fetch(`/api/booking/packages/${pkgId}/features`)
+            .then((r) => r.ok ? r.json() : [])
+            .then((feats: { id: string; label: string; type: 0 | 1; sortOrder: number }[]) => [pkgId, feats] as const)
+            .catch((): readonly [string, { id: string; label: string; type: 0 | 1; sortOrder: number }[]] => [pkgId, []])
+        )
+      ).then((featResults) => setFeaturesMap(new Map(featResults)));
+    });
+  }, [order]);
 
   async function handlePayOnline() {
     if (!orderId) return;
@@ -347,6 +379,74 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                                 )}
                               </div>
                             </div>
+
+                            {/* Upgrade section */}
+                            {(() => {
+                              const availablePkgs = packagesMap.get(item.serviceId) ?? [];
+                              const upgrades = availablePkgs.filter((p) => p.basePrice > pickAmount(item.unitPrice));
+                              if (upgrades.length === 0) return null;
+                              const isExpanded = expandedUpgrade === item.id;
+                              return (
+                                <div className="border-t border-[#1e1e1e]">
+                                  <button
+                                    type="button"
+                                    onClick={() => setExpandedUpgrade(isExpanded ? null : item.id)}
+                                    className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-white/5 transition-colors cursor-pointer"
+                                  >
+                                    <span className="text-[12px] font-medium text-[#c4973f] font-figtree tracking-tight">
+                                      {d.upgrade_package}
+                                    </span>
+                                    <svg
+                                      width="12" height="12" viewBox="0 0 12 12" fill="none"
+                                      className={`shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                                    >
+                                      <path d="M3 4.5l3 3 3-3" stroke="#c4973f" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  </button>
+                                  {isExpanded && (
+                                    <div className="flex flex-col gap-2 px-4 pb-4">
+                                      {upgrades.map((upgPkg) => {
+                                        const features = (featuresMap.get(upgPkg.id) ?? [])
+                                          .filter((f) => f.type === 0)
+                                          .sort((a, b) => a.sortOrder - b.sortOrder);
+                                        return (
+                                          <div key={upgPkg.id} className="flex flex-col bg-[#161616] border border-[#333]">
+                                            <div className="flex items-start justify-between gap-3 px-3 py-3">
+                                              <div className="flex flex-col gap-0.5 min-w-0">
+                                                <p className="text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight">{upgPkg.name}</p>
+                                                <p className="text-[11px] text-[#666] font-figtree tracking-tight uppercase">{upgPkg.tier}</p>
+                                              </div>
+                                              <div className="flex items-center gap-3 shrink-0">
+                                                <p className="text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight">{formatMDL(upgPkg.basePrice)}</p>
+                                                <button
+                                                  type="button"
+                                                  disabled
+                                                  className="text-[12px] px-3 py-1.5 bg-[#c4973f]/20 text-[#c4973f] border border-[#c4973f]/40 font-figtree tracking-tight opacity-60 cursor-not-allowed"
+                                                >
+                                                  {d.select_upgrade}
+                                                </button>
+                                              </div>
+                                            </div>
+                                            {features.length > 0 && (
+                                              <ul className="flex flex-col gap-1 px-3 pb-3 border-t border-[#252525] pt-2">
+                                                {features.map((f) => (
+                                                  <li key={f.id} className="flex items-start gap-2">
+                                                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none" className="shrink-0 mt-0.5">
+                                                      <path d="M1 4l3 3 5-6" stroke="#c4973f" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                    </svg>
+                                                    <span className="text-[11px] text-[#888] font-figtree tracking-tight leading-snug">{f.label}</span>
+                                                  </li>
+                                                ))}
+                                              </ul>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </div>
                         );
                       })}

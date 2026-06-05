@@ -475,6 +475,13 @@
       "loading": "Loading...",
       "error": "An error occurred. Please try again.",
       "view_order": "Details",
+      "upgrade_package": "Upgrade package",
+      "select_upgrade": "Select",
+      "edit_event_date_unavailable": "Some of your booked services are not available on the selected date.",
+      "edit_event": "Edit Event",
+      "edit_event_save": "Save",
+      "edit_event_cancel": "Cancel",
+      "edit_event_error": "Could not save. Please try again.",
       "add_order": "Add Order"
     },
     "contracts_page": {

@@ -475,6 +475,13 @@
       "loading": "Загрузка...",
       "error": "Произошла ошибка. Попробуйте снова.",
       "view_order": "Детали",
+      "upgrade_package": "Улучшить пакет",
+      "select_upgrade": "Выбрать",
+      "edit_event_date_unavailable": "Некоторые из заказанных услуг недоступны на выбранную дату.",
+      "edit_event": "Редактировать",
+      "edit_event_save": "Сохранить",
+      "edit_event_cancel": "Отмена",
+      "edit_event_error": "Не удалось сохранить. Попробуйте снова.",
       "add_order": "Добавить заказ"
     },
     "contracts_page": {
