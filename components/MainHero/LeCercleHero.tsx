@@ -2,7 +2,6 @@
 
 import { loadAuth } from "@/components/BookingFlow/utils/auth";
 import VideoShowcase from "@/components/MainHero/VideoShowcase";
-import { contact_link } from "@/data/venues/constants/links";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -199,7 +198,7 @@ export default function LeCercleHero({ dict, locale }: LeCercleHeroProps) {
 
             {/* Contact CTA — desktop only */}
             <Link
-              href={contact_link}
+              href={`/${locale}/booking`}
               className="hidden sm:flex group border-0 bg-gray-100/20 text-gray-100 text-[12px] tracking-[0.12em] cursor-pointer px-5.5 py-2.25 transition-all duration-250 relative hover:bg-gray-100/40 hover:text-white"
             >
               <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />
@@ -227,7 +226,7 @@ export default function LeCercleHero({ dict, locale }: LeCercleHeroProps) {
         </p>
         {/* Contact CTA — mobile only, under description */}
         <Link
-          href={contact_link}
+          href={`/${locale}/booking`}
           className="sm:hidden group border-0 bg-gray-100/20 text-gray-100 text-[11px] tracking-[0.12em] cursor-pointer px-4 py-2 mt-5 transition-all duration-250 relative hover:bg-gray-100/40 hover:text-white"
         >
           <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-gray-100/20 group-hover:border-gray-100/40 transition-[border-color] duration-250" />

@@ -88,6 +88,7 @@ export default function Step5Contact({
     { key: "company", label: d.type_company },
   ];
 
+  const isLoggedIn = !!state.userId;
   const phoneFilled = /^\+373\d{8}$/.test(state.phone);
   const emailFilled = state.email.trim().includes("@");
   const firstNameValid = state.firstName.trim() !== "";
@@ -215,6 +216,7 @@ export default function Step5Contact({
                 value={state.companyName}
                 onChange={(v) => onChange({ companyName: v })}
                 placeholder={d.company_name_placeholder}
+                disabled={isLoggedIn}
               />
               {showErrors && !companyNameValid && (
                 <p className="text-xs text-red-400 font-figtree tracking-tight">{d.field_required}</p>
@@ -229,6 +231,7 @@ export default function Step5Contact({
                   onChange({ idno: digits });
                 }}
                 placeholder={d.idno_placeholder}
+                disabled={isLoggedIn}
               />
               {showErrors && !idnoValid && (
                 <p className="text-xs text-red-400 font-figtree tracking-tight">{d.field_idno_invalid}</p>
@@ -244,6 +247,7 @@ export default function Step5Contact({
               value={state.firstName}
               onChange={(v) => onChange({ firstName: v })}
               placeholder={d.first_name_placeholder}
+              disabled={isLoggedIn}
             />
             {showErrors && !firstNameValid && (
               <p className="text-xs text-red-400 font-figtree tracking-tight">{d.field_required}</p>
@@ -255,6 +259,7 @@ export default function Step5Contact({
               value={state.lastName}
               onChange={(v) => onChange({ lastName: v })}
               placeholder={d.last_name_placeholder}
+              disabled={isLoggedIn}
             />
             {showErrors && !lastNameValid && (
               <p className="text-xs text-red-400 font-figtree tracking-tight">{d.field_required}</p>
@@ -290,6 +295,7 @@ export default function Step5Contact({
             onChange={(v) =>
               onChange({ phone: v, smsVerified: false, smsSent: false })
             }
+            disabled={isLoggedIn}
           />
           {showErrors && !phoneFilled && (
             <p className="text-xs text-red-400 font-figtree tracking-tight">{d.field_phone_invalid}</p>

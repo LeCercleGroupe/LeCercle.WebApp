@@ -105,8 +105,9 @@ function GuestInput({
   const hasError = value < 5;
 
   function handleChange(str: string) {
-    setRaw(str);
-    const parsed = parseInt(str, 10);
+    const digits = str.replace(/\D/g, "").slice(0, 5);
+    setRaw(digits);
+    const parsed = parseInt(digits, 10);
     if (!isNaN(parsed) && parsed > 0) onChange(parsed);
   }
 

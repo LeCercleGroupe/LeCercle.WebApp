@@ -1,7 +1,6 @@
 "use client";
 
 import type { VenueHeroData } from "@/components/VenuePage/types";
-import { contact_link } from "@/data/venues/constants/links";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -11,6 +10,7 @@ interface VenueHeroProps {
   logo?: string;
   name: string;
   contactLabel: string;
+  locale: string;
 }
 
 export default function VenueHero({
@@ -18,6 +18,7 @@ export default function VenueHero({
   logo,
   name,
   contactLabel,
+  locale,
 }: VenueHeroProps) {
   const [isMobile, setIsMobile] = useState(false);
 
@@ -65,7 +66,7 @@ export default function VenueHero({
         </p>
         {/* Contact CTA only for mobile */}
         <Link
-          href={contact_link}
+          href={`/${locale}/booking`}
           className="group border-0 bg-gray-100/10 text-gray-100 text-[11px] tracking-[0.14em] cursor-pointer px-4 py-2 transition-all duration-250 relative hover:bg-gray-100/30 hover:text-white font-figtree block sm:hidden"
         >
           <span className="absolute top-0 left-0 w-3 h-3 border-t border-l border-gray-100/70" />

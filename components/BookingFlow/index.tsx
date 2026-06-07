@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookingState } from "./types";
 import type { BookingDict } from "./dict";
@@ -73,7 +73,6 @@ function loadSaved(): { step: number; state: BookingState; isAddOrder: boolean; 
         ...parsed.state,
         date: d ? new Date(d.y, d.m, d.d) : null,
         reservationToken: "",
-        bookingRef: "",
       },
     };
   } catch {
@@ -182,6 +181,29 @@ export default function BookingFlow({ locale, dict }: BookingFlowProps) {
   const [isAddOrder] = useState(() => getInitialFlow().isAddOrder);
   const [returnUrl] = useState(() => getInitialFlow().returnUrl);
   const { tokenRef, tokenReady, error: tokenError } = useBookingToken();
+
+  // If returning from a payment redirect, reload before the browser paints to
+  // avoid a black flash. useLayoutEffect fires synchronously after DOM mutation
+  // but before paint, so the reload is invisible to the user.
+  useLayoutEffect(() => {
+    if (sessionStorage.getItem("lecercle_payment_pending")) {
+      sessionStorage.removeItem("lecercle_payment_pending");
+      window.location.reload();
+    }
+  }, []);
+
+  // Verify cookies are actually valid on mount — localStorage can outlive the session
+  useEffect(() => {
+    if (!state.userId) return;
+    fetch("/api/auth/refresh", { method: "POST" })
+      .then((r) => {
+        if (r.status === 401) {
+          patch({ userId: "", customerId: "", emailVerified: false, smsVerified: false });
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const isAddOrderRef = useRef(isAddOrder);
   useEffect(() => {

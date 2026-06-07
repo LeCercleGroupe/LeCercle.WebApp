@@ -1,4 +1,5 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getAccessToken } from "@/app/api/_lib/authCookie";
 import DynamicProfilePage from "@/components/Account/DynamicProfilePage";
 import { getDictionary, hasLocale } from "../../dictionaries";
 
@@ -9,6 +10,8 @@ interface Props {
 export default async function ProfilePage({ params }: Props) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
+  const token = await getAccessToken();
+  if (!token) redirect(`/${lang}/account/login`);
   const dict = await getDictionary(lang);
   const account = dict.account as {
     profile_page: Record<string, string>;

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { VenueSuggestion } from "@/app/api/geocode/venue/route";
+import type { AddressSuggestion } from "@/app/api/geocode/address/route";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { loadAuth, clearAuth, fetchWithRefresh, StoredAuth } from "@/components/BookingFlow/utils/auth";
@@ -211,6 +213,45 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
     notes: "",
   });
 
+  const [venueSuggestions, setVenueSuggestions] = useState<VenueSuggestion[]>([]);
+  const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
+  const venueDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const addressDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!editOpen || editForm.venueTitle.length < 2) { setVenueSuggestions([]); return; }
+    if (venueDebounce.current) clearTimeout(venueDebounce.current);
+    venueDebounce.current = setTimeout(() => {
+      fetch(`/api/geocode/venue?q=${encodeURIComponent(editForm.venueTitle)}`)
+        .then((r) => r.ok ? r.json() : [])
+        .then(setVenueSuggestions)
+        .catch(() => setVenueSuggestions([]));
+    }, 400);
+    return () => { if (venueDebounce.current) clearTimeout(venueDebounce.current); };
+  }, [editForm.venueTitle, editOpen]);
+
+  useEffect(() => {
+    if (!editOpen || !editForm.city || editForm.venueAddress.length < 3) { setAddressSuggestions([]); return; }
+    if (addressDebounce.current) clearTimeout(addressDebounce.current);
+    addressDebounce.current = setTimeout(() => {
+      fetch(`/api/geocode/address?q=${encodeURIComponent(editForm.venueAddress)}&city=${encodeURIComponent(editForm.city)}`)
+        .then((r) => r.ok ? r.json() : [])
+        .then(setAddressSuggestions)
+        .catch(() => setAddressSuggestions([]));
+    }, 400);
+    return () => { if (addressDebounce.current) clearTimeout(addressDebounce.current); };
+  }, [editForm.venueAddress, editForm.city, editOpen]);
+
+  function handleVenueSuggestionSelect(s: VenueSuggestion) {
+    setEditForm((p) => ({ ...p, venueTitle: s.label, city: s.city, venueAddress: s.description }));
+    setVenueSuggestions([]);
+  }
+
+  function handleAddressSuggestionSelect(s: AddressSuggestion) {
+    setEditForm((p) => ({ ...p, venueAddress: s.label }));
+    setAddressSuggestions([]);
+  }
+
   const [dateAvailable, setDateAvailable] = useState<boolean | null>(null);
   const [checkingDate, setCheckingDate] = useState(false);
   const dateCheckTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -259,6 +300,8 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
     setEditError(false);
     setDateAvailable(null);
     setCheckingDate(false);
+    setVenueSuggestions([]);
+    setAddressSuggestions([]);
     setEditOpen(true);
   }
 
@@ -539,12 +582,79 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
               <button type="button" onClick={() => setEditOpen(false)} className="text-[#555] hover:text-[#c0c0c0] transition-colors text-lg leading-none cursor-pointer">✕</button>
             </div>
             <div className="flex flex-col gap-4 px-5 py-5 overflow-y-auto max-h-[70vh]">
+              {/* Date — read-only */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">Date</label>
+                <input
+                  type="date"
+                  value={editForm.eventDate}
+                  disabled
+                  className="w-full px-3 py-2.5 bg-[#111] border border-[#2a2a2a] text-[14px] text-[#555] font-figtree tracking-tight opacity-50 cursor-not-allowed"
+                />
+              </div>
+
+              {/* Venue name with autocomplete */}
+              <div className="flex flex-col gap-1.5 relative">
+                <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">Venue name</label>
+                <input
+                  type="text"
+                  value={editForm.venueTitle}
+                  onChange={(e) => setEditForm((p) => ({ ...p, venueTitle: e.target.value }))}
+                  className="w-full px-3 py-2.5 bg-[#111] border border-[#2a2a2a] text-[14px] text-[#f0f0f0] font-figtree tracking-tight focus:outline-none focus:border-[#4a4a4a] transition-colors"
+                />
+                {venueSuggestions.length > 0 && (
+                  <ul className="absolute z-30 top-full left-0 right-0 mt-0.5 bg-[#1a1a1a] border border-[#2a2a2a] max-h-48 overflow-y-auto">
+                    {venueSuggestions.map((s, i) => (
+                      <li key={i}>
+                        <button type="button" onMouseDown={() => handleVenueSuggestionSelect(s)}
+                          className="w-full text-left px-3 py-2 hover:bg-white/5 transition-colors">
+                          <span className="block text-[13px] text-[#f0f0f0] font-figtree tracking-tight">{s.label}</span>
+                          {s.sublabel && <span className="block text-[11px] text-[#666] font-figtree tracking-tight">{s.sublabel}</span>}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* City */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">City</label>
+                <input
+                  type="text"
+                  value={editForm.city}
+                  onChange={(e) => setEditForm((p) => ({ ...p, city: e.target.value }))}
+                  className="w-full px-3 py-2.5 bg-[#111] border border-[#2a2a2a] text-[14px] text-[#f0f0f0] font-figtree tracking-tight focus:outline-none focus:border-[#4a4a4a] transition-colors"
+                />
+              </div>
+
+              {/* Address with autocomplete */}
+              <div className="flex flex-col gap-1.5 relative">
+                <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">Address</label>
+                <input
+                  type="text"
+                  value={editForm.venueAddress}
+                  onChange={(e) => setEditForm((p) => ({ ...p, venueAddress: e.target.value }))}
+                  className="w-full px-3 py-2.5 bg-[#111] border border-[#2a2a2a] text-[14px] text-[#f0f0f0] font-figtree tracking-tight focus:outline-none focus:border-[#4a4a4a] transition-colors"
+                />
+                {addressSuggestions.length > 0 && (
+                  <ul className="absolute z-30 top-full left-0 right-0 mt-0.5 bg-[#1a1a1a] border border-[#2a2a2a] max-h-48 overflow-y-auto">
+                    {addressSuggestions.map((s, i) => (
+                      <li key={i}>
+                        <button type="button" onMouseDown={() => handleAddressSuggestionSelect(s)}
+                          className="w-full text-left px-3 py-2 hover:bg-white/5 transition-colors">
+                          <span className="block text-[13px] text-[#f0f0f0] font-figtree tracking-tight">{s.label}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* Remaining plain fields */}
               {[
-                { key: "venueTitle",    label: "Venue name",    type: "text"   },
-                { key: "eventStartTime",label: "Start time",    type: "time"   },
-                { key: "city",          label: "City",          type: "text"   },
-                { key: "venueAddress",  label: "Address",       type: "text"   },
-                { key: "guestCount",    label: "Guests",        type: "number" },
+                { key: "eventStartTime", label: "Start time", type: "time"   },
+                { key: "guestCount",     label: "Guests",     type: "number" },
               ].map(({ key, label, type }) => (
                 <div key={key} className="flex flex-col gap-1.5">
                   <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">{label}</label>
@@ -556,30 +666,6 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
                   />
                 </div>
               ))}
-
-              {/* Date field — separate for availability check */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">Date</label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={editForm.eventDate}
-                    onChange={(e) => {
-                      setEditForm((p) => ({ ...p, eventDate: e.target.value }));
-                      checkDateAvailability(e.target.value);
-                    }}
-                    className={`w-full px-3 py-2.5 bg-[#111] border text-[14px] text-[#f0f0f0] font-figtree tracking-tight focus:outline-none transition-colors ${
-                      dateAvailable === false ? "border-red-500" : "border-[#2a2a2a] focus:border-[#4a4a4a]"
-                    }`}
-                  />
-                  {checkingDate && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 size-4 border-2 border-[#555] border-t-[#f0f0f0] rounded-full animate-spin" />
-                  )}
-                </div>
-                {dateAvailable === false && (
-                  <p className="text-xs text-red-400 font-figtree tracking-tight">{d.edit_event_date_unavailable}</p>
-                )}
-              </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">Notes</label>
                 <textarea

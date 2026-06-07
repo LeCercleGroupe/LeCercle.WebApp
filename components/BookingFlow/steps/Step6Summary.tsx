@@ -166,8 +166,7 @@ export default function Step6Summary({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // When the page is restored from bfcache after a payment redirect, React's
-  // scheduler is frozen. Reload so the flow reinitialises from sessionStorage.
+  // bfcache restore: React scheduler is frozen, reload to reinitialise.
   useEffect(() => {
     const handlePageshow = (e: PageTransitionEvent) => {
       if (e.persisted) window.location.reload();
@@ -366,6 +365,7 @@ export default function Step6Summary({
             packageId: state.selectedPackages[sid]!.id,
             serviceId: sid,
             quantity: 1,
+            guestCount: state.guestsPerService[sid] ?? state.guests,
             selectedOptionIds: state.selectedPackages[sid]!.selectedOptionIds ?? [],
             roadPrice: transportCostPerService,
           }));
@@ -412,9 +412,21 @@ export default function Step6Summary({
         }
         const { paymentUrl } = await payRes.json();
         onChange({ bookingRef: orderId });
+        // Persist the locked state so the user can retry payment if they come back
         try {
-          sessionStorage.removeItem("lecercle_booking_flow");
-          sessionStorage.removeItem("lecercle_booking_summary");
+          const d = state.date;
+          sessionStorage.setItem("lecercle_booking_flow", JSON.stringify({
+            step: 6,
+            isAddOrder: false,
+            returnUrl: "",
+            state: {
+              ...state,
+              bookingRef: orderId,
+              reservationToken: "",
+              date: d ? { y: d.getFullYear(), m: d.getMonth(), d: d.getDate() } : null,
+            },
+          }));
+          sessionStorage.setItem("lecercle_payment_pending", "1");
         } catch {}
         window.location.assign(paymentUrl);
         return;

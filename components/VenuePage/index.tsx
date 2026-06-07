@@ -48,6 +48,7 @@ export default function VenuePage({
         logo={logo}
         name={name}
         contactLabel={contactLabel}
+        locale={locale}
       />
 
       {sections.map((section: VenueSection, idx: number) => {

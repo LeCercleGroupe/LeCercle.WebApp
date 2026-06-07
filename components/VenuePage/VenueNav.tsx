@@ -1,6 +1,5 @@
 "use client";
 
-import { contact_link } from "@/data/venues/constants/links";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -88,7 +87,7 @@ export default function VenueNav({
 
         {/* Contact CTA only for desktop */}
         <Link
-          href={contact_link}
+          href={`/${locale}/booking`}
           className="group border-0 bg-gray-100/10 text-gray-100 text-[11px] tracking-[0.14em] cursor-pointer px-4 py-2 transition-all duration-250 relative hover:bg-gray-100/30 hover:text-white font-figtree hidden sm:block"
         >
           <span className="absolute top-0 left-0 w-3 h-2 border-t border-l border-gray-100/70" />
