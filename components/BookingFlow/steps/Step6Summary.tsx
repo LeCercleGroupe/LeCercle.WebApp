@@ -280,7 +280,7 @@ export default function Step6Summary({
     0
   );
   const totalPrice = serviceTotal + totalTransportCost;
-  const advanceAmount = Math.round(totalPrice * 0.1);
+  const advanceAmount = Math.round(serviceTotal * 0.1);
   const advanceFormatted = formatMDL(advanceAmount);
 
   // ── Finalize handler ─────────────────────────────────────────────────────
@@ -769,28 +769,24 @@ export default function Step6Summary({
         <div className="flex flex-col gap-3 px-4 py-4">
           <SectionLabel>{d.cost_section}</SectionLabel>
           <div className="flex flex-col gap-2">
-            {state.selectedServices.flatMap((v) => {
+            {state.selectedServices.map((v) => {
               const info = VENUE_INFO[v];
               const pkg = state.selectedPackages[v];
-              const rows = [
+              return (
                 <Row
                   key={v}
                   label={`${info.name}: ${pkg?.name ?? ""}`}
                   value={pkg ? formatMDL(pkg.basePrice + getLiveAdditionalCost(pkg, featuresMap)) : "—"}
-                />,
-              ];
-              if (transportCostPerService > 0) {
-                rows.push(
-                  <Row
-                    key={`${v}-transport`}
-                    label={d.transport_label.replace("{km}", String(transportKm))}
-                    value={formatMDL(transportCostPerService)}
-                    dimValue
-                  />
-                );
-              }
-              return rows;
+                />
+              );
             })}
+            {totalTransportCost > 0 && (
+              <Row
+                label={d.transport_label.replace("{km}", String(transportKm))}
+                value={formatMDL(totalTransportCost)}
+                dimValue
+              />
+            )}
             <Row label={d.taxes_label} value="—" dimValue />
           </div>
           <div className="border-t border-[#303030] pt-3 flex justify-between items-center">

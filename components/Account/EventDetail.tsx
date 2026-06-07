@@ -214,7 +214,6 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
   });
 
   const [venueSuggestions, setVenueSuggestions] = useState<VenueSuggestion[]>([]);
-  const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
   const venueDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
   const addressDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -230,26 +229,9 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
     return () => { if (venueDebounce.current) clearTimeout(venueDebounce.current); };
   }, [editForm.venueTitle, editOpen]);
 
-  useEffect(() => {
-    if (!editOpen || !editForm.city || editForm.venueAddress.length < 3) { setAddressSuggestions([]); return; }
-    if (addressDebounce.current) clearTimeout(addressDebounce.current);
-    addressDebounce.current = setTimeout(() => {
-      fetch(`/api/geocode/address?q=${encodeURIComponent(editForm.venueAddress)}&city=${encodeURIComponent(editForm.city)}`)
-        .then((r) => r.ok ? r.json() : [])
-        .then(setAddressSuggestions)
-        .catch(() => setAddressSuggestions([]));
-    }, 400);
-    return () => { if (addressDebounce.current) clearTimeout(addressDebounce.current); };
-  }, [editForm.venueAddress, editForm.city, editOpen]);
-
   function handleVenueSuggestionSelect(s: VenueSuggestion) {
     setEditForm((p) => ({ ...p, venueTitle: s.label, city: s.city, venueAddress: s.description }));
     setVenueSuggestions([]);
-  }
-
-  function handleAddressSuggestionSelect(s: AddressSuggestion) {
-    setEditForm((p) => ({ ...p, venueAddress: s.label }));
-    setAddressSuggestions([]);
   }
 
   const [dateAvailable, setDateAvailable] = useState<boolean | null>(null);
@@ -301,7 +283,6 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
     setDateAvailable(null);
     setCheckingDate(false);
     setVenueSuggestions([]);
-    setAddressSuggestions([]);
     setEditOpen(true);
   }
 
@@ -637,18 +618,6 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
                   onChange={(e) => setEditForm((p) => ({ ...p, venueAddress: e.target.value }))}
                   className="w-full px-3 py-2.5 bg-[#111] border border-[#2a2a2a] text-[14px] text-[#f0f0f0] font-figtree tracking-tight focus:outline-none focus:border-[#4a4a4a] transition-colors"
                 />
-                {addressSuggestions.length > 0 && (
-                  <ul className="absolute z-30 top-full left-0 right-0 mt-0.5 bg-[#1a1a1a] border border-[#2a2a2a] max-h-48 overflow-y-auto">
-                    {addressSuggestions.map((s, i) => (
-                      <li key={i}>
-                        <button type="button" onMouseDown={() => handleAddressSuggestionSelect(s)}
-                          className="w-full text-left px-3 py-2 hover:bg-white/5 transition-colors">
-                          <span className="block text-[13px] text-[#f0f0f0] font-figtree tracking-tight">{s.label}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
               </div>
 
               {/* Remaining plain fields */}

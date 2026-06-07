@@ -6,7 +6,7 @@ import Link from "next/link";
 import BookingNavbar from "@/components/BookingFlow/shared/BookingNavbar";
 import OtpDigitInput from "@/components/BookingFlow/shared/OtpDigitInput";
 import PrimaryButton from "@/components/BookingFlow/shared/PrimaryButton";
-import { saveAuth, loadAuth } from "@/components/BookingFlow/utils/auth";
+import { saveAuth, loadAuth, clearAuth } from "@/components/BookingFlow/utils/auth";
 
 type ContactType = "person" | "company";
 type OtpState = "idle" | "sending" | "verifying" | "done";
@@ -125,7 +125,30 @@ export default function AccountLogin({ locale, dict }: Props) {
 
   useEffect(() => {
     const result = loadAuth();
-    if (result?.tokensValid) router.replace(`/${locale}/account`);
+    if (!result?.tokensValid) return;
+    // localStorage says auth is valid, but the HTTP-only cookie may be expired.
+    // Verify via refresh before redirecting — this also renews the access cookie.
+    fetch("/api/auth/refresh", { method: "POST" })
+      .then(async (r) => {
+        if (r.ok) {
+          router.replace(`/${locale}/account`);
+          return;
+        }
+        const body = await r.json().catch(() => ({})) as { error?: string };
+        if (body.error === "No refresh token") {
+          // The upstream doesn't issue refresh tokens for this auth flow — the
+          // access token simply expired. Keep localStorage so the email is
+          // pre-filled; the user just needs to re-enter their OTP code.
+          fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+        } else {
+          // Refresh token was present but rejected — full logout.
+          clearAuth();
+        }
+      })
+      .catch(() => {
+        // Network error — redirect optimistically; account page will handle it.
+        router.replace(`/${locale}/account`);
+      });
   }, [locale, router]);
 
   function authHeader(): Record<string, string> {

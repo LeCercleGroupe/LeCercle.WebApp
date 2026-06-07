@@ -21,11 +21,13 @@ export async function POST(request: Request) {
 
   const data = await res.json();
 
-  // Move tokens to HttpOnly cookies — never expose them to the browser
-  if (data.accessToken && data.refreshToken) {
+  // Move tokens to HttpOnly cookies — never expose them to the browser.
+  // refreshToken is optional: some upstream configs (client-credentials OTP) only
+  // issue an access token. We still set lc_access so the account page works.
+  if (data.accessToken) {
     await setAuthCookies(
       data.accessToken,
-      data.refreshToken,
+      data.refreshToken ?? null,
       data.expiresIn ?? 3600,
     );
   }

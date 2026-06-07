@@ -96,7 +96,7 @@ export default function Step5Contact({
   const companyNameValid = !isCompany || state.companyName.trim() !== "";
   const idnoValid = !isCompany || state.idno.trim().length === 13;
 
-  const formFilled = firstNameValid && lastNameValid && emailFilled && phoneFilled && companyNameValid && idnoValid;
+  const formFilled = firstNameValid && lastNameValid && emailFilled && (isLoggedIn || phoneFilled) && companyNameValid && idnoValid;
   const canProceed = formFilled && state.emailVerified;
 
   function authHeader(): Record<string, string> {

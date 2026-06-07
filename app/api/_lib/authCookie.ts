@@ -17,12 +17,14 @@ export async function getAccessToken(): Promise<string | null> {
 
 export async function setAuthCookies(
   accessToken: string,
-  refreshToken: string,
+  refreshToken: string | null | undefined,
   accessExpiresIn: number,
 ): Promise<void> {
   const jar = await cookies();
-  jar.set(COOKIE_ACCESS,  accessToken,  { ...BASE, maxAge: accessExpiresIn });
-  jar.set(COOKIE_REFRESH, refreshToken, { ...BASE, maxAge: 30 * 24 * 60 * 60 });
+  jar.set(COOKIE_ACCESS, accessToken, { ...BASE, maxAge: accessExpiresIn });
+  if (refreshToken) {
+    jar.set(COOKIE_REFRESH, refreshToken, { ...BASE, maxAge: 30 * 24 * 60 * 60 });
+  }
 }
 
 export async function clearAuthCookies(): Promise<void> {
