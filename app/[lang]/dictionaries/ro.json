@@ -161,7 +161,7 @@
       "taxes_label": "Taxe incluse",
       "total_de_plata": "TOTAL DE PLATĂ",
       "payment_title": "CUM VREI SĂ PLĂTEȘTI?",
-      "payment_subtitle": "Avansul de blochează data și confirmă rezervarea. Restul de se achită în ziua evenimentului. Avansul nu include taxa de logistica în afara Chișinăului, care se calculează separat în funcție de locație.",
+      "payment_subtitle": "Avansul blochează data și confirmă rezervarea. Restul de se achită în ziua evenimentului. Avansul nu include taxa de logistica în afara Chișinăului, care se calculează separat în funcție de locație.",
       "pay_now_label": "Plata avansului acum",
       "pay_now_sub": "Plătești {amount} acum, rezervarea ta este confirmată imediat și data este blocată în calendarul nostru.",
       "pay_later_label": "Plata avansului mai târziu",
