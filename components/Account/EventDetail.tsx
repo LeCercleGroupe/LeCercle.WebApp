@@ -220,7 +220,16 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
   const [editOpen, setEditOpen] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState(false);
-  const [editForm, setEditForm] = useState({
+  const [editForm, setEditForm] = useState<{
+    eventDate: string;
+    venueTitle: string;
+    venueAddress: string;
+    city: string;
+    eventStartTime: string;
+    guestCount: string;
+    notes: string;
+    distanceKm: number | null;
+  }>({
     eventDate: "",
     venueTitle: "",
     venueAddress: "",
@@ -228,6 +237,7 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
     eventStartTime: "",
     guestCount: "",
     notes: "",
+    distanceKm: null,
   });
 
   const [venueSuggestions, setVenueSuggestions] = useState<VenueSuggestion[]>(
@@ -252,14 +262,26 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
     };
   }, [editForm.venueTitle, editOpen]);
 
-  function handleVenueSuggestionSelect(s: VenueSuggestion) {
+  async function handleVenueSuggestionSelect(s: VenueSuggestion) {
     setEditForm((p) => ({
       ...p,
       venueTitle: s.label,
       city: s.city,
       venueAddress: s.description,
+      distanceKm: null,
     }));
     setVenueSuggestions([]);
+    try {
+      const r = await fetch(
+        `/api/geocode/distance?destination=${encodeURIComponent(s.description)}`,
+      );
+      if (r.ok) {
+        const dist: { distanceKm: number | null } | null = await r.json();
+        if (dist?.distanceKm != null) {
+          setEditForm((p) => ({ ...p, distanceKm: dist.distanceKm }));
+        }
+      }
+    } catch {}
   }
 
   const [dateAvailable, setDateAvailable] = useState<boolean | null>(null);
@@ -322,6 +344,7 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
       eventStartTime: (event.eventStartTime ?? "").slice(0, 5),
       guestCount: String(event.guestCount ?? ""),
       notes: event.notes ?? "",
+      distanceKm: event.distanceKm ?? null,
     });
     setEditError(false);
     setDateAvailable(null);
@@ -349,7 +372,7 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
             : undefined,
           guestCount: parseInt(editForm.guestCount, 10) || event.guestCount,
           notes: editForm.notes,
-          distanceKm: event.distanceKm,
+          distanceKm: editForm.distanceKm,
         }),
       });
       if (!res.ok) throw new Error(`${res.status}`);
@@ -361,6 +384,7 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
               venueTitle: editForm.venueTitle,
               venueAddress: editForm.venueAddress,
               city: editForm.city,
+              distanceKm: editForm.distanceKm ?? undefined,
               eventStartTime: editForm.eventStartTime
                 ? `${editForm.eventStartTime}:00`
                 : prev.eventStartTime,
@@ -488,7 +512,7 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
 
   const eventState = deriveEventState(event);
 
-  function handleBookOrder() {
+  async function handleBookOrder() {
     if (!event || eventState === "cancelled") return;
     const authResult = loadAuth();
     const tokens = authResult?.auth;
@@ -496,6 +520,23 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
 
     const [y, m, day] = event.eventDate.split("-").map(Number);
     const date = y && m && day ? new Date(y, m - 1, day) : null;
+
+    // If the events list API didn't include distanceKm, calculate it on demand.
+    let distanceKm: number | null = event.distanceKm ?? null;
+    if (distanceKm == null && event.venueAddress) {
+      const cityNorm = (event.city || "").trim().toLowerCase()
+        .normalize("NFD").replace(/[̀-ͯ]/g, "");
+      const isChisinau = cityNorm === "chisinau" || cityNorm === "kishinev" || cityNorm === "chisineu";
+      if (!isChisinau) {
+        try {
+          const r = await fetch(`/api/geocode/distance?destination=${encodeURIComponent(event.venueAddress)}`);
+          if (r.ok) {
+            const dist = await r.json() as { distanceKm?: number | null } | null;
+            if (dist?.distanceKm != null) distanceKm = dist.distanceKm;
+          }
+        } catch {}
+      }
+    }
 
     const prefilledState = {
       date: date
@@ -511,7 +552,7 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
       venueName: event.venueTitle || "",
       latitude: null,
       longitude: null,
-      distanceKm: event.distanceKm ?? null,
+      distanceKm,
       startTime: event.eventStartTime || "",
       notes: event.notes ?? "",
       contactType: tokens?.user.isCompany ? "company" : "person",
@@ -726,7 +767,7 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
                   type="text"
                   value={editForm.city}
                   onChange={(e) =>
-                    setEditForm((p) => ({ ...p, city: e.target.value }))
+                    setEditForm((p) => ({ ...p, city: e.target.value, distanceKm: null }))
                   }
                   className="w-full px-3 py-2.5 bg-[#111] border border-[#2a2a2a] text-[14px] text-[#f0f0f0] font-figtree tracking-tight focus:outline-none focus:border-[#4a4a4a] transition-colors"
                 />
@@ -741,7 +782,7 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
                   type="text"
                   value={editForm.venueAddress}
                   onChange={(e) =>
-                    setEditForm((p) => ({ ...p, venueAddress: e.target.value }))
+                    setEditForm((p) => ({ ...p, venueAddress: e.target.value, distanceKm: null }))
                   }
                   className="w-full px-3 py-2.5 bg-[#111] border border-[#2a2a2a] text-[14px] text-[#f0f0f0] font-figtree tracking-tight focus:outline-none focus:border-[#4a4a4a] transition-colors"
                 />
@@ -758,7 +799,7 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
                   </label>
                   <input
                     type={type}
-                    value={editForm[key as keyof typeof editForm]}
+                    value={editForm[key as keyof typeof editForm] as string}
                     onChange={(e) =>
                       setEditForm((p) => ({ ...p, [key]: e.target.value }))
                     }

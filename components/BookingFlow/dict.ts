@@ -95,6 +95,7 @@ export interface BookingDict {
     services_section: string;
     details_section: string;
     cost_section: string;
+    services_label: string;
     date_label: string;
     guests_label: string;
     guests_unit: string;

@@ -616,6 +616,47 @@ export default function Step3Packages({
     }
   }
 
+  // ── Render helpers ───────────────────────────────────────────────────────
+
+  function ServiceTabs({ className }: { className?: string }) {
+    if (state.selectedServices.length <= 1) return null;
+    return (
+      <div className={`flex gap-2 overflow-x-auto scrollbar-none ${className ?? ""}`}>
+        {state.selectedServices.map((v) => {
+          const info = VENUE_INFO[v];
+          const hasPackage = !!state.selectedPackages[v];
+          const guestsInvalid = hasPackage && (state.guestsPerService[v] ?? state.guests) < 5;
+          const pkg = state.selectedPackages[v];
+          const featuresInvalid = hasPackage && featuresMap !== null && pkg
+            ? (featuresMap.get(pkg.id) ?? []).filter((f) => f.type === 1).some(
+                (f) => (selections.get(pkg.id)?.get(f.id)?.size ?? 0) === 0
+              )
+            : false;
+          const serviceInvalid = guestsInvalid || featuresInvalid;
+          const isActive = v === activeVenue;
+          return (
+            <button
+              key={v}
+              onClick={() => setActiveVenue(v)}
+              className={`flex items-center gap-2 px-3 py-2 border rounded-full shrink-0 text-sm font-medium font-figtree tracking-tight transition-all duration-200 ${
+                isActive
+                  ? "bg-[#1b1b1b] border-[#474747] text-[#f1f1f1]"
+                  : "bg-transparent border-[#303030] text-[#a8a8a8] hover:border-[#474747]"
+              }`}
+            >
+              {info.logo && (
+                <Image src={info.logo} alt={info.name} width={16} height={16} className="object-contain" />
+              )}
+              {info.name}
+              {serviceInvalid && <div className="size-1.5 rounded-full bg-red-500" />}
+              {hasPackage && !serviceInvalid && <div className="size-1.5 rounded-full bg-[#37a067]" />}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -635,41 +676,7 @@ export default function Step3Packages({
         </div>
 
         {/* Service tab switcher */}
-        {state.selectedServices.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto scrollbar-none">
-            {state.selectedServices.map((v) => {
-              const info = VENUE_INFO[v];
-              const hasPackage = !!state.selectedPackages[v];
-              const guestsInvalid = hasPackage && (state.guestsPerService[v] ?? state.guests) < 5;
-              const pkg = state.selectedPackages[v];
-              const featuresInvalid = hasPackage && featuresMap !== null && pkg
-                ? (featuresMap.get(pkg.id) ?? []).filter((f) => f.type === 1).some(
-                    (f) => (selections.get(pkg.id)?.get(f.id)?.size ?? 0) === 0
-                  )
-                : false;
-              const serviceInvalid = guestsInvalid || featuresInvalid;
-              const isActive = v === activeVenue;
-              return (
-                <button
-                  key={v}
-                  onClick={() => setActiveVenue(v)}
-                  className={`flex items-center gap-2 px-3 py-2 border rounded-full shrink-0 text-sm font-medium font-figtree tracking-tight transition-all duration-200 ${
-                    isActive
-                      ? "bg-[#1b1b1b] border-[#474747] text-[#f1f1f1]"
-                      : "bg-transparent border-[#303030] text-[#a8a8a8] hover:border-[#474747]"
-                  }`}
-                >
-                  {info.logo && (
-                    <Image src={info.logo} alt={info.name} width={16} height={16} className="object-contain" />
-                  )}
-                  {info.name}
-                  {serviceInvalid && <div className="size-1.5 rounded-full bg-red-500" />}
-                  {hasPackage && !serviceInvalid && <div className="size-1.5 rounded-full bg-[#37a067]" />}
-                </button>
-              );
-            })}
-          </div>
-        )}
+        <ServiceTabs />
       </div>
 
       {/* ── Full-width cards ── */}
@@ -740,6 +747,8 @@ export default function Step3Packages({
               .replace("{total}", String(state.selectedServices.length))}
           </p>
         )}
+
+        <ServiceTabs className="sm:hidden" />
 
         {reserveError && (
           <p className="text-sm text-red-400 font-figtree tracking-tight text-center">

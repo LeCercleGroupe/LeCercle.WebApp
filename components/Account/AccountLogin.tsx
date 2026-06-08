@@ -134,16 +134,9 @@ export default function AccountLogin({ locale, dict }: Props) {
           router.replace(`/${locale}/account`);
           return;
         }
-        const body = await r.json().catch(() => ({})) as { error?: string };
-        if (body.error === "No refresh token") {
-          // The upstream doesn't issue refresh tokens for this auth flow — the
-          // access token simply expired. Keep localStorage so the email is
-          // pre-filled; the user just needs to re-enter their OTP code.
-          fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
-        } else {
-          // Refresh token was present but rejected — full logout.
-          clearAuth();
-        }
+        // Cookies are already cleared by the refresh route on failure.
+        // Keep localStorage so the email/phone is pre-filled for re-login.
+        fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
       })
       .catch(() => {
         // Network error — redirect optimistically; account page will handle it.

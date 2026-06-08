@@ -86,6 +86,7 @@ export interface Contract {
   orderNumber: string;
   contractNumber: string;
   documentName?: string;
+  serviceName?: string;
   status: string;
   generatedAt: string;
   signedAt: string | null;

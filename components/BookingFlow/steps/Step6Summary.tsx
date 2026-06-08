@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
 import type { RefObject } from "react";
+import { useEffect, useState } from "react";
 import type { BookingDict } from "../dict";
 import BackButton from "../shared/BackButton";
 import BookingStepper from "../shared/BookingStepper";
@@ -80,7 +80,10 @@ function inject(template: string, amount: string): string {
   return template.replace("{amount}", amount);
 }
 
-function computeDefaultCost(features: ApiFeature[]): { selectedOptionIds: string[]; additionalCost: number } {
+function computeDefaultCost(features: ApiFeature[]): {
+  selectedOptionIds: string[];
+  additionalCost: number;
+} {
   const selectedOptionIds: string[] = [];
   let additionalCost = 0;
   for (const feature of features) {
@@ -96,7 +99,10 @@ function computeDefaultCost(features: ApiFeature[]): { selectedOptionIds: string
   return { selectedOptionIds, additionalCost };
 }
 
-function computeAdditionalCostFromIds(features: ApiFeature[], selectedOptionIds: string[]): number {
+function computeAdditionalCostFromIds(
+  features: ApiFeature[],
+  selectedOptionIds: string[],
+): number {
   const allSelectedIds = new Set(selectedOptionIds);
   let total = 0;
   for (const feature of features) {
@@ -115,8 +121,10 @@ function computeAdditionalCostFromIds(features: ApiFeature[], selectedOptionIds:
 // Always derive price from live featuresMap when available so that
 // toggling options in Step6 is immediately reflected in the display.
 function getLiveAdditionalCost(
-  pkg: { id: string; additionalCost?: number; selectedOptionIds?: string[] } | undefined,
-  featuresMap: Map<string, ApiFeature[]>
+  pkg:
+    | { id: string; additionalCost?: number; selectedOptionIds?: string[] }
+    | undefined,
+  featuresMap: Map<string, ApiFeature[]>,
 ): number {
   if (!pkg) return 0;
   const features = featuresMap.get(pkg.id);
@@ -134,11 +142,23 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Row({ label, value, dimValue }: { label: string; value: string; dimValue?: boolean }) {
+function Row({
+  label,
+  value,
+  dimValue,
+}: {
+  label: string;
+  value: string;
+  dimValue?: boolean;
+}) {
   return (
     <div className="flex justify-between gap-4 items-start">
-      <p className="text-sm text-[#747474] font-figtree tracking-tight shrink-0">{label}</p>
-      <p className={`text-sm font-figtree tracking-tight text-right ${dimValue ? "text-[#747474]" : "text-[#f1f1f1]"}`}>
+      <p className="text-sm text-[#747474] font-figtree tracking-tight shrink-0">
+        {label}
+      </p>
+      <p
+        className={`text-sm font-figtree tracking-tight text-right ${dimValue ? "text-[#747474]" : "text-[#f1f1f1]"}`}
+      >
         {value}
       </p>
     </div>
@@ -156,8 +176,6 @@ export default function Step6Summary({
   dict,
   locale,
   stepLabel,
-  tokenRef,
-  tokenReady,
 }: Props) {
   const d = dict.step6;
   const months = dict.step1.months;
@@ -175,9 +193,16 @@ export default function Step6Summary({
     return () => window.removeEventListener("pageshow", handlePageshow);
   }, []);
 
-  const [packagesMap, setPackagesMap] = useState<Map<ServiceId, ApiPackage[]> | null>(null);
-  const [featuresMap, setFeaturesMap] = useState<Map<string, ApiFeature[]>>(new Map());
-  const [expandedUpgrade, setExpandedUpgrade] = useState<ServiceId | null>(null);
+  const [packagesMap, setPackagesMap] = useState<Map<
+    ServiceId,
+    ApiPackage[]
+  > | null>(null);
+  const [featuresMap, setFeaturesMap] = useState<Map<string, ApiFeature[]>>(
+    new Map(),
+  );
+  const [expandedUpgrade, setExpandedUpgrade] = useState<ServiceId | null>(
+    null,
+  );
 
   // ── Fetch all packages + features for display and upgrade options ─────────
 
@@ -187,10 +212,12 @@ export default function Step6Summary({
     Promise.all(
       state.selectedServices.map((serviceId) =>
         fetch(`/api/booking/packages/${serviceId}`)
-          .then((r) => (r.ok ? (r.json() as Promise<ApiPackage[]>) : ([] as ApiPackage[])))
+          .then((r) =>
+            r.ok ? (r.json() as Promise<ApiPackage[]>) : ([] as ApiPackage[]),
+          )
           .then((pkgs) => [serviceId, pkgs.filter((p) => p.isActive)] as const)
-          .catch((): readonly [ServiceId, ApiPackage[]] => [serviceId, []])
-      )
+          .catch((): readonly [ServiceId, ApiPackage[]] => [serviceId, []]),
+      ),
     )
       .then((results) => {
         const pMap = new Map(results);
@@ -200,10 +227,14 @@ export default function Step6Summary({
         return Promise.all(
           allPackageIds.map((pkgId) =>
             fetch(`/api/booking/packages/${pkgId}/features`)
-              .then((r) => (r.ok ? (r.json() as Promise<ApiFeature[]>) : ([] as ApiFeature[])))
+              .then((r) =>
+                r.ok
+                  ? (r.json() as Promise<ApiFeature[]>)
+                  : ([] as ApiFeature[]),
+              )
               .then((feats): readonly [string, ApiFeature[]] => [pkgId, feats])
-              .catch((): readonly [string, ApiFeature[]] => [pkgId, []])
-          )
+              .catch((): readonly [string, ApiFeature[]] => [pkgId, []]),
+          ),
         );
       })
       .then((featResults) => {
@@ -233,7 +264,11 @@ export default function Step6Summary({
     setExpandedUpgrade(null);
   }
 
-  function toggleOption(serviceId: ServiceId, featureId: string, optionId: string) {
+  function toggleOption(
+    serviceId: ServiceId,
+    featureId: string,
+    optionId: string,
+  ) {
     const pkg = state.selectedPackages[serviceId];
     if (!pkg) return;
     const features = featuresMap.get(pkg.id) ?? [];
@@ -241,7 +276,9 @@ export default function Step6Summary({
     if (!feature) return;
     const featureOptionIds = new Set(feature.options.map((o) => o.id));
     const currentAllIds = pkg.selectedOptionIds ?? [];
-    const thisFeatureIds = currentAllIds.filter((id) => featureOptionIds.has(id));
+    const thisFeatureIds = currentAllIds.filter((id) =>
+      featureOptionIds.has(id),
+    );
     const otherIds = currentAllIds.filter((id) => !featureOptionIds.has(id));
     const idx = thisFeatureIds.indexOf(optionId);
     if (idx !== -1) {
@@ -257,7 +294,10 @@ export default function Step6Summary({
         [serviceId]: {
           ...pkg,
           selectedOptionIds: newSelectedOptionIds,
-          additionalCost: computeAdditionalCostFromIds(features, newSelectedOptionIds),
+          additionalCost: computeAdditionalCostFromIds(
+            features,
+            newSelectedOptionIds,
+          ),
         },
       },
     });
@@ -265,19 +305,33 @@ export default function Step6Summary({
 
   // ── Cost computation ─────────────────────────────────────────────────────
 
-  const cityNorm = state.city.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-  const isChisinau = cityNorm === "chisinau" || cityNorm === "kishinev";
-  const rawKm = !isChisinau && state.distanceKm ? Math.trunc(state.distanceKm) : 0;
+  const cityNorm = state.city
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+  const isChisinau =
+    cityNorm === "chisinau" ||
+    cityNorm === "kishinev" ||
+    cityNorm === "chisineu";
+  const distanceKmNum = Number(state.distanceKm);
+  const rawKm =
+    !isChisinau && Number.isFinite(distanceKmNum) && distanceKmNum > 0
+      ? Math.trunc(distanceKmNum)
+      : 0;
   const transportKm = rawKm >= 15 ? rawKm : 0;
-  const transportCostPerService = Math.round(transportKm * TRANSPORT_RATE_PER_KM);
-  const totalTransportCost = transportCostPerService * state.selectedServices.length;
+  const transportCostPerService = Math.round(
+    transportKm * TRANSPORT_RATE_PER_KM,
+  );
+  const totalTransportCost =
+    transportCostPerService * state.selectedServices.length;
 
   const serviceTotal = state.selectedServices.reduce(
     (sum, v) =>
       sum +
       (state.selectedPackages[v]?.basePrice ?? 0) +
       getLiveAdditionalCost(state.selectedPackages[v], featuresMap),
-    0
+    0,
   );
   const totalPrice = serviceTotal + totalTransportCost;
   const advanceAmount = Math.round(serviceTotal * 0.1);
@@ -303,22 +357,37 @@ export default function Step6Summary({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               eventDate,
-              items: state.selectedServices.map((sid) => ({ serviceId: sid, quantity: 1 })),
+              items: state.selectedServices.map((sid) => ({
+                serviceId: sid,
+                quantity: 1,
+              })),
             }),
           });
           if (resRes.status === 401) {
             // Session expired — clear auth state so Step 5 forces re-authentication
-            onChange({ emailVerified: false, smsVerified: false, userId: "", customerId: "" });
+            onChange({
+              emailVerified: false,
+              smsVerified: false,
+              userId: "",
+              customerId: "",
+            });
             setSubmitting(false);
             onBack();
             return;
           }
           if (!resRes.ok) {
             const body = await resRes.text().catch(() => "");
-            console.error(`[finalize] reservation failed ${resRes.status}:`, body);
+            console.error(
+              `[finalize] reservation failed ${resRes.status}:`,
+              body,
+            );
             let detail: string | null = null;
-            try { detail = (JSON.parse(body) as { detail?: string }).detail ?? null; } catch {}
-            throw Object.assign(new Error(`reservation ${resRes.status}`), { detail });
+            try {
+              detail = (JSON.parse(body) as { detail?: string }).detail ?? null;
+            } catch {}
+            throw Object.assign(new Error(`reservation ${resRes.status}`), {
+              detail,
+            });
           }
           const { token } = await resRes.json();
           reservationToken = token ?? "";
@@ -346,7 +415,8 @@ export default function Step6Summary({
               notes: state.notes,
               latitude: state.latitude,
               longitude: state.longitude,
-              distanceKm: state.distanceKm != null ? Math.trunc(state.distanceKm) : null,
+              distanceKm:
+                state.distanceKm != null ? Math.trunc(state.distanceKm) : null,
               customerId: state.customerId,
             }),
           });
@@ -366,7 +436,8 @@ export default function Step6Summary({
             serviceId: sid,
             quantity: 1,
             guestCount: state.guestsPerService[sid] ?? state.guests,
-            selectedOptionIds: state.selectedPackages[sid]!.selectedOptionIds ?? [],
+            selectedOptionIds:
+              state.selectedPackages[sid]!.selectedOptionIds ?? [],
             roadPrice: transportCostPerService,
           }));
 
@@ -415,17 +486,22 @@ export default function Step6Summary({
         // Persist the locked state so the user can retry payment if they come back
         try {
           const d = state.date;
-          sessionStorage.setItem("lecercle_booking_flow", JSON.stringify({
-            step: 6,
-            isAddOrder: false,
-            returnUrl: "",
-            state: {
-              ...state,
-              bookingRef: orderId,
-              reservationToken: "",
-              date: d ? { y: d.getFullYear(), m: d.getMonth(), d: d.getDate() } : null,
-            },
-          }));
+          sessionStorage.setItem(
+            "lecercle_booking_flow",
+            JSON.stringify({
+              step: 6,
+              isAddOrder: false,
+              returnUrl: "",
+              state: {
+                ...state,
+                bookingRef: orderId,
+                reservationToken: "",
+                date: d
+                  ? { y: d.getFullYear(), m: d.getMonth(), d: d.getDate() }
+                  : null,
+              },
+            }),
+          );
           sessionStorage.setItem("lecercle_payment_pending", "1");
         } catch {}
         window.location.assign(paymentUrl);
@@ -443,7 +519,12 @@ export default function Step6Summary({
     }
   }
 
-  const paymentOptions: { key: PaymentOption; label: string; sub: string; recommended: boolean }[] = [
+  const paymentOptions: {
+    key: PaymentOption;
+    label: string;
+    sub: string;
+    recommended: boolean;
+  }[] = [
     {
       key: "now",
       label: d.pay_now_label,
@@ -457,6 +538,8 @@ export default function Step6Summary({
       recommended: false,
     },
   ];
+
+  console.log(transportCostPerService, totalTransportCost, transportKm);
 
   return (
     <div className="flex flex-col gap-6">
@@ -481,8 +564,19 @@ export default function Step6Summary({
       {/* Locked notice — shown when order already exists */}
       {isLocked && (
         <div className="flex items-start gap-3 px-4 py-3 border border-[#c4973f]/40 bg-[#c4973f]/10">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0 mt-0.5">
-            <path d="M8 1.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13zm0 5v4.5M8 5.5v.5" stroke="#c4973f" strokeWidth="1.5" strokeLinecap="round" />
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            className="shrink-0 mt-0.5"
+          >
+            <path
+              d="M8 1.5a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13zm0 5v4.5M8 5.5v.5"
+              stroke="#c4973f"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
           </svg>
           <p className="text-sm text-[#c4973f] font-figtree tracking-tight leading-snug">
             {d.order_locked_notice}
@@ -502,7 +596,12 @@ export default function Step6Summary({
         <div className="flex flex-col gap-3 px-4 py-4 border-b border-[#252525]">
           <SectionLabel>{d.event_section}</SectionLabel>
           <div className="flex flex-col gap-2">
-            <Row label={d.date_label} value={state.date ? formatDate(state.date, months, daysFull) : "—"} />
+            <Row
+              label={d.date_label}
+              value={
+                state.date ? formatDate(state.date, months, daysFull) : "—"
+              }
+            />
             <Row label={d.time_label} value={state.startTime || "—"} />
           </div>
         </div>
@@ -519,22 +618,32 @@ export default function Step6Summary({
         {/* SERVICII */}
         <div className="flex flex-col gap-3 px-4 py-4 border-b border-[#252525]">
           <SectionLabel>
-            {d.services_section.replace("{count}", String(state.selectedServices.length))}
+            {d.services_section.replace(
+              "{count}",
+              String(state.selectedServices.length),
+            )}
           </SectionLabel>
           <div className="flex flex-col gap-2">
             {state.selectedServices.map((v) => {
               const info = VENUE_INFO[v];
               const pkg = state.selectedPackages[v];
               const pkgFeatures = pkg
-                ? (featuresMap.get(pkg.id) ?? []).sort((a, b) => a.sortOrder - b.sortOrder)
+                ? (featuresMap.get(pkg.id) ?? []).sort(
+                    (a, b) => a.sortOrder - b.sortOrder,
+                  )
                 : [];
               const allPkgs = packagesMap?.get(v) ?? [];
               const upgradeOptions = pkg
-                ? allPkgs.filter((p) => p.isActive && p.basePrice > pkg.basePrice)
+                ? allPkgs.filter(
+                    (p) => p.isActive && p.basePrice > pkg.basePrice,
+                  )
                 : [];
 
               return (
-                <div key={v} className="flex flex-col bg-[#111] border border-[#2a2a2a]">
+                <div
+                  key={v}
+                  className="flex flex-col bg-[#111] border border-[#2a2a2a]"
+                >
                   {/* Package info */}
                   <div className="flex flex-col gap-2.5 px-3 py-3">
                     <div className="flex justify-between items-start gap-3">
@@ -552,14 +661,21 @@ export default function Step6Summary({
                         </span>
                       )}
                       <p className="text-base font-medium text-[#f1f1f1] font-figtree tracking-tight shrink-0">
-                        {pkg ? formatMDL(pkg.basePrice + getLiveAdditionalCost(pkg, featuresMap)) : "—"}
+                        {pkg
+                          ? formatMDL(
+                              pkg.basePrice +
+                                getLiveAdditionalCost(pkg, featuresMap),
+                            )
+                          : "—"}
                       </p>
                     </div>
                     {pkg && (
                       <>
                         <div className="flex items-center gap-1.5">
                           <div className="size-4 rounded-full bg-[#c4973f] shrink-0" />
-                          <p className="text-sm text-[#d4d4d4] font-figtree tracking-tight">{pkg.name}</p>
+                          <p className="text-sm text-[#d4d4d4] font-figtree tracking-tight">
+                            {pkg.name}
+                          </p>
                         </div>
                         <Row
                           label={d.guests_label}
@@ -571,9 +687,24 @@ export default function Step6Summary({
                             {pkgFeatures
                               .filter((f) => f.type === 0)
                               .map((feature) => (
-                                <li key={feature.id} className="flex gap-2 items-start">
-                                  <svg width="12" height="10" viewBox="0 0 12 10" fill="none" className="shrink-0 mt-0.5">
-                                    <path d="M1 5l3.5 3.5L11 1" stroke="#37a067" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                <li
+                                  key={feature.id}
+                                  className="flex gap-2 items-start"
+                                >
+                                  <svg
+                                    width="12"
+                                    height="10"
+                                    viewBox="0 0 12 10"
+                                    fill="none"
+                                    className="shrink-0 mt-0.5"
+                                  >
+                                    <path
+                                      d="M1 5l3.5 3.5L11 1"
+                                      stroke="#37a067"
+                                      strokeWidth="1.5"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
                                   </svg>
                                   <span className="text-xs text-[#a8a8a8] font-figtree tracking-tight">
                                     {feature.label}
@@ -593,44 +724,82 @@ export default function Step6Summary({
                         .filter((f) => f.type === 1)
                         .map((feature) => {
                           // Sort by additionalCost ascending — cheapest displayed first
-                          const sortedOptions = [...feature.options].sort((a, b) => a.additionalCost - b.additionalCost);
-                          const featureOptionIds = new Set(feature.options.map((o) => o.id));
-                          const selectedIds = new Set((pkg.selectedOptionIds ?? []).filter((id) => featureOptionIds.has(id)));
+                          const sortedOptions = [...feature.options].sort(
+                            (a, b) => a.additionalCost - b.additionalCost,
+                          );
+                          const featureOptionIds = new Set(
+                            feature.options.map((o) => o.id),
+                          );
+                          const selectedIds = new Set(
+                            (pkg.selectedOptionIds ?? []).filter((id) =>
+                              featureOptionIds.has(id),
+                            ),
+                          );
                           // Cheapest currently-selected option is free
-                          const freeOptionId = sortedOptions.find((o) => selectedIds.has(o.id))?.id ?? null;
+                          const freeOptionId =
+                            sortedOptions.find((o) => selectedIds.has(o.id))
+                              ?.id ?? null;
                           return (
-                            <div key={feature.id} className="flex flex-col gap-2">
+                            <div
+                              key={feature.id}
+                              className="flex flex-col gap-2"
+                            >
                               <p className="text-sm font-medium text-[#f1f1f1] font-figtree tracking-tight">
                                 {feature.label}
                               </p>
                               <div className="flex flex-col gap-1.5">
                                 {sortedOptions.map((option) => {
                                   const isChecked = selectedIds.has(option.id);
-                                  const isFree = isChecked && option.id === freeOptionId;
+                                  const isFree =
+                                    isChecked && option.id === freeOptionId;
                                   return (
                                     <button
                                       key={option.id}
                                       type="button"
-                                      onClick={() => !isLocked && toggleOption(v, feature.id, option.id)}
+                                      onClick={() =>
+                                        !isLocked &&
+                                        toggleOption(v, feature.id, option.id)
+                                      }
                                       disabled={isLocked}
                                       className={`flex items-center gap-3 px-3 py-2.5 bg-[#111] border border-[#303030] transition-colors text-left w-full ${isLocked ? "cursor-not-allowed opacity-60" : "hover:border-[#474747]"}`}
                                     >
-                                      <div className={`size-4 shrink-0 border flex items-center justify-center transition-colors ${
-                                        isChecked ? "bg-[#37a067] border-[#37a067]" : "bg-transparent border-[#474747]"
-                                      }`}>
+                                      <div
+                                        className={`size-4 shrink-0 border flex items-center justify-center transition-colors ${
+                                          isChecked
+                                            ? "bg-[#37a067] border-[#37a067]"
+                                            : "bg-transparent border-[#474747]"
+                                        }`}
+                                      >
                                         {isChecked && (
-                                          <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                                            <path d="M1 4l3 3 5-6" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                          <svg
+                                            width="10"
+                                            height="8"
+                                            viewBox="0 0 10 8"
+                                            fill="none"
+                                          >
+                                            <path
+                                              d="M1 4l3 3 5-6"
+                                              stroke="#fff"
+                                              strokeWidth="1.5"
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                            />
                                           </svg>
                                         )}
                                       </div>
                                       <span className="flex-1 text-sm text-[#c4c4c4] font-figtree tracking-tight">
                                         {option.label}
                                       </span>
-                                      <span className={`text-xs font-medium font-figtree tracking-tight shrink-0 ${
-                                        isChecked ? "text-[#37a067]" : "text-[#a8a8a8]"
-                                      }`}>
-                                        {isFree ? dict.step3.feature_included : `+${formatMDL(option.additionalCost)}`}
+                                      <span
+                                        className={`text-xs font-medium font-figtree tracking-tight shrink-0 ${
+                                          isChecked
+                                            ? "text-[#37a067]"
+                                            : "text-[#a8a8a8]"
+                                        }`}
+                                      >
+                                        {isFree
+                                          ? dict.step3.feature_included
+                                          : `+${formatMDL(option.additionalCost)}`}
                                       </span>
                                     </button>
                                   );
@@ -647,7 +816,9 @@ export default function Step6Summary({
                     <div className="border-t border-[#2a2a2a]">
                       <button
                         type="button"
-                        onClick={() => setExpandedUpgrade(expandedUpgrade === v ? null : v)}
+                        onClick={() =>
+                          setExpandedUpgrade(expandedUpgrade === v ? null : v)
+                        }
                         className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-white/5 transition-colors"
                       >
                         <span className="text-xs font-medium text-[#c4973f] font-figtree tracking-tight">
@@ -673,10 +844,11 @@ export default function Step6Summary({
                       {expandedUpgrade === v && (
                         <div className="flex flex-col gap-2 px-3 pb-3">
                           {upgradeOptions.map((upgPkg) => {
-                            const upgFeatures = (featuresMap.get(upgPkg.id) ?? []).sort(
-                              (a, b) => a.sortOrder - b.sortOrder
-                            );
-                            const upgDefaultCost = computeDefaultCost(upgFeatures).additionalCost;
+                            const upgFeatures = (
+                              featuresMap.get(upgPkg.id) ?? []
+                            ).sort((a, b) => a.sortOrder - b.sortOrder);
+                            const upgDefaultCost =
+                              computeDefaultCost(upgFeatures).additionalCost;
                             return (
                               <div
                                 key={upgPkg.id}
@@ -693,7 +865,9 @@ export default function Step6Summary({
                                   </div>
                                   <div className="flex flex-col items-end gap-2 shrink-0">
                                     <p className="text-sm font-medium text-[#f1f1f1] font-figtree tracking-tight">
-                                      {formatMDL(upgPkg.basePrice + upgDefaultCost)}
+                                      {formatMDL(
+                                        upgPkg.basePrice + upgDefaultCost,
+                                      )}
                                     </p>
                                     <button
                                       type="button"
@@ -707,7 +881,10 @@ export default function Step6Summary({
                                 {upgFeatures.length > 0 && (
                                   <ul className="flex flex-col gap-1">
                                     {upgFeatures.map((f) => (
-                                      <li key={f.id} className="flex gap-1.5 items-start">
+                                      <li
+                                        key={f.id}
+                                        className="flex gap-1.5 items-start"
+                                      >
                                         <svg
                                           width="10"
                                           height="8"
@@ -776,25 +953,34 @@ export default function Step6Summary({
                 <Row
                   key={v}
                   label={`${info.name}: ${pkg?.name ?? ""}`}
-                  value={pkg ? formatMDL(pkg.basePrice + getLiveAdditionalCost(pkg, featuresMap)) : "—"}
+                  value={
+                    pkg
+                      ? formatMDL(
+                          pkg.basePrice +
+                            getLiveAdditionalCost(pkg, featuresMap),
+                        )
+                      : "—"
+                  }
                 />
               );
             })}
             {totalTransportCost > 0 && (
-              <Row
-                label={d.transport_label.replace("{km}", String(transportKm))}
-                value={formatMDL(totalTransportCost)}
-                dimValue
-              />
+              <>
+                {/* <Row label={d.services_label} value={formatMDL(serviceTotal)} /> */}
+                <Row
+                  label={d.transport_label.replace("{km}", String(transportKm))}
+                  value={formatMDL(totalTransportCost)}
+                  dimValue
+                />
+              </>
             )}
-            <Row label={d.taxes_label} value="—" dimValue />
           </div>
           <div className="border-t border-[#303030] pt-3 flex justify-between items-center">
             <p className="text-sm font-semibold text-[#f1f1f1] font-figtree tracking-widest uppercase">
               {d.total_de_plata}
             </p>
             <p className="text-xl font-semibold text-[#f1f1f1] font-figtree tracking-tight">
-              {formatMDL(serviceTotal)}
+              {formatMDL(totalPrice)}
             </p>
           </div>
         </div>
@@ -829,7 +1015,9 @@ export default function Step6Summary({
                     selected ? "border-[#f1f1f1]" : "border-[#474747]"
                   }`}
                 >
-                  {selected && <div className="size-2.5 rounded-full bg-[#f1f1f1]" />}
+                  {selected && (
+                    <div className="size-2.5 rounded-full bg-[#f1f1f1]" />
+                  )}
                 </div>
                 <div className="flex-1 flex flex-col gap-1">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -838,8 +1026,20 @@ export default function Step6Summary({
                     </p>
                     {opt.recommended && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#0b2a18] border border-[#1a4d2e] text-xs text-[#4ade80] font-figtree tracking-tight">
-                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none" className="shrink-0">
-                          <path d="M1 4l3 3 5-6" stroke="#37a067" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <svg
+                          width="10"
+                          height="8"
+                          viewBox="0 0 10 8"
+                          fill="none"
+                          className="shrink-0"
+                        >
+                          <path
+                            d="M1 4l3 3 5-6"
+                            stroke="#37a067"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
                         </svg>
                         {d.recommended}
                       </span>

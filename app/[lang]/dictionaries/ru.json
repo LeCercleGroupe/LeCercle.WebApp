@@ -150,6 +150,7 @@
       "services_section": "УСЛУГИ ({count})",
       "details_section": "ДОПОЛНИТЕЛЬНЫЕ ДЕТАЛИ",
       "cost_section": "СТОИМОСТЬ",
+      "services_label": "Услуги",
       "date_label": "Дата",
       "guests_label": "Гости",
       "guests_unit": "человек",
@@ -160,7 +161,7 @@
       "taxes_label": "Налоги включены",
       "total_de_plata": "ИТОГО К ОПЛАТЕ",
       "payment_title": "КАК ВЫ ХОТИТЕ ОПЛАТИТЬ?",
-      "payment_subtitle": "Аванс 10% фиксирует дату и подтверждает бронирование. Оставшиеся 90% оплачиваются в день мероприятия.",
+      "payment_subtitle": "Аванс фиксирует дату и подтверждает бронирование. Оставшиеся средства оплачиваются в день мероприятия. Аванс не включает логистику за пределами Кишинёва, которая рассчитывается отдельно в зависимости от локации.",
       "pay_now_label": "Оплатить аванс сейчас",
       "pay_now_sub": "Оплатите {amount} сейчас — бронирование подтверждается немедленно, дата фиксируется в нашем календаре.",
       "pay_later_label": "Оплатить аванс позже",
@@ -213,7 +214,7 @@
       "steps": [
         {
           "label": "Аванс оплачен",
-          "sub": "Аванс в размере 10% успешно обработан."
+          "sub": "Аванс успешно обработан."
         },
         {
           "label": "Договор в вашем профиле",
@@ -332,7 +333,7 @@
       "contract_signed": "Подписан",
       "contract_download": "Скачать PDF",
       "contract_not_ready": "Договор будет доступен после оплаты аванса.",
-      "advance_label": "Аванс (10%)",
+      "advance_label": "Аванс",
       "total_label": "ИТОГО"
     },
     "nav": {
@@ -388,7 +389,7 @@
       "draft_ref_label": "ПРЕДВАРИТЕЛЬНЫЙ НОМЕР",
       "draft_ref_sub": "Будет заменён постоянным кодом после подтверждения.",
       "estimated_cost_label": "ПРЕДВАРИТЕЛЬНАЯ СТОИМОСТЬ",
-      "advance_estimated": "Аванс 10%, приблизительно {amount}, оплачивается на шаге 6.",
+      "advance_estimated": "Аванс, приблизительно {amount}, оплачивается на шаге 6.",
       "section_progress": "ПРОГРЕСС БРОНИРОВАНИЯ",
       "section_data_filled": "ЗАПОЛНЕННЫЕ ДАННЫЕ",
       "transport_calculated": "рассчитывается после выбора локации",
@@ -425,8 +426,8 @@
       "access_label": "Доступ",
       "not_selected": "Не выбрано",
       "total_event_label": "Итого за мероприятие",
-      "advance_label": "Аванс (10%)",
-      "rest_label": "Остаток (90%)",
+      "advance_label": "Аванс",
+      "rest_label": "Остаток",
       "paid_badge": "оплачен",
       "confirmed_badge": "подтверждён",
       "taxes_label": "Налоги включены",
@@ -445,8 +446,8 @@
       "financial_services": "Услуги",
       "financial_transportation": "Транспорт",
       "financial_total": "Итого за мероприятие",
-      "financial_advance": "Аванс (10%)",
-      "financial_rest": "Остаток (90%)",
+      "financial_advance": "Аванс",
+      "financial_rest": "Остаток",
       "status_section_label": "СТАТУС",
       "badge_pending": "В ОЖИДАНИИ",
       "badge_confirmed": "ПОДТВЕРЖДЕНО",

@@ -692,9 +692,9 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                       <p className="text-[26px] sm:text-[28px] font-semibold text-[#f0f0f0] font-figtree tracking-tight leading-none mb-1">
                         {formatMDL(totalPrice)}
                       </p>
-                      <p className="text-[12px] text-[#666] font-figtree tracking-tight mb-4">
+                      {/* <p className="text-[12px] text-[#666] font-figtree tracking-tight mb-4">
                         {d.taxes_label}
-                      </p>
+                      </p> */}
                       <div className="flex flex-col gap-2 border-t border-[#1e1e1e] pt-3">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-[13px] text-[#888] font-figtree tracking-tight">
@@ -820,9 +820,16 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                                 />
                               </svg>
                             </div>
-                            <p className="flex-1 min-w-0 text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight truncate">
-                              {c.documentName || c.contractNumber || "Document"}
-                            </p>
+                            <div className="flex-1 min-w-0">
+                              {c.serviceName && (
+                                <p className="text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight truncate">
+                                  {c.serviceName}
+                                </p>
+                              )}
+                              <p className={`font-figtree tracking-tight truncate ${c.serviceName ? "text-[12px] text-[#666] mt-0.5" : "text-[13px] font-medium text-[#f0f0f0]"}`}>
+                                {c.documentName || c.contractNumber || "Document"}
+                              </p>
+                            </div>
                             {c.fileUrl ? (
                               <a
                                 href={c.fileUrl}

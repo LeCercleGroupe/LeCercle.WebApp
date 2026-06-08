@@ -150,6 +150,7 @@
       "services_section": "SERVICII ({count})",
       "details_section": "DETALII SUPLIMENTARE",
       "cost_section": "COST",
+      "services_label": "Servicii",
       "date_label": "Data",
       "guests_label": "Invitați",
       "guests_unit": "persoane",
@@ -160,7 +161,7 @@
       "taxes_label": "Taxe incluse",
       "total_de_plata": "TOTAL DE PLATĂ",
       "payment_title": "CUM VREI SĂ PLĂTEȘTI?",
-      "payment_subtitle": "Avansul de 10% blochează data și confirmă rezervarea. Restul de 90% se achită în ziua evenimentului.",
+      "payment_subtitle": "Avansul de blochează data și confirmă rezervarea. Restul de se achită în ziua evenimentului. Avansul nu include taxa de logistica în afara Chișinăului, care se calculează separat în funcție de locație.",
       "pay_now_label": "Plata avansului acum",
       "pay_now_sub": "Plătești {amount} acum, rezervarea ta este confirmată imediat și data este blocată în calendarul nostru.",
       "pay_later_label": "Plata avansului mai târziu",
@@ -213,7 +214,7 @@
       "steps": [
         {
           "label": "Avans achitat",
-          "sub": "Avansul de 10% a fost procesat cu succes."
+          "sub": "Avansul de a fost procesat cu succes."
         },
         {
           "label": "Contract în profilul tău",
@@ -332,7 +333,7 @@
       "contract_signed": "Semnat la",
       "contract_download": "Descarcă PDF",
       "contract_not_ready": "Contractul va fi disponibil după achitarea avansului.",
-      "advance_label": "Avans (10%)",
+      "advance_label": "Avans",
       "total_label": "TOTAL"
     },
     "nav": {
@@ -388,7 +389,7 @@
       "draft_ref_label": "REFERINȚĂ PROVIZORIE",
       "draft_ref_sub": "Înlocuită cu un cod permanent după confirmare.",
       "estimated_cost_label": "COST ESTIMAT",
-      "advance_estimated": "Avans de 10%, aproximativ {amount}, se plătește la pasul 6.",
+      "advance_estimated": "Avansul, aproximativ {amount}, se plătește la pasul 6.",
       "section_progress": "PROGRESUL REZERVĂRII TALE",
       "section_data_filled": "DATE COMPLETATE PÂNĂ ACUM",
       "transport_calculated": "se calculează după locație",
@@ -425,8 +426,8 @@
       "access_label": "Acces",
       "not_selected": "Neselectat încă",
       "total_event_label": "Total eveniment",
-      "advance_label": "Avans (10%)",
-      "rest_label": "Rest (90%)",
+      "advance_label": "Avans",
+      "rest_label": "Rest",
       "paid_badge": "plătit",
       "confirmed_badge": "confirmat",
       "taxes_label": "Taxe incluse",
@@ -445,8 +446,8 @@
       "financial_services": "Servicii",
       "financial_transportation": "Transport",
       "financial_total": "Total eveniment",
-      "financial_advance": "Avans (10%)",
-      "financial_rest": "Rest (90%)",
+      "financial_advance": "Avans",
+      "financial_rest": "Rest",
       "status_section_label": "STATUS",
       "badge_pending": "IN AȘTEPTARE",
       "badge_confirmed": "CONFIRMAT",

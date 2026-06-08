@@ -150,6 +150,7 @@
       "services_section": "SERVICES ({count})",
       "details_section": "ADDITIONAL DETAILS",
       "cost_section": "COST",
+      "services_label": "Services",
       "date_label": "Date",
       "guests_label": "Guests",
       "guests_unit": "people",
@@ -160,7 +161,7 @@
       "taxes_label": "Taxes included",
       "total_de_plata": "TOTAL DUE",
       "payment_title": "HOW WOULD YOU LIKE TO PAY?",
-      "payment_subtitle": "The 10% advance locks your date and confirms the booking. The remaining 90% is paid on the day of the event.",
+      "payment_subtitle": "The advance locks your date and confirms the booking. The remaining is paid on the day of the event. The advance does not include logistics outside Chișinău, which is calculated separately based on the location.",
       "pay_now_label": "Pay advance now",
       "pay_now_sub": "Pay {amount} now and your booking is confirmed immediately, with the date locked in our calendar.",
       "pay_later_label": "Pay advance later",
@@ -213,7 +214,7 @@
       "steps": [
         {
           "label": "Advance paid",
-          "sub": "Your 10% advance has been successfully processed."
+          "sub": "Your advance has been successfully processed."
         },
         {
           "label": "Contract in your profile",
@@ -332,7 +333,7 @@
       "contract_signed": "Signed on",
       "contract_download": "Download PDF",
       "contract_not_ready": "The contract will be available after the advance is paid.",
-      "advance_label": "Advance (10%)",
+      "advance_label": "Advance",
       "total_label": "TOTAL"
     },
     "nav": {
@@ -371,7 +372,7 @@
       "book_similar": "Book a similar event",
       "pending_action_label": "ACTION REQUIRED · DATE EXPIRES IN {time}",
       "pending_action_title": "Pay the advance of {amount} to confirm the date",
-      "pending_action_sub": "Your request was registered on {date}. The advance locks the date and transforms it into a firm reservation. Remaining 90%, {rest}, is paid on the day of the event.",
+      "pending_action_sub": "Your request was registered on {date}. The advance locks the date and transforms it into a firm reservation. Remaining {rest}, is paid on the day of the event.",
       "pay_online": "Pay online · {amount}",
       "pay_cash": "Pay cash · WhatsApp",
       "pay_error": "Payment could not be initiated. Please try again.",
@@ -388,7 +389,7 @@
       "draft_ref_label": "PROVISIONAL REFERENCE",
       "draft_ref_sub": "Will be replaced with a permanent code after confirmation.",
       "estimated_cost_label": "ESTIMATED COST",
-      "advance_estimated": "10% advance, approximately {amount}, paid at step 6.",
+      "advance_estimated": "Advance, approximately {amount}, paid at step 6.",
       "section_progress": "YOUR BOOKING PROGRESS",
       "section_data_filled": "DETAILS FILLED IN SO FAR",
       "transport_calculated": "calculated after location",
@@ -425,8 +426,8 @@
       "access_label": "Access",
       "not_selected": "Not selected yet",
       "total_event_label": "Total event",
-      "advance_label": "Advance (10%)",
-      "rest_label": "Rest (90%)",
+      "advance_label": "Advance",
+      "rest_label": "Rest",
       "paid_badge": "paid",
       "confirmed_badge": "confirmed",
       "taxes_label": "Taxes included",
@@ -445,8 +446,8 @@
       "financial_services": "Services",
       "financial_transportation": "Transport",
       "financial_total": "Total event",
-      "financial_advance": "Advance (10%)",
-      "financial_rest": "Rest (90%)",
+      "financial_advance": "Advance",
+      "financial_rest": "Rest",
       "status_section_label": "STATUS",
       "badge_pending": "WAITING",
       "badge_confirmed": "CONFIRMED",
