@@ -126,13 +126,13 @@ export default function ProfilePage({ locale, dict }: Props) {
               <div className="flex flex-col gap-0.5">
                 <p className="text-[18px] font-semibold text-[#f0f0f0] font-figtree tracking-tight leading-tight">{fullName}</p>
                 {user.email && (
-                  <p className="text-[13px] text-[#888] font-figtree tracking-tight">{user.email}</p>
-                )}
-                {user.phoneNumber && (
                   <div className="flex items-center gap-1.5">
-                    <p className="text-[13px] text-[#4ade80] font-figtree tracking-tight">{user.phoneNumber}</p>
+                    <p className="text-[13px] text-[#888] font-figtree tracking-tight">{user.email}</p>
                     <span className="text-[11px] text-[#4ade80] font-figtree tracking-tight">· {d.verified}</span>
                   </div>
+                )}
+                {user.phoneNumber && (
+                  <p className="text-[13px] text-[#888] font-figtree tracking-tight">{user.phoneNumber}</p>
                 )}
               </div>
             </div>
@@ -148,8 +148,8 @@ export default function ProfilePage({ locale, dict }: Props) {
               <div className="border border-[#1e1e1e] px-5 py-1 mt-4">
                 <ProfileField label={d.first_name} value={user.firstName || d.not_filled} notFilled={!user.firstName} />
                 <ProfileField label={d.last_name} value={user.lastName || d.not_filled} notFilled={!user.lastName} />
-                <ProfileField label={d.email_label} value={user.email || d.not_filled} notFilled={!user.email} />
-                <ProfileField label={d.phone_label} value={user.phoneNumber || d.not_filled} verified={!!user.phoneNumber} notFilled={!user.phoneNumber} />
+                <ProfileField label={d.email_label} value={user.email || d.not_filled} verified={!!user.email} notFilled={!user.email} />
+                <ProfileField label={d.phone_label} value={user.phoneNumber || d.not_filled} notFilled={!user.phoneNumber} />
               </div>
             </div>
 

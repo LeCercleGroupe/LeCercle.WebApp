@@ -1,15 +1,30 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
 import type { VenueSuggestion } from "@/app/api/geocode/venue/route";
-import type { AddressSuggestion } from "@/app/api/geocode/address/route";
-import { useRouter } from "next/navigation";
+import {
+  clearAuth,
+  fetchWithRefresh,
+  loadAuth,
+  StoredAuth,
+} from "@/components/BookingFlow/utils/auth";
 import Link from "next/link";
-import { loadAuth, clearAuth, fetchWithRefresh, StoredAuth } from "@/components/BookingFlow/utils/auth";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AccountTopBar from "./shared/AccountTopBar";
-import { formatDay, formatYear, formatDateShort, formatTime, formatMDL, pickAmount } from "./shared/format";
-import { EventBooking, OrderDetail, deriveEventState, deriveOrderState, type EventState } from "./shared/types";
-import { whatsapp } from "@/data/venues/constants/links";
+import {
+  formatDateShort,
+  formatDay,
+  formatMDL,
+  formatTime,
+  formatYear,
+} from "./shared/format";
+import {
+  deriveEventState,
+  deriveOrderState,
+  EventBooking,
+  OrderDetail,
+  type EventState,
+} from "./shared/types";
 
 interface EventDetailDict {
   back: string;
@@ -94,6 +109,8 @@ interface EventDetailDict {
   ref_label: string;
   ref_sub: string;
   financial_label: string;
+  financial_services: string;
+  financial_transportation: string;
   financial_total: string;
   financial_advance: string;
   financial_rest: string;
@@ -157,35 +174,35 @@ interface Props {
 
 function stateBadgeClass(state: EventState): string {
   switch (state) {
-    case "confirmed":  return "bg-[#0a2010] border border-[#1a4a2a] text-[#4ade80]";
-    case "pending":    return "bg-[#1f1400] border border-[#3a2a00] text-[#fbbf24]";
-    case "draft":      return "bg-[#1a0f00] border border-[#3a2000] text-[#fb923c]";
-    case "past":       return "bg-[#1a1a1a] border border-[#2a2a2a] text-[#888]";
-    case "cancelled":  return "bg-[#1a0505] border border-[#3a1010] text-[#f87171]";
-    default:           return "bg-[#1f1400] border border-[#3a2a00] text-[#fbbf24]";
+    case "confirmed":
+      return "bg-[#0a2010] border border-[#1a4a2a] text-[#4ade80]";
+    case "pending":
+      return "bg-[#1f1400] border border-[#3a2a00] text-[#fbbf24]";
+    case "draft":
+      return "bg-[#1a0f00] border border-[#3a2000] text-[#fb923c]";
+    case "past":
+      return "bg-[#1a1a1a] border border-[#2a2a2a] text-[#888]";
+    case "cancelled":
+      return "bg-[#1a0505] border border-[#3a1010] text-[#f87171]";
+    default:
+      return "bg-[#1f1400] border border-[#3a2a00] text-[#fbbf24]";
   }
 }
 
 function stateLabel(state: EventState, d: EventDetailDict): string {
   switch (state) {
-    case "confirmed": return d.badge_confirmed;
-    case "pending":   return d.badge_pending;
-    case "draft":     return d.badge_draft;
-    case "past":      return d.badge_past;
-    case "cancelled": return d.badge_cancelled;
-    default:          return d.badge_pending;
-  }
-}
-
-function orderSubText(state: EventState, order: OrderDetail): string {
-  const total = pickAmount(order.totalAmount);
-  switch (state) {
-    case "confirmed": return "Tot este în regulă";
-    case "pending":   return "Avans neplătit";
-    case "draft":     return "Rezervare în progres";
-    case "past":      return total > 0 ? "Plăți finalizate" : "Finalizat";
-    case "cancelled": return "Anulat";
-    default:          return "";
+    case "confirmed":
+      return d.badge_confirmed;
+    case "pending":
+      return d.badge_pending;
+    case "draft":
+      return d.badge_draft;
+    case "past":
+      return d.badge_past;
+    case "cancelled":
+      return d.badge_cancelled;
+    default:
+      return d.badge_pending;
   }
 }
 
@@ -213,24 +230,35 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
     notes: "",
   });
 
-  const [venueSuggestions, setVenueSuggestions] = useState<VenueSuggestion[]>([]);
+  const [venueSuggestions, setVenueSuggestions] = useState<VenueSuggestion[]>(
+    [],
+  );
   const venueDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const addressDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!editOpen || editForm.venueTitle.length < 2) { setVenueSuggestions([]); return; }
+    if (!editOpen || editForm.venueTitle.length < 2) {
+      return;
+    }
     if (venueDebounce.current) clearTimeout(venueDebounce.current);
     venueDebounce.current = setTimeout(() => {
       fetch(`/api/geocode/venue?q=${encodeURIComponent(editForm.venueTitle)}`)
-        .then((r) => r.ok ? r.json() : [])
+        .then((r) => (r.ok ? r.json() : []))
         .then(setVenueSuggestions)
         .catch(() => setVenueSuggestions([]));
     }, 400);
-    return () => { if (venueDebounce.current) clearTimeout(venueDebounce.current); };
+    return () => {
+      if (venueDebounce.current) clearTimeout(venueDebounce.current);
+      setVenueSuggestions([]);
+    };
   }, [editForm.venueTitle, editOpen]);
 
   function handleVenueSuggestionSelect(s: VenueSuggestion) {
-    setEditForm((p) => ({ ...p, venueTitle: s.label, city: s.city, venueAddress: s.description }));
+    setEditForm((p) => ({
+      ...p,
+      venueTitle: s.label,
+      city: s.city,
+      venueAddress: s.description,
+    }));
     setVenueSuggestions([]);
   }
 
@@ -239,26 +267,42 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
   const dateCheckTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function checkDateAvailability(date: string) {
-    if (!date) { setDateAvailable(null); return; }
+    if (!date) {
+      setDateAvailable(null);
+      return;
+    }
     if (dateCheckTimeout.current) clearTimeout(dateCheckTimeout.current);
 
     // Collect service IDs from orders fetched via /api/account/orders?eventId=
-    const serviceIds = [...new Set(
-      orders.flatMap((o) => (o.items ?? []).map((i) => i.serviceId)).filter(Boolean)
-    )];
+    const serviceIds = [
+      ...new Set(
+        orders
+          .flatMap((o) => (o.items ?? []).map((i) => i.serviceId))
+          .filter(Boolean),
+      ),
+    ];
 
     // If orders haven't loaded yet or have no items, skip the check silently
-    if (!serviceIds.length) { setDateAvailable(null); return; }
+    if (!serviceIds.length) {
+      setDateAvailable(null);
+      return;
+    }
 
     setCheckingDate(true);
     setDateAvailable(null);
     dateCheckTimeout.current = setTimeout(async () => {
       try {
         const res = await fetch(`/api/booking/services?date=${date}`);
-        if (!res.ok) { setCheckingDate(false); return; }
-        const data: { serviceId: string; isAvailable: boolean }[] = await res.json();
+        if (!res.ok) {
+          setCheckingDate(false);
+          return;
+        }
+        const data: { serviceId: string; isAvailable: boolean }[] =
+          await res.json();
         const availMap = new Map(data.map((s) => [s.serviceId, s.isAvailable]));
-        const allAvailable = serviceIds.every((sid) => availMap.get(sid) !== false);
+        const allAvailable = serviceIds.every(
+          (sid) => availMap.get(sid) !== false,
+        );
         setDateAvailable(allAvailable);
       } catch {
         setDateAvailable(null);
@@ -300,23 +344,31 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
           venueTitle: editForm.venueTitle,
           venueAddress: editForm.venueAddress,
           city: editForm.city,
-          eventStartTime: editForm.eventStartTime ? `${editForm.eventStartTime}:00` : undefined,
+          eventStartTime: editForm.eventStartTime
+            ? `${editForm.eventStartTime}:00`
+            : undefined,
           guestCount: parseInt(editForm.guestCount, 10) || event.guestCount,
           notes: editForm.notes,
           distanceKm: event.distanceKm,
         }),
       });
       if (!res.ok) throw new Error(`${res.status}`);
-      setEvent((prev) => prev ? {
-        ...prev,
-        eventDate: editForm.eventDate,
-        venueTitle: editForm.venueTitle,
-        venueAddress: editForm.venueAddress,
-        city: editForm.city,
-        eventStartTime: editForm.eventStartTime ? `${editForm.eventStartTime}:00` : prev.eventStartTime,
-        guestCount: parseInt(editForm.guestCount, 10) || prev.guestCount,
-        notes: editForm.notes,
-      } : prev);
+      setEvent((prev) =>
+        prev
+          ? {
+              ...prev,
+              eventDate: editForm.eventDate,
+              venueTitle: editForm.venueTitle,
+              venueAddress: editForm.venueAddress,
+              city: editForm.city,
+              eventStartTime: editForm.eventStartTime
+                ? `${editForm.eventStartTime}:00`
+                : prev.eventStartTime,
+              guestCount: parseInt(editForm.guestCount, 10) || prev.guestCount,
+              notes: editForm.notes,
+            }
+          : prev,
+      );
       setEditOpen(false);
     } catch {
       setEditError(true);
@@ -326,15 +378,24 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
   }
 
   useEffect(() => {
-    if (!auth) { router.replace(`/${locale}/account/login`); return; }
+    if (!auth) {
+      router.replace(`/${locale}/account/login`);
+      return;
+    }
     const customerId = auth.user.customerId;
-    if (!customerId) { setError(true); setLoading(false); return; }
+    if (!customerId) {
+      return;
+    }
 
     async function load() {
       try {
         const [evRes, ordRes] = await Promise.all([
-          fetchWithRefresh(`/api/account/events?customerId=${encodeURIComponent(customerId!)}`),
-          fetchWithRefresh(`/api/account/orders?eventId=${encodeURIComponent(eventId)}`),
+          fetchWithRefresh(
+            `/api/account/events?customerId=${encodeURIComponent(customerId!)}`,
+          ),
+          fetchWithRefresh(
+            `/api/account/orders?eventId=${encodeURIComponent(eventId)}`,
+          ),
         ]);
 
         if (evRes.status === 401) {
@@ -349,7 +410,11 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
             ? evData
             : (evData?.items ?? evData?.events ?? []);
           const found = list.find((e) => e.id === eventId);
-          if (!found) { setError(true); setLoading(false); return; }
+          if (!found) {
+            setError(true);
+            setLoading(false);
+            return;
+          }
           setEvent(found);
         } else {
           setError(true);
@@ -374,21 +439,29 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
   }, [auth, locale, eventId, router]);
 
   const initials = auth
-    ? `${auth.user.firstName?.[0] ?? ""}${auth.user.lastName?.[0] ?? ""}`.toUpperCase() || "?"
+    ? `${auth.user.firstName?.[0] ?? ""}${auth.user.lastName?.[0] ?? ""}`.toUpperCase() ||
+      "?"
     : "?";
   const displayName = auth
-    ? `${auth.user.firstName ?? ""} ${auth.user.lastName ?? ""}`.trim() || (auth.user.phoneNumber ?? "—")
+    ? `${auth.user.firstName ?? ""} ${auth.user.lastName ?? ""}`.trim() ||
+      (auth.user.phoneNumber ?? "—")
     : "—";
 
-  const ordersWithState = useMemo(() =>
-    orders.map((order) => ({ order, state: deriveOrderState(order) })),
-    [orders]
+  const ordersWithState = useMemo(
+    () => orders.map((order) => ({ order, state: deriveOrderState(order) })),
+    [orders],
   );
 
   if (loading) {
     return (
       <div className="min-h-svh bg-[#080808] flex flex-col">
-        <AccountTopBar locale={locale} initials={initials} displayName={displayName} email={auth?.user.email} navDict={dict.nav} />
+        <AccountTopBar
+          locale={locale}
+          initials={initials}
+          displayName={displayName}
+          email={auth?.user.email}
+          navDict={dict.nav}
+        />
         <main className="flex-1 flex items-center justify-center">
           <p className="text-sm text-[#666] font-figtree">{d.loading}</p>
         </main>
@@ -399,7 +472,13 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
   if (error || !event) {
     return (
       <div className="min-h-svh bg-[#080808] flex flex-col">
-        <AccountTopBar locale={locale} initials={initials} displayName={displayName} email={auth?.user.email} navDict={dict.nav} />
+        <AccountTopBar
+          locale={locale}
+          initials={initials}
+          displayName={displayName}
+          email={auth?.user.email}
+          navDict={dict.nav}
+        />
         <main className="flex-1 flex items-center justify-center">
           <p className="text-sm text-red-400 font-figtree">{d.error}</p>
         </main>
@@ -419,7 +498,9 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
     const date = y && m && day ? new Date(y, m - 1, day) : null;
 
     const prefilledState = {
-      date: date ? { y: date.getFullYear(), m: date.getMonth(), d: date.getDate() } : null,
+      date: date
+        ? { y: date.getFullYear(), m: date.getMonth(), d: date.getDate() }
+        : null,
       guests: event.guestCount || 1,
       selectedServices: [],
       selectedPackages: {},
@@ -442,9 +523,9 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
       phone: tokens?.user.phoneNumber ?? "+373",
       paymentOption: "now",
       smsSent: false,
-      smsVerified: tokensValid && !!(tokens?.user.phoneNumber),
+      smsVerified: tokensValid && !!tokens?.user.phoneNumber,
       emailSent: false,
-      emailVerified: tokensValid && !!(tokens?.user.email),
+      emailVerified: tokensValid && !!tokens?.user.email,
       userId: tokensValid ? (tokens?.user.userId ?? "") : "",
       customerId: tokensValid ? (tokens?.user.customerId ?? "") : "",
       bookingRef: "",
@@ -454,34 +535,42 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
 
     try {
       sessionStorage.removeItem("lecercle_booking_flow");
-      sessionStorage.setItem("lecercle_booking_flow", JSON.stringify({
-        step: 2,
-        isAddOrder: true,
-        returnUrl: `/${locale}/account/events/${eventId}`,
-        state: prefilledState,
-      }));
+      sessionStorage.setItem(
+        "lecercle_booking_flow",
+        JSON.stringify({
+          step: 2,
+          isAddOrder: true,
+          returnUrl: `/${locale}/account/events/${eventId}`,
+          state: prefilledState,
+        }),
+      );
     } catch {}
 
     router.push(`/${locale}/booking`);
   }
 
   const stateBadgeClasses: Record<EventState, string> = {
-    pending:   "bg-[#1f1400] border-[#3a2a00] text-[#fbbf24]",
+    pending: "bg-[#1f1400] border-[#3a2a00] text-[#fbbf24]",
     confirmed: "bg-[#0a2010] border-[#1a4a2a] text-[#4ade80]",
-    draft:     "bg-[#1a0f00] border-[#3a2000] text-[#fb923c]",
-    past:      "bg-[#1a1a1a] border-[#2a2a2a] text-[#888]",
+    draft: "bg-[#1a0f00] border-[#3a2000] text-[#fb923c]",
+    past: "bg-[#1a1a1a] border-[#2a2a2a] text-[#888]",
     cancelled: "bg-[#1a0505] border-[#3a1010] text-[#f87171]",
     completed: "bg-[#0a0f1f] border-[#1a2a4a] text-[#60a5fa]",
   };
 
   return (
     <div className="min-h-svh bg-[#080808] flex flex-col">
-      <AccountTopBar locale={locale} initials={initials} displayName={displayName} email={auth?.user.email} navDict={dict.nav} />
+      <AccountTopBar
+        locale={locale}
+        initials={initials}
+        displayName={displayName}
+        email={auth?.user.email}
+        navDict={dict.nav}
+      />
 
       <main className="flex-1 w-full">
         <div className="mx-auto max-w-432">
           <div className="mx-auto max-w-295 px-4 sm:px-6 lg:px-8 2xl:px-0 py-8 sm:py-14">
-
             {/* Back link */}
             <Link
               href={`/${locale}/account`}
@@ -514,7 +603,9 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
                     </button>
                   </div>
                 ) : (
-                  <span className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest border shrink-0 ${stateBadgeClasses[eventState]}`}>
+                  <span
+                    className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest border shrink-0 ${stateBadgeClasses[eventState]}`}
+                  >
                     {stateLabel(eventState, d)}
                   </span>
                 )}
@@ -522,10 +613,16 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
               <p className="text-[13px] sm:text-[15px] text-[#888] font-figtree tracking-tight">
                 {[
                   formatDateShort(event.eventDate),
-                  event.eventStartTime ? formatTime(event.eventStartTime) : null,
+                  event.eventStartTime
+                    ? formatTime(event.eventStartTime)
+                    : null,
                   event.city,
-                  event.guestCount ? `${event.guestCount} ${d.guests_unit}` : null,
-                ].filter(Boolean).join(" · ")}
+                  event.guestCount
+                    ? `${event.guestCount} ${d.guests_unit}`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
               </p>
             </div>
 
@@ -549,7 +646,6 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
                 ))}
               </div>
             )}
-
           </div>
         </div>
       </main>
@@ -559,13 +655,23 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
           <div className="w-full max-w-lg bg-[#0f0f0f] border border-[#222] flex flex-col">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[#1e1e1e]">
-              <p className="text-sm font-medium text-[#f0f0f0] font-figtree tracking-tight">{d.edit_event}</p>
-              <button type="button" onClick={() => setEditOpen(false)} className="text-[#555] hover:text-[#c0c0c0] transition-colors text-lg leading-none cursor-pointer">✕</button>
+              <p className="text-sm font-medium text-[#f0f0f0] font-figtree tracking-tight">
+                {d.edit_event}
+              </p>
+              <button
+                type="button"
+                onClick={() => setEditOpen(false)}
+                className="text-[#555] hover:text-[#c0c0c0] transition-colors text-lg leading-none cursor-pointer"
+              >
+                ✕
+              </button>
             </div>
             <div className="flex flex-col gap-4 px-5 py-5 overflow-y-auto max-h-[70vh]">
               {/* Date — read-only */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">Date</label>
+                <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">
+                  Date
+                </label>
                 <input
                   type="date"
                   value={editForm.eventDate}
@@ -576,21 +682,34 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
 
               {/* Venue name with autocomplete */}
               <div className="flex flex-col gap-1.5 relative">
-                <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">Venue name</label>
+                <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">
+                  Venue name
+                </label>
                 <input
                   type="text"
                   value={editForm.venueTitle}
-                  onChange={(e) => setEditForm((p) => ({ ...p, venueTitle: e.target.value }))}
+                  onChange={(e) =>
+                    setEditForm((p) => ({ ...p, venueTitle: e.target.value }))
+                  }
                   className="w-full px-3 py-2.5 bg-[#111] border border-[#2a2a2a] text-[14px] text-[#f0f0f0] font-figtree tracking-tight focus:outline-none focus:border-[#4a4a4a] transition-colors"
                 />
                 {venueSuggestions.length > 0 && (
                   <ul className="absolute z-30 top-full left-0 right-0 mt-0.5 bg-[#1a1a1a] border border-[#2a2a2a] max-h-48 overflow-y-auto">
                     {venueSuggestions.map((s, i) => (
                       <li key={i}>
-                        <button type="button" onMouseDown={() => handleVenueSuggestionSelect(s)}
-                          className="w-full text-left px-3 py-2 hover:bg-white/5 transition-colors">
-                          <span className="block text-[13px] text-[#f0f0f0] font-figtree tracking-tight">{s.label}</span>
-                          {s.sublabel && <span className="block text-[11px] text-[#666] font-figtree tracking-tight">{s.sublabel}</span>}
+                        <button
+                          type="button"
+                          onMouseDown={() => handleVenueSuggestionSelect(s)}
+                          className="w-full text-left px-3 py-2 hover:bg-white/5 transition-colors"
+                        >
+                          <span className="block text-[13px] text-[#f0f0f0] font-figtree tracking-tight">
+                            {s.label}
+                          </span>
+                          {s.sublabel && (
+                            <span className="block text-[11px] text-[#666] font-figtree tracking-tight">
+                              {s.sublabel}
+                            </span>
+                          )}
                         </button>
                       </li>
                     ))}
@@ -600,52 +719,70 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
 
               {/* City */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">City</label>
+                <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">
+                  City
+                </label>
                 <input
                   type="text"
                   value={editForm.city}
-                  onChange={(e) => setEditForm((p) => ({ ...p, city: e.target.value }))}
+                  onChange={(e) =>
+                    setEditForm((p) => ({ ...p, city: e.target.value }))
+                  }
                   className="w-full px-3 py-2.5 bg-[#111] border border-[#2a2a2a] text-[14px] text-[#f0f0f0] font-figtree tracking-tight focus:outline-none focus:border-[#4a4a4a] transition-colors"
                 />
               </div>
 
               {/* Address with autocomplete */}
               <div className="flex flex-col gap-1.5 relative">
-                <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">Address</label>
+                <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">
+                  Address
+                </label>
                 <input
                   type="text"
                   value={editForm.venueAddress}
-                  onChange={(e) => setEditForm((p) => ({ ...p, venueAddress: e.target.value }))}
+                  onChange={(e) =>
+                    setEditForm((p) => ({ ...p, venueAddress: e.target.value }))
+                  }
                   className="w-full px-3 py-2.5 bg-[#111] border border-[#2a2a2a] text-[14px] text-[#f0f0f0] font-figtree tracking-tight focus:outline-none focus:border-[#4a4a4a] transition-colors"
                 />
               </div>
 
               {/* Remaining plain fields */}
               {[
-                { key: "eventStartTime", label: "Start time", type: "time"   },
-                { key: "guestCount",     label: "Guests",     type: "number" },
+                { key: "eventStartTime", label: "Start time", type: "time" },
+                { key: "guestCount", label: "Guests", type: "number" },
               ].map(({ key, label, type }) => (
                 <div key={key} className="flex flex-col gap-1.5">
-                  <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">{label}</label>
+                  <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">
+                    {label}
+                  </label>
                   <input
                     type={type}
                     value={editForm[key as keyof typeof editForm]}
-                    onChange={(e) => setEditForm((p) => ({ ...p, [key]: e.target.value }))}
+                    onChange={(e) =>
+                      setEditForm((p) => ({ ...p, [key]: e.target.value }))
+                    }
                     className="w-full px-3 py-2.5 bg-[#111] border border-[#2a2a2a] text-[14px] text-[#f0f0f0] font-figtree tracking-tight focus:outline-none focus:border-[#4a4a4a] transition-colors"
                   />
                 </div>
               ))}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">Notes</label>
+                <label className="text-[12px] font-medium text-[#888] font-figtree tracking-tight">
+                  Notes
+                </label>
                 <textarea
                   rows={3}
                   value={editForm.notes}
-                  onChange={(e) => setEditForm((p) => ({ ...p, notes: e.target.value }))}
+                  onChange={(e) =>
+                    setEditForm((p) => ({ ...p, notes: e.target.value }))
+                  }
                   className="w-full px-3 py-2.5 bg-[#111] border border-[#2a2a2a] text-[14px] text-[#f0f0f0] font-figtree tracking-tight focus:outline-none focus:border-[#4a4a4a] transition-colors resize-none"
                 />
               </div>
               {editError && (
-                <p className="text-xs text-red-400 font-figtree tracking-tight">{d.edit_event_error}</p>
+                <p className="text-xs text-red-400 font-figtree tracking-tight">
+                  {d.edit_event_error}
+                </p>
               )}
             </div>
             <div className="flex gap-2 px-5 py-4 border-t border-[#1e1e1e]">
@@ -687,9 +824,8 @@ function OrderRow({
   viewLabel: string;
   d: EventDetailDict;
 }) {
-  const day     = formatDay(order.createdAt ?? "");
-  const year    = formatYear(order.createdAt ?? "");
-  const subText = orderSubText(state, order);
+  const day = formatDay(order.createdAt ?? "");
+  const year = formatYear(order.createdAt ?? "");
   const services = [...new Set((order.items ?? []).map((i) => i.serviceName))];
 
   return (
@@ -702,13 +838,17 @@ function OrderRow({
         <span className="text-[20px] sm:text-[22px] font-semibold text-[#f0f0f0] font-figtree tracking-tight leading-none whitespace-nowrap">
           {day}
         </span>
-        <span className="text-[11px] sm:text-xs text-[#555] font-figtree tracking-tight mt-0.5">{year}</span>
+        <span className="text-[11px] sm:text-xs text-[#555] font-figtree tracking-tight mt-0.5">
+          {year}
+        </span>
       </div>
 
       {/* Main content */}
       <div className="flex-1 min-w-0 flex flex-col gap-1">
         <p className="text-[15px] font-medium text-[#f0f0f0] font-figtree tracking-tight truncate">
-          {services.length > 0 ? services.join(" · ") : (order.orderNumber || "—")}
+          {services.length > 0
+            ? services.join(" · ")
+            : order.orderNumber || "—"}
         </p>
         {order.orderNumber && (
           <p className="text-[13px] text-[#666] font-figtree tracking-tight truncate">
@@ -730,23 +870,21 @@ function OrderRow({
         )}
         {/* Status row — mobile only */}
         <div className="flex items-center gap-2 mt-1 sm:hidden">
-          <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-medium font-figtree tracking-widest border ${stateBadgeClass(state)}`}>
+          <span
+            className={`inline-flex items-center px-2 py-0.5 text-[11px] font-medium font-figtree tracking-widest border ${stateBadgeClass(state)}`}
+          >
             {stateLabel(state, d)}
           </span>
-          {subText && (
-            <span className="text-[12px] text-[#666] font-figtree tracking-tight">{subText}</span>
-          )}
         </div>
       </div>
 
       {/* Status — desktop only */}
       <div className="hidden sm:flex shrink-0 flex-col items-start gap-1 min-w-35">
-        <span className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest border ${stateBadgeClass(state)}`}>
+        <span
+          className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest border ${stateBadgeClass(state)}`}
+        >
           {stateLabel(state, d)}
         </span>
-        {subText && (
-          <span className="text-[12px] text-[#666] font-figtree tracking-tight">{subText}</span>
-        )}
       </div>
 
       {/* CTA — desktop only */}
@@ -757,7 +895,13 @@ function OrderRow({
       {/* Chevron — mobile only */}
       <div className="sm:hidden shrink-0 self-center text-[#444]">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          <path
+            d="M6 4l4 4-4 4"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       </div>
     </Link>

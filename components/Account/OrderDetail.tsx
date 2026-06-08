@@ -1,30 +1,54 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
-import { loadAuth, clearAuth, fetchWithRefresh, StoredAuth } from "@/components/BookingFlow/utils/auth";
-import AccountTopBar from "./shared/AccountTopBar";
-import { formatDate, formatDateShort, formatMDL, formatTime, pickAmount } from "./shared/format";
-import { OrderDetail as OrderDetailType, Contract, deriveOrderState, type EventState, type OrderItemSelection } from "./shared/types";
 import { VENUE_INFO } from "@/components/BookingFlow/types";
-import type { EventDetailPageDict } from "./EventDetail";
+import {
+  clearAuth,
+  fetchWithRefresh,
+  loadAuth,
+  StoredAuth,
+} from "@/components/BookingFlow/utils/auth";
 import { whatsapp } from "@/data/venues/constants/links";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import type { EventDetailPageDict } from "./EventDetail";
+import AccountTopBar from "./shared/AccountTopBar";
+import {
+  formatDate,
+  formatDateShort,
+  formatMDL,
+  pickAmount,
+} from "./shared/format";
+import {
+  Contract,
+  deriveOrderState,
+  OrderDetail as OrderDetailType,
+  type EventState,
+  type OrderItemSelection,
+} from "./shared/types";
 
 function getVenueInfo(serviceId: string) {
-  return (VENUE_INFO as Record<string, { name: string; logo: string } | undefined>)[serviceId];
+  return (
+    VENUE_INFO as Record<string, { name: string; logo: string } | undefined>
+  )[serviceId];
 }
 
 function groupSelections(selections?: OrderItemSelection[]) {
   if (!selections?.length) return [];
-  const map = new Map<string, { featureLabel: string; options: OrderItemSelection[] }>();
+  const map = new Map<
+    string,
+    { featureLabel: string; options: OrderItemSelection[] }
+  >();
   for (const sel of selections) {
     const existing = map.get(sel.featureLabel);
     if (existing) {
       existing.options.push(sel);
     } else {
-      map.set(sel.featureLabel, { featureLabel: sel.featureLabel, options: [sel] });
+      map.set(sel.featureLabel, {
+        featureLabel: sel.featureLabel,
+        options: [sel],
+      });
     }
   }
   return Array.from(map.values());
@@ -37,15 +61,24 @@ interface Props {
   dict: EventDetailPageDict;
 }
 
-function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
+function DetailRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: React.ReactNode;
+}) {
   return (
     <div className="flex justify-between items-baseline gap-4 py-2.5 border-b border-[#141414] last:border-b-0">
-      <span className="text-[13px] text-[#888] font-figtree tracking-tight shrink-0">{label}</span>
-      <span className="text-[13px] text-right font-figtree tracking-tight text-[#f0f0f0]">{value}</span>
+      <span className="text-[13px] text-[#888] font-figtree tracking-tight shrink-0">
+        {label}
+      </span>
+      <span className="text-[13px] text-right font-figtree tracking-tight text-[#f0f0f0]">
+        {value}
+      </span>
     </div>
   );
 }
-
 
 export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
   const router = useRouter();
@@ -58,12 +91,19 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
   const [error, setError] = useState(false);
   const [payingOnline, setPayingOnline] = useState(false);
   const [payOnlineError, setPayOnlineError] = useState(false);
-  const [packagesMap, setPackagesMap] = useState<Map<string, { id: string; name: string; tier: string; basePrice: number }[]>>(new Map());
-  const [featuresMap, setFeaturesMap] = useState<Map<string, { id: string; label: string; type: 0 | 1; sortOrder: number }[]>>(new Map());
+  const [packagesMap, setPackagesMap] = useState<
+    Map<string, { id: string; name: string; tier: string; basePrice: number }[]>
+  >(new Map());
+  const [featuresMap, setFeaturesMap] = useState<
+    Map<string, { id: string; label: string; type: 0 | 1; sortOrder: number }[]>
+  >(new Map());
   const [expandedUpgrade, setExpandedUpgrade] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!auth) { router.replace(`/${locale}/account/login`); return; }
+    if (!auth) {
+      router.replace(`/${locale}/account/login`);
+      return;
+    }
 
     async function load() {
       try {
@@ -89,7 +129,11 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
 
         if (cRes.ok) {
           const cData = await cRes.json();
-          const list: Contract[] = Array.isArray(cData) ? cData : (cData ? [cData] : []);
+          const list: Contract[] = Array.isArray(cData)
+            ? cData
+            : cData
+              ? [cData]
+              : [];
           setContracts(list);
         }
       } catch {
@@ -103,17 +147,38 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
 
   useEffect(() => {
     if (!order?.items?.length) return;
-    const serviceIds = [...new Set(order.items.map((i) => i.serviceId).filter(Boolean))];
+    const serviceIds = [
+      ...new Set(order.items.map((i) => i.serviceId).filter(Boolean)),
+    ];
 
     Promise.all(
       serviceIds.map((sid) =>
         fetch(`/api/booking/packages/${sid}`)
-          .then((r) => r.ok ? r.json() : [])
-          .then((pkgs: { id: string; name: string; tier: string; basePrice: number; isActive: boolean }[]) =>
-            [sid, pkgs.filter((p) => p.isActive)] as const
+          .then((r) => (r.ok ? r.json() : []))
+          .then(
+            (
+              pkgs: {
+                id: string;
+                name: string;
+                tier: string;
+                basePrice: number;
+                isActive: boolean;
+              }[],
+            ) => [sid, pkgs.filter((p) => p.isActive)] as const,
           )
-          .catch((): readonly [string, { id: string; name: string; tier: string; basePrice: number; isActive: boolean }[]] => [sid, []])
-      )
+          .catch(
+            (): readonly [
+              string,
+              {
+                id: string;
+                name: string;
+                tier: string;
+                basePrice: number;
+                isActive: boolean;
+              }[],
+            ] => [sid, []],
+          ),
+      ),
     ).then((results) => {
       const pMap = new Map(results);
       setPackagesMap(pMap);
@@ -122,10 +187,24 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
       Promise.all(
         allPkgIds.map((pkgId) =>
           fetch(`/api/booking/packages/${pkgId}/features`)
-            .then((r) => r.ok ? r.json() : [])
-            .then((feats: { id: string; label: string; type: 0 | 1; sortOrder: number }[]) => [pkgId, feats] as const)
-            .catch((): readonly [string, { id: string; label: string; type: 0 | 1; sortOrder: number }[]] => [pkgId, []])
-        )
+            .then((r) => (r.ok ? r.json() : []))
+            .then(
+              (
+                feats: {
+                  id: string;
+                  label: string;
+                  type: 0 | 1;
+                  sortOrder: number;
+                }[],
+              ) => [pkgId, feats] as const,
+            )
+            .catch(
+              (): readonly [
+                string,
+                { id: string; label: string; type: 0 | 1; sortOrder: number }[],
+              ] => [pkgId, []],
+            ),
+        ),
       ).then((featResults) => setFeaturesMap(new Map(featResults)));
     });
   }, [order]);
@@ -156,16 +235,24 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
   }
 
   const initials = auth
-    ? `${auth.user.firstName?.[0] ?? ""}${auth.user.lastName?.[0] ?? ""}`.toUpperCase() || "?"
+    ? `${auth.user.firstName?.[0] ?? ""}${auth.user.lastName?.[0] ?? ""}`.toUpperCase() ||
+      "?"
     : "?";
   const displayName = auth
-    ? `${auth.user.firstName ?? ""} ${auth.user.lastName ?? ""}`.trim() || (auth.user.phoneNumber ?? "—")
+    ? `${auth.user.firstName ?? ""} ${auth.user.lastName ?? ""}`.trim() ||
+      (auth.user.phoneNumber ?? "—")
     : "—";
 
   if (loading) {
     return (
       <div className="min-h-svh bg-[#080808] flex flex-col">
-        <AccountTopBar locale={locale} initials={initials} displayName={displayName} email={auth?.user.email} navDict={dict.nav} />
+        <AccountTopBar
+          locale={locale}
+          initials={initials}
+          displayName={displayName}
+          email={auth?.user.email}
+          navDict={dict.nav}
+        />
         <main className="flex-1 flex items-center justify-center">
           <p className="text-sm text-[#666] font-figtree">{d.loading}</p>
         </main>
@@ -176,7 +263,13 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
   if (error || !order) {
     return (
       <div className="min-h-svh bg-[#080808] flex flex-col">
-        <AccountTopBar locale={locale} initials={initials} displayName={displayName} email={auth?.user.email} navDict={dict.nav} />
+        <AccountTopBar
+          locale={locale}
+          initials={initials}
+          displayName={displayName}
+          email={auth?.user.email}
+          navDict={dict.nav}
+        />
         <main className="flex-1 flex items-center justify-center">
           <p className="text-sm text-red-400 font-figtree">{d.error}</p>
         </main>
@@ -185,35 +278,50 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
   }
 
   const orderState = deriveOrderState(order);
-  const total   = pickAmount(order.totalAmount);
-  const advance = pickAmount(order.advanceAmount) || (total > 0 ? Math.round(total * 0.1) : 0);
-  const rest    = total - advance;
+  const serviceTotal = order.items?.reduce(
+    (sum, item) => sum + pickAmount(item.unitPrice) * (item.quantity ?? 1),
+    0,
+  ) ?? 0;
+  const transportationTotal = order.items?.reduce(
+    (sum, item) => sum + pickAmount(item.roadPrice),
+    0,
+  ) ?? 0;
+  const totalPrice = serviceTotal + transportationTotal;
+  const advance =
+    pickAmount(order.advanceAmount) ||
+    (serviceTotal > 0 ? Math.round(serviceTotal * 0.1) : 0);
+  const rest = totalPrice - advance;
   const stateBadgeLabels: Record<EventState, string> = {
-    pending:   d.badge_pending,
+    pending: d.badge_pending,
     confirmed: d.badge_confirmed,
-    draft:     d.badge_draft,
-    past:      d.badge_past,
+    draft: d.badge_draft,
+    past: d.badge_past,
     cancelled: d.badge_cancelled,
     completed: d.badge_past,
   };
 
   const stateClasses: Record<EventState, string> = {
-    pending:   "bg-[#1f1400] border-[#3a2a00] text-[#fbbf24]",
+    pending: "bg-[#1f1400] border-[#3a2a00] text-[#fbbf24]",
     confirmed: "bg-[#0a2010] border-[#1a4a2a] text-[#4ade80]",
-    draft:     "bg-[#1a0f00] border-[#3a2000] text-[#fb923c]",
-    past:      "bg-[#1a1a1a] border-[#2a2a2a] text-[#888]",
+    draft: "bg-[#1a0f00] border-[#3a2000] text-[#fb923c]",
+    past: "bg-[#1a1a1a] border-[#2a2a2a] text-[#888]",
     cancelled: "bg-[#1a0505] border-[#3a1010] text-[#f87171]",
     completed: "bg-[#0a0f1f] border-[#1a2a4a] text-[#60a5fa]",
   };
 
   return (
     <div className="min-h-svh bg-[#080808] flex flex-col">
-      <AccountTopBar locale={locale} initials={initials} displayName={displayName} email={auth?.user.email} navDict={dict.nav} />
+      <AccountTopBar
+        locale={locale}
+        initials={initials}
+        displayName={displayName}
+        email={auth?.user.email}
+        navDict={dict.nav}
+      />
 
       <main className="flex-1 w-full">
         <div className="mx-auto max-w-432">
           <div className="mx-auto max-w-295 px-4 sm:px-6 lg:px-8 2xl:px-0 py-6 sm:py-10">
-
             {/* Back link */}
             <Link
               href={`/${locale}/account/events/${eventId}`}
@@ -235,7 +343,9 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                 )}
               </div>
               <div className="flex items-center flex-wrap gap-2 shrink-0">
-                <span className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest border ${stateClasses[orderState]}`}>
+                <span
+                  className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest border ${stateClasses[orderState]}`}
+                >
                   {stateBadgeLabels[orderState]}
                 </span>
                 <a
@@ -250,10 +360,8 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 lg:gap-8 items-start">
-
               {/* ── LEFT COLUMN ─────────────────────────── */}
               <div className="flex flex-col gap-0">
-
                 {/* Pending payment action */}
                 {orderState === "pending" && (
                   <div className="border border-[#3a2a00] bg-[#110c00] p-6 mb-0">
@@ -261,11 +369,19 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                       {d.pending_action_label.replace("{time}", "")}
                     </p>
                     <p className="text-[20px] font-semibold text-[#f0f0f0] font-figtree tracking-tight mb-2">
-                      {d.pending_action_title.replace("{amount}", formatMDL(advance))}
+                      {d.pending_action_title.replace(
+                        "{amount}",
+                        formatMDL(advance),
+                      )}
                     </p>
                     <p className="text-[13px] text-[#888] font-figtree tracking-tight mb-5">
                       {d.pending_action_sub
-                        .replace("{date}", order.createdAt ? formatDateShort(order.createdAt) : "—")
+                        .replace(
+                          "{date}",
+                          order.createdAt
+                            ? formatDateShort(order.createdAt)
+                            : "—",
+                        )
                         .replace("{rest}", formatMDL(rest))}
                     </p>
                     <div className="flex flex-col gap-2">
@@ -276,7 +392,12 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                           disabled={payingOnline}
                           className="w-full sm:w-auto px-5 py-3 sm:py-2.5 bg-[#f0f0f0] text-[#080808] text-[13px] font-semibold font-figtree tracking-tight hover:bg-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                         >
-                          {payingOnline ? "···" : d.pay_online.replace("{amount}", formatMDL(advance))}
+                          {payingOnline
+                            ? "···"
+                            : d.pay_online.replace(
+                                "{amount}",
+                                formatMDL(advance),
+                              )}
                         </button>
                         <a
                           href={whatsapp}
@@ -288,7 +409,9 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                         </a>
                       </div>
                       {payOnlineError && (
-                        <p className="text-[12px] text-red-400 font-figtree tracking-tight">{d.pay_error}</p>
+                        <p className="text-[12px] text-red-400 font-figtree tracking-tight">
+                          {d.pay_error}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -323,101 +446,186 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                     <div className="flex flex-col gap-3">
                       {order.items.map((item) => {
                         const info = getVenueInfo(item.serviceId);
-                        const lineTotal = pickAmount(item.unitPrice) * (item.quantity ?? 1);
-                        const groupedSelections = groupSelections(item.selections);
+                        const lineTotal =
+                          pickAmount(item.unitPrice) * (item.quantity ?? 1);
+                        const groupedSelections = groupSelections(
+                          item.selections,
+                        );
                         return (
-                          <div key={item.id} className="border border-[#1e1e1e] p-4">
+                          <div
+                            key={item.id}
+                            className="border border-[#1e1e1e] p-4"
+                          >
                             <div className="flex items-start justify-between gap-4">
                               <div className="flex flex-col gap-1 min-w-0">
                                 {info ? (
-                                  <Image src={info.logo} alt={info.name} width={100} height={36} className="h-8 w-auto object-contain object-left" />
+                                  <Image
+                                    src={info.logo}
+                                    alt={info.name}
+                                    width={100}
+                                    height={36}
+                                    className="h-8 w-auto object-contain object-left"
+                                  />
                                 ) : (
-                                  <p className="text-[14px] font-medium text-[#f0f0f0] font-figtree tracking-tight">{item.serviceName}</p>
+                                  <p className="text-[14px] font-medium text-[#f0f0f0] font-figtree tracking-tight">
+                                    {item.serviceName}
+                                  </p>
                                 )}
                                 {item.packageName && (
-                                  <p className="text-[12px] text-[#888] font-figtree tracking-tight">{item.packageName}</p>
+                                  <p className="text-[12px] text-[#888] font-figtree tracking-tight">
+                                    {item.packageName}
+                                  </p>
                                 )}
                               </div>
                               <div className="text-right shrink-0">
                                 <p className="text-[16px] font-semibold text-[#f0f0f0] font-figtree tracking-tight">
                                   {formatMDL(lineTotal)}
                                 </p>
-                                <p className="text-[11px] text-[#666] font-figtree tracking-tight">incl. TVA</p>
+                                <p className="text-[11px] text-[#666] font-figtree tracking-tight">
+                                  incl. TVA
+                                </p>
                               </div>
                             </div>
                             <div className="mt-3 pt-3 border-t border-[#1e1e1e] flex flex-col gap-2.5">
-                              {item.fixedFeatures && item.fixedFeatures.length > 0 && (
-                                <ul className="flex flex-col gap-1.5">
-                                  {[...item.fixedFeatures]
-                                    .sort((a, b) => a.sortOrder - b.sortOrder)
-                                    .map((f) => (
-                                      <li key={f.featureId} className="flex items-start gap-2">
-                                        <svg width="12" height="10" viewBox="0 0 12 10" fill="none" className="shrink-0 mt-0.5">
-                                          <path d="M1 5l3.5 3.5L11 1" stroke="#37a067" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                        <span className="text-[12px] text-[#888] font-figtree tracking-tight leading-snug">{f.label}</span>
-                                      </li>
-                                    ))}
-                                </ul>
-                              )}
+                              {item.fixedFeatures &&
+                                item.fixedFeatures.length > 0 && (
+                                  <ul className="flex flex-col gap-1.5">
+                                    {[...item.fixedFeatures]
+                                      .sort((a, b) => a.sortOrder - b.sortOrder)
+                                      .map((f) => (
+                                        <li
+                                          key={f.featureId}
+                                          className="flex items-start gap-2"
+                                        >
+                                          <svg
+                                            width="12"
+                                            height="10"
+                                            viewBox="0 0 12 10"
+                                            fill="none"
+                                            className="shrink-0 mt-0.5"
+                                          >
+                                            <path
+                                              d="M1 5l3.5 3.5L11 1"
+                                              stroke="#37a067"
+                                              strokeWidth="1.5"
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                            />
+                                          </svg>
+                                          <span className="text-[12px] text-[#888] font-figtree tracking-tight leading-snug">
+                                            {f.label}
+                                          </span>
+                                        </li>
+                                      ))}
+                                  </ul>
+                                )}
                               {groupedSelections.map((group) => (
-                                <div key={group.featureLabel} className={item.fixedFeatures?.length ? "border-t border-[#1e1e1e] pt-2" : ""}>
+                                <div
+                                  key={group.featureLabel}
+                                  className={
+                                    item.fixedFeatures?.length
+                                      ? "border-t border-[#1e1e1e] pt-2"
+                                      : ""
+                                  }
+                                >
                                   <p className="text-[11px] font-medium text-[#555] font-figtree tracking-[0.08em] uppercase mb-1">
                                     {group.featureLabel}
                                   </p>
                                   {group.options.map((sel) => (
-                                    <p key={sel.selectedOptionId} className="text-[12px] text-[#888] font-figtree tracking-tight leading-snug">{sel.selectedOptionLabel}</p>
+                                    <p
+                                      key={sel.selectedOptionId}
+                                      className="text-[12px] text-[#888] font-figtree tracking-tight leading-snug"
+                                    >
+                                      {sel.selectedOptionLabel}
+                                    </p>
                                   ))}
                                 </div>
                               ))}
-                              <div className={`flex items-center justify-between gap-3 pt-1 ${(item.fixedFeatures?.length || groupedSelections.length > 0) ? "border-t border-[#1e1e1e]" : ""}`}>
-                                <p className="text-[11px] font-medium text-[#555] font-figtree tracking-[0.08em] uppercase">{d.transport_label}</p>
+                              <div
+                                className={`flex items-center justify-between gap-3 pt-1 ${item.fixedFeatures?.length || groupedSelections.length > 0 ? "border-t border-[#1e1e1e]" : ""}`}
+                              >
+                                <p className="text-[11px] font-medium text-[#555] font-figtree tracking-[0.08em] uppercase">
+                                  {d.transport_label}
+                                </p>
                                 {pickAmount(item.roadPrice) > 0 ? (
-                                  <p className="text-[12px] text-[#c0c0c0] font-figtree tracking-tight shrink-0">+{formatMDL(pickAmount(item.roadPrice))}</p>
+                                  <p className="text-[12px] text-[#c0c0c0] font-figtree tracking-tight shrink-0">
+                                    +{formatMDL(pickAmount(item.roadPrice))}
+                                  </p>
                                 ) : (
-                                  <p className="text-[12px] text-[#4ade80] font-figtree tracking-tight shrink-0">{d.transport_included}</p>
+                                  <p className="text-[12px] text-[#4ade80] font-figtree tracking-tight shrink-0">
+                                    {d.transport_included}
+                                  </p>
                                 )}
                               </div>
                             </div>
 
                             {/* Upgrade section */}
                             {(() => {
-                              const availablePkgs = packagesMap.get(item.serviceId) ?? [];
-                              const upgrades = availablePkgs.filter((p) => p.basePrice > pickAmount(item.unitPrice));
+                              const availablePkgs =
+                                packagesMap.get(item.serviceId) ?? [];
+                              const upgrades = availablePkgs.filter(
+                                (p) => p.basePrice > pickAmount(item.unitPrice),
+                              );
                               if (upgrades.length === 0) return null;
                               const isExpanded = expandedUpgrade === item.id;
                               return (
                                 <div className="border-t border-[#1e1e1e]">
                                   <button
                                     type="button"
-                                    onClick={() => setExpandedUpgrade(isExpanded ? null : item.id)}
+                                    onClick={() =>
+                                      setExpandedUpgrade(
+                                        isExpanded ? null : item.id,
+                                      )
+                                    }
                                     className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-white/5 transition-colors cursor-pointer"
                                   >
                                     <span className="text-[12px] font-medium text-[#c4973f] font-figtree tracking-tight">
                                       {d.upgrade_package}
                                     </span>
                                     <svg
-                                      width="12" height="12" viewBox="0 0 12 12" fill="none"
+                                      width="12"
+                                      height="12"
+                                      viewBox="0 0 12 12"
+                                      fill="none"
                                       className={`shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`}
                                     >
-                                      <path d="M3 4.5l3 3 3-3" stroke="#c4973f" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                      <path
+                                        d="M3 4.5l3 3 3-3"
+                                        stroke="#c4973f"
+                                        strokeWidth="1.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      />
                                     </svg>
                                   </button>
                                   {isExpanded && (
                                     <div className="flex flex-col gap-2 px-4 pb-4">
                                       {upgrades.map((upgPkg) => {
-                                        const features = (featuresMap.get(upgPkg.id) ?? [])
+                                        const features = (
+                                          featuresMap.get(upgPkg.id) ?? []
+                                        )
                                           .filter((f) => f.type === 0)
-                                          .sort((a, b) => a.sortOrder - b.sortOrder);
+                                          .sort(
+                                            (a, b) => a.sortOrder - b.sortOrder,
+                                          );
                                         return (
-                                          <div key={upgPkg.id} className="flex flex-col bg-[#161616] border border-[#333]">
+                                          <div
+                                            key={upgPkg.id}
+                                            className="flex flex-col bg-[#161616] border border-[#333]"
+                                          >
                                             <div className="flex items-start justify-between gap-3 px-3 py-3">
                                               <div className="flex flex-col gap-0.5 min-w-0">
-                                                <p className="text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight">{upgPkg.name}</p>
-                                                <p className="text-[11px] text-[#666] font-figtree tracking-tight uppercase">{upgPkg.tier}</p>
+                                                <p className="text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight">
+                                                  {upgPkg.name}
+                                                </p>
+                                                <p className="text-[11px] text-[#666] font-figtree tracking-tight uppercase">
+                                                  {upgPkg.tier}
+                                                </p>
                                               </div>
                                               <div className="flex items-center gap-3 shrink-0">
-                                                <p className="text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight">{formatMDL(upgPkg.basePrice)}</p>
+                                                <p className="text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight">
+                                                  {formatMDL(upgPkg.basePrice)}
+                                                </p>
                                                 <button
                                                   type="button"
                                                   disabled
@@ -430,11 +638,28 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                                             {features.length > 0 && (
                                               <ul className="flex flex-col gap-1 px-3 pb-3 border-t border-[#252525] pt-2">
                                                 {features.map((f) => (
-                                                  <li key={f.id} className="flex items-start gap-2">
-                                                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none" className="shrink-0 mt-0.5">
-                                                      <path d="M1 4l3 3 5-6" stroke="#c4973f" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                  <li
+                                                    key={f.id}
+                                                    className="flex items-start gap-2"
+                                                  >
+                                                    <svg
+                                                      width="10"
+                                                      height="8"
+                                                      viewBox="0 0 10 8"
+                                                      fill="none"
+                                                      className="shrink-0 mt-0.5"
+                                                    >
+                                                      <path
+                                                        d="M1 4l3 3 5-6"
+                                                        stroke="#c4973f"
+                                                        strokeWidth="1.5"
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                      />
                                                     </svg>
-                                                    <span className="text-[11px] text-[#888] font-figtree tracking-tight leading-snug">{f.label}</span>
+                                                    <span className="text-[11px] text-[#888] font-figtree tracking-tight leading-snug">
+                                                      {f.label}
+                                                    </span>
                                                   </li>
                                                 ))}
                                               </ul>
@@ -455,32 +680,78 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                 )}
 
                 {/* Total */}
-                {total > 0 && (
-                  <Section label={orderState === "past" ? d.section_total_paid : d.section_total}>
+                {totalPrice > 0 && (
+                  <Section
+                    label={
+                      orderState === "past"
+                        ? d.section_total_paid
+                        : d.section_total
+                    }
+                  >
                     <div className="border border-[#1e1e1e] p-4 sm:p-5">
                       <p className="text-[26px] sm:text-[28px] font-semibold text-[#f0f0f0] font-figtree tracking-tight leading-none mb-1">
-                        {formatMDL(total)}
+                        {formatMDL(totalPrice)}
                       </p>
-                      <p className="text-[12px] text-[#666] font-figtree tracking-tight mb-4">{d.taxes_label}</p>
+                      <p className="text-[12px] text-[#666] font-figtree tracking-tight mb-4">
+                        {d.taxes_label}
+                      </p>
                       <div className="flex flex-col gap-2 border-t border-[#1e1e1e] pt-3">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-[13px] text-[#888] font-figtree tracking-tight">{d.advance_label}</span>
-                          <span className={`text-[13px] font-medium font-figtree tracking-tight whitespace-nowrap ${
-                            orderState === "past" || orderState === "confirmed" ? "text-[#4ade80]" : "text-[#fbbf24]"
-                          }`}>
+                          <span className="text-[13px] text-[#888] font-figtree tracking-tight">
+                            {d.financial_services}
+                          </span>
+                          <span className="text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight whitespace-nowrap">
+                            {formatMDL(serviceTotal)}
+                          </span>
+                        </div>
+                        {transportationTotal > 0 && (
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[13px] text-[#888] font-figtree tracking-tight">
+                              {d.financial_transportation}
+                            </span>
+                            <span className="text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight whitespace-nowrap">
+                              {formatMDL(transportationTotal)}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between gap-2 border-t border-[#1e1e1e] pt-2">
+                          <span className="text-[13px] text-[#888] font-figtree tracking-tight">
+                            {d.advance_label}
+                          </span>
+                          <span
+                            className={`text-[13px] font-medium font-figtree tracking-tight whitespace-nowrap ${
+                              orderState === "past" ||
+                              orderState === "confirmed"
+                                ? "text-[#4ade80]"
+                                : "text-[#fbbf24]"
+                            }`}
+                          >
                             {formatMDL(advance)}
-                            {(orderState === "past" || orderState === "confirmed") && (
-                              <span className="text-[11px] ml-1">{d.paid_badge}</span>
+                            {(orderState === "past" ||
+                              orderState === "confirmed") && (
+                              <span className="text-[11px] ml-1">
+                                {d.paid_badge}
+                              </span>
                             )}
                           </span>
                         </div>
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-[13px] text-[#888] font-figtree tracking-tight">{d.rest_label}</span>
-                          <span className={`text-[13px] font-medium font-figtree tracking-tight whitespace-nowrap ${
-                            orderState === "past" ? "text-[#4ade80]" : "text-[#f0f0f0]"
-                          }`}>
+                          <span className="text-[13px] text-[#888] font-figtree tracking-tight">
+                            {d.rest_label}
+                          </span>
+                          <span
+                            className={`text-[13px] font-medium font-figtree tracking-tight whitespace-nowrap ${
+                              orderState === "past"
+                                ? "text-[#4ade80]"
+                                : "text-[#f0f0f0]"
+                            }`}
+                          >
                             {formatMDL(rest)}
-                            {orderState === "past" && <span className="text-[11px] ml-1">{d.paid_badge}</span>}
+                            {orderState === "past" && (
+                              <span className="text-[11px] ml-1">
+                                {d.paid_badge}
+                              </span>
+                            )}
                           </span>
                         </div>
                       </div>
@@ -493,23 +764,60 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                   {contracts.length === 0 ? (
                     <div className="border border-[#1e1e1e] p-6 flex flex-col items-center gap-2">
                       <div className="size-12 border border-[#2a2a2a] bg-[#111] flex items-center justify-center mb-2">
-                        <svg width="20" height="24" viewBox="0 0 20 24" fill="none">
-                          <path d="M12 1H3a2 2 0 0 0-2 2v18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8L12 1Z" stroke="#444" strokeWidth="1.5" strokeLinejoin="round"/>
-                          <path d="M12 1v7h7" stroke="#444" strokeWidth="1.5" strokeLinejoin="round"/>
+                        <svg
+                          width="20"
+                          height="24"
+                          viewBox="0 0 20 24"
+                          fill="none"
+                        >
+                          <path
+                            d="M12 1H3a2 2 0 0 0-2 2v18a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8L12 1Z"
+                            stroke="#444"
+                            strokeWidth="1.5"
+                            strokeLinejoin="round"
+                          />
+                          <path
+                            d="M12 1v7h7"
+                            stroke="#444"
+                            strokeWidth="1.5"
+                            strokeLinejoin="round"
+                          />
                         </svg>
                       </div>
-                      <p className="text-[14px] font-medium text-[#f0f0f0] font-figtree tracking-tight">{d.no_docs}</p>
-                      <p className="text-[12px] text-[#666] font-figtree tracking-tight text-center max-w-xs">{d.no_docs_sub}</p>
+                      <p className="text-[14px] font-medium text-[#f0f0f0] font-figtree tracking-tight">
+                        {d.no_docs}
+                      </p>
+                      <p className="text-[12px] text-[#666] font-figtree tracking-tight text-center max-w-xs">
+                        {d.no_docs_sub}
+                      </p>
                     </div>
                   ) : (
                     <div className="border border-[#1e1e1e] p-4">
                       {contracts.map((c) => (
-                        <div key={c.id} className="py-3 border-b border-[#141414] last:border-b-0">
+                        <div
+                          key={c.id}
+                          className="py-3 border-b border-[#141414] last:border-b-0"
+                        >
                           <div className="flex items-center gap-3">
                             <div className="size-8 border border-[#2a2a2a] bg-[#111] shrink-0 flex items-center justify-center">
-                              <svg width="14" height="16" viewBox="0 0 14 16" fill="none">
-                                <path d="M8 1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V6L8 1Z" stroke="#555" strokeWidth="1.2" strokeLinejoin="round"/>
-                                <path d="M8 1v5h5" stroke="#555" strokeWidth="1.2" strokeLinejoin="round"/>
+                              <svg
+                                width="14"
+                                height="16"
+                                viewBox="0 0 14 16"
+                                fill="none"
+                              >
+                                <path
+                                  d="M8 1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V6L8 1Z"
+                                  stroke="#555"
+                                  strokeWidth="1.2"
+                                  strokeLinejoin="round"
+                                />
+                                <path
+                                  d="M8 1v5h5"
+                                  stroke="#555"
+                                  strokeWidth="1.2"
+                                  strokeLinejoin="round"
+                                />
                               </svg>
                             </div>
                             <p className="flex-1 min-w-0 text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight truncate">
@@ -552,23 +860,30 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                         />
                       )}
                       {order.contactPhone && (
-                        <DetailRow label={d.contact_phone} value={order.contactPhone} />
+                        <DetailRow
+                          label={d.contact_phone}
+                          value={order.contactPhone}
+                        />
                       )}
                       {order.contactEmail && (
-                        <DetailRow label={d.contact_email} value={order.contactEmail} />
+                        <DetailRow
+                          label={d.contact_email}
+                          value={order.contactEmail}
+                        />
                       )}
                       {order.contactNotes && (
-                        <DetailRow label={d.contact_notes} value={order.contactNotes} />
+                        <DetailRow
+                          label={d.contact_notes}
+                          value={order.contactNotes}
+                        />
                       )}
                     </div>
                   </Section>
                 )}
-
               </div>
 
               {/* ── RIGHT SIDEBAR ──────────────────────── */}
               <div className="flex flex-col gap-4">
-
                 {/* Reference */}
                 {order.orderNumber && (
                   <div className="border border-[#1e1e1e] bg-[#0e0e0e] p-4">
@@ -585,38 +900,71 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                 )}
 
                 {/* Financial summary */}
-                {total > 0 && (
+                {totalPrice > 0 && (
                   <div className="border border-[#1e1e1e] bg-[#0e0e0e] p-4">
                     <p className="text-[11px] font-medium text-[#666] font-figtree tracking-[0.12em] uppercase mb-3">
                       {d.financial_label}
                     </p>
                     <div className="flex flex-col gap-2">
                       <div className="flex justify-between items-baseline">
-                        <span className="text-[13px] text-[#888] font-figtree tracking-tight">{d.financial_total}</span>
-                        <span className="text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight">{formatMDL(total)}</span>
+                        <span className="text-[13px] text-[#888] font-figtree tracking-tight">
+                          {d.financial_services}
+                        </span>
+                        <span className="text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight">
+                          {formatMDL(serviceTotal)}
+                        </span>
+                      </div>
+                      {transportationTotal > 0 && (
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-[13px] text-[#888] font-figtree tracking-tight">
+                            {d.financial_transportation}
+                          </span>
+                          <span className="text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight">
+                            {formatMDL(transportationTotal)}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-baseline border-t border-[#1e1e1e] pt-2">
+                        <span className="text-[13px] text-[#888] font-figtree tracking-tight">
+                          {d.financial_total}
+                        </span>
+                        <span className="text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight">
+                          {formatMDL(totalPrice)}
+                        </span>
                       </div>
                       <div className="flex justify-between items-baseline">
-                        <span className="text-[13px] text-[#888] font-figtree tracking-tight">{d.financial_advance}</span>
-                        <span className={`text-[13px] font-medium font-figtree tracking-tight ${
-                          orderState === "past" || orderState === "confirmed" ? "text-[#4ade80]" : "text-[#fbbf24]"
-                        }`}>
+                        <span className="text-[13px] text-[#888] font-figtree tracking-tight">
+                          {d.financial_advance}
+                        </span>
+                        <span
+                          className={`text-[13px] font-medium font-figtree tracking-tight ${
+                            orderState === "past" || orderState === "confirmed"
+                              ? "text-[#4ade80]"
+                              : "text-[#fbbf24]"
+                          }`}
+                        >
                           {formatMDL(advance)}
-                          {(orderState === "past" || orderState === "confirmed") && (
-                            <span className="text-[11px] ml-1">{d.paid_badge}</span>
+                          {(orderState === "past" ||
+                            orderState === "confirmed") && (
+                            <span className="text-[11px] ml-1">
+                              {d.paid_badge}
+                            </span>
                           )}
                         </span>
                       </div>
                       <div className="flex justify-between items-baseline">
-                        <span className="text-[13px] text-[#888] font-figtree tracking-tight">{d.financial_rest}</span>
-                        <span className="text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight">{formatMDL(rest)}</span>
+                        <span className="text-[13px] text-[#888] font-figtree tracking-tight">
+                          {d.financial_rest}
+                        </span>
+                        <span className="text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight">
+                          {formatMDL(rest)}
+                        </span>
                       </div>
                     </div>
                   </div>
                 )}
-
               </div>
             </div>
-
           </div>
         </div>
       </main>
@@ -624,11 +972,19 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
   );
 }
 
-function Section({ label, children }: { label: string; children: React.ReactNode }) {
+function Section({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="pt-8">
       <div className="flex items-center gap-4 mb-4">
-        <p className="text-[11px] font-medium text-[#555] font-figtree tracking-[0.12em] uppercase shrink-0">{label}</p>
+        <p className="text-[11px] font-medium text-[#555] font-figtree tracking-[0.12em] uppercase shrink-0">
+          {label}
+        </p>
         <div className="flex-1 h-px bg-[#1e1e1e]" />
       </div>
       {children}

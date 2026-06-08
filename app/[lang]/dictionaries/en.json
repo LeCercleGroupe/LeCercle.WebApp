@@ -442,6 +442,8 @@
       "ref_label": "EVENT REFERENCE",
       "ref_sub": "Quote this code in any communication with our team.",
       "financial_label": "FINANCIAL SUMMARY",
+      "financial_services": "Services",
+      "financial_transportation": "Transport",
       "financial_total": "Total event",
       "financial_advance": "Advance (10%)",
       "financial_rest": "Rest (90%)",

@@ -70,19 +70,6 @@ function stateLabel(state: EventState, d: EventsPageDict): string {
   }
 }
 
-function stateSubText(state: EventState, event: EventBooking): string {
-  const total = pickAmount(event.orders?.[0]?.totalAmount);
-  switch (state) {
-    case "confirmed":  return "Tot este în regulă";
-    case "pending":    return "Avans neplătit";
-    case "draft":      return "Rezervare în progres";
-    case "past":       return total > 0 ? "Plăți finalizate" : "Eveniment finalizat";
-    case "cancelled":  return "Anulat";
-    case "completed":  return total > 0 ? "Plăți finalizate" : "Eveniment finalizat";
-    default:           return "";
-  }
-}
-
 export default function EventsOverview({ locale, dict }: Props) {
   const router = useRouter();
   const d = dict.events_page;
@@ -278,7 +265,6 @@ function EventRow({
 }) {
   const day     = formatDay(event.eventDate);
   const year    = formatYear(event.eventDate);
-  const subText = stateSubText(state, event);
 
   const parts: string[] = [];
   if (event.eventType)              parts.push(event.eventType);
@@ -315,9 +301,6 @@ function EventRow({
           <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-medium font-figtree tracking-widest ${stateBadgeClass(state)}`}>
             {stateLabel(state, d)}
           </span>
-          {subText && (
-            <span className="text-[12px] text-[#666] font-figtree tracking-tight">{subText}</span>
-          )}
         </div>
       </div>
 
@@ -326,9 +309,6 @@ function EventRow({
         <span className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest ${stateBadgeClass(state)}`}>
           {stateLabel(state, d)}
         </span>
-        {subText && (
-          <span className="text-[12px] text-[#666] font-figtree tracking-tight">{subText}</span>
-        )}
       </div>
 
       {/* CTA button — desktop only */}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import PhoneInput from "@/components/BookingFlow/shared/PhoneInput";
 import { loadAuth, updateAuthProfile, StoredAuth } from "@/components/BookingFlow/utils/auth";
 import AccountTopBar from "./shared/AccountTopBar";
 
@@ -81,7 +82,7 @@ export default function ProfileEditPage({ locale, dict }: Props) {
   const [firstName, setFirstName] = useState(() => auth?.user.firstName ?? "");
   const [lastName, setLastName] = useState(() => auth?.user.lastName ?? "");
   const [email, setEmail] = useState(() => auth?.user.email ?? "");
-  const [phoneNumber, setPhoneNumber] = useState(() => auth?.user.phoneNumber ?? "");
+  const [phoneNumber, setPhoneNumber] = useState(() => auth?.user.phoneNumber ?? "+373");
   const [companyName, setCompanyName] = useState(() => auth?.user.companyName ?? "");
   const [idno, setIdno] = useState(() => auth?.user.idno ?? "");
   const [notes, setNotes] = useState("");
@@ -109,6 +110,7 @@ export default function ProfileEditPage({ locale, dict }: Props) {
     setSaving(true);
     setSaveError(false);
     try {
+      const phone = phoneNumber && phoneNumber !== "+373" ? phoneNumber : undefined;
       const res = await fetch("/api/account/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -117,7 +119,7 @@ export default function ProfileEditPage({ locale, dict }: Props) {
           firstName:   firstName   || undefined,
           lastName:    lastName    || undefined,
           displayName: `${firstName} ${lastName}`.trim() || undefined,
-          phoneNumber: phoneNumber || undefined,
+          phoneNumber: phone,
           companyName: companyName || undefined,
           idno:        idno        || undefined,
         }),
@@ -127,7 +129,7 @@ export default function ProfileEditPage({ locale, dict }: Props) {
         firstName,
         lastName,
         email:       email       || null,
-        phoneNumber: phoneNumber || null,
+        phoneNumber: phone ?? null,
         companyName: companyName || null,
         idno:        idno        || null,
       });
@@ -228,7 +230,7 @@ export default function ProfileEditPage({ locale, dict }: Props) {
                   </div>
                   <div>
                     <FieldLabel>{d.phone_label}</FieldLabel>
-                    <TextInput value={phoneNumber} onChange={setPhoneNumber} placeholder="+37360123456" />
+                    <PhoneInput value={phoneNumber} onChange={setPhoneNumber} compact />
                   </div>
                 </div>
               </div>

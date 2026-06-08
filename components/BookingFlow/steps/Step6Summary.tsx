@@ -794,7 +794,7 @@ export default function Step6Summary({
               {d.total_de_plata}
             </p>
             <p className="text-xl font-semibold text-[#f1f1f1] font-figtree tracking-tight">
-              {formatMDL(totalPrice)}
+              {formatMDL(serviceTotal)}
             </p>
           </div>
         </div>
