@@ -30,8 +30,10 @@ export default function VenueNav({
       const { auth } = result;
       const initials = `${auth.user.firstName?.[0] ?? ""}${auth.user.lastName?.[0] ?? ""}`.toUpperCase();
       setUserInitials(initials || "U");
+    } else {
+      setUserInitials(null);
     }
-  }, []);
+  }, [pathname]);
 
   function switchLocale(next: string) {
     setLangOpen(false);

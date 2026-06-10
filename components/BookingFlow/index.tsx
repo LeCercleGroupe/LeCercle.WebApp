@@ -54,6 +54,8 @@ const INITIAL_STATE: BookingState = {
   bookingRef: "",
   reservationToken: "",
   existingEventId: "",
+  promoCode: "",
+  promoDiscountPercentage: 0,
 };
 
 function loadSaved(): { step: number; state: BookingState; isAddOrder: boolean; returnUrl: string } | null {
@@ -190,19 +192,6 @@ export default function BookingFlow({ locale, dict }: BookingFlowProps) {
       sessionStorage.removeItem("lecercle_payment_pending");
       window.location.reload();
     }
-  }, []);
-
-  // Verify cookies are actually valid on mount — localStorage can outlive the session
-  useEffect(() => {
-    if (!state.userId) return;
-    fetch("/api/auth/refresh", { method: "POST" })
-      .then((r) => {
-        if (r.status === 401) {
-          patch({ userId: "", customerId: "", emailVerified: false, smsVerified: false });
-        }
-      })
-      .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isAddOrderRef = useRef(isAddOrder);

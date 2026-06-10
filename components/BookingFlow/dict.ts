@@ -118,6 +118,13 @@ export interface BookingDict {
     select_upgrade: string;
     order_locked_notice: string;
     start_new_order: string;
+    promo_label: string;
+    promo_placeholder: string;
+    promo_apply: string;
+    promo_applied: string;
+    promo_invalid: string;
+    promo_error: string;
+    promo_discount_label: string;
   };
   step7: {
     title: string;

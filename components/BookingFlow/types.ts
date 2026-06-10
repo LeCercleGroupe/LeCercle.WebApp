@@ -52,6 +52,8 @@ export interface BookingState {
   bookingRef: string;
   reservationToken: string;
   existingEventId: string;
+  promoCode: string;
+  promoDiscountPercentage: number;
 }
 
 export const VENUE_INFO: Record<ServiceId, { name: string; description: string; logo?: string; accentColor: string }> = {

@@ -184,6 +184,58 @@ export default function Step6Summary({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const [promoInput, setPromoInput] = useState(() => state.promoCode || "");
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; discountPercentage: number } | null>(
+    () => state.promoCode && state.promoDiscountPercentage > 0
+      ? { code: state.promoCode, discountPercentage: state.promoDiscountPercentage }
+      : null,
+  );
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState<"invalid" | "error" | null>(null);
+
+  async function applyPromo() {
+    const code = promoInput.trim().toUpperCase();
+    if (!code) return;
+    setPromoLoading(true);
+    setPromoError(null);
+    try {
+      const res = await fetchWithRefresh("/api/promocodes/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      if (res.status === 401) {
+        // No valid session — treat the same as order creation 401: reset auth
+        // and send the user back to step 5 to re-verify.
+        onChange({
+          emailVerified: false,
+          smsVerified: false,
+          userId: "",
+          customerId: "",
+        });
+        setPromoLoading(false);
+        onBack();
+        return;
+      }
+      if (res.status === 404 || res.status === 400) {
+        setPromoError("invalid");
+        setAppliedPromo(null);
+        return;
+      }
+      if (!res.ok) {
+        setPromoError("error");
+        return;
+      }
+      const data = await res.json() as { discountPercentage: number };
+      setAppliedPromo({ code, discountPercentage: data.discountPercentage });
+      onChange({ promoCode: code, promoDiscountPercentage: data.discountPercentage });
+    } catch {
+      setPromoError("error");
+    } finally {
+      setPromoLoading(false);
+    }
+  }
+
   // bfcache restore: React scheduler is frozen, reload to reinitialise.
   useEffect(() => {
     const handlePageshow = (e: PageTransitionEvent) => {
@@ -333,8 +385,11 @@ export default function Step6Summary({
       getLiveAdditionalCost(state.selectedPackages[v], featuresMap),
     0,
   );
-  const totalPrice = serviceTotal + totalTransportCost;
-  const advanceAmount = Math.round(serviceTotal * 0.1);
+  const discountPercent = appliedPromo?.discountPercentage ?? 0;
+  const discountAmount = Math.round(serviceTotal * discountPercent / 100);
+  const discountedServiceTotal = serviceTotal - discountAmount;
+  const totalPrice = discountedServiceTotal + totalTransportCost;
+  const advanceAmount = Math.round(discountedServiceTotal * 0.1);
   const advanceFormatted = formatMDL(advanceAmount);
 
   // ── Finalize handler ─────────────────────────────────────────────────────
@@ -453,6 +508,7 @@ export default function Step6Summary({
             reservationToken,
             items,
             customerId: state.customerId,
+            ...(appliedPromo && { promoCode: appliedPromo.code }),
           }),
         });
         if (!orderRes.ok) {
@@ -964,17 +1020,66 @@ export default function Step6Summary({
                 />
               );
             })}
+            {discountAmount > 0 && (
+              <div className="flex justify-between gap-4 items-start">
+                <p className="text-sm text-[#4ade80] font-figtree tracking-tight shrink-0">
+                  {d.promo_discount_label.replace("{percent}", String(discountPercent))}
+                </p>
+                <p className="text-sm font-figtree tracking-tight text-right text-[#4ade80]">
+                  -{formatMDL(discountAmount)}
+                </p>
+              </div>
+            )}
             {totalTransportCost > 0 && (
-              <>
-                {/* <Row label={d.services_label} value={formatMDL(serviceTotal)} /> */}
-                <Row
-                  label={d.transport_label.replace("{km}", String(transportKm))}
-                  value={formatMDL(totalTransportCost)}
-                  dimValue
-                />
-              </>
+              <Row
+                label={d.transport_label.replace("{km}", String(transportKm))}
+                value={formatMDL(totalTransportCost)}
+                dimValue
+              />
             )}
           </div>
+
+          {/* Promo code input */}
+          {!isLocked && (
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-medium text-[#747474] font-figtree tracking-widest uppercase">
+                {d.promo_label}
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={promoInput}
+                  onChange={(e) => {
+                    setPromoInput(e.target.value.toUpperCase());
+                    if (promoError) setPromoError(null);
+                    if (appliedPromo && e.target.value.toUpperCase() !== appliedPromo.code) {
+                      setAppliedPromo(null);
+                      onChange({ promoCode: "", promoDiscountPercentage: 0 });
+                    }
+                  }}
+                  onKeyDown={(e) => { if (e.key === "Enter") applyPromo(); }}
+                  placeholder={d.promo_placeholder}
+                  disabled={promoLoading}
+                  className="flex-1 bg-[#111] border border-[#303030] px-3 py-2.5 text-sm text-[#f1f1f1] font-figtree tracking-tight focus:outline-none focus:border-[#474747] placeholder:text-[#474747] disabled:opacity-50"
+                />
+                <button
+                  type="button"
+                  onClick={applyPromo}
+                  disabled={!promoInput.trim() || promoLoading}
+                  className="px-4 py-2.5 text-sm font-medium font-figtree tracking-tight border border-[#303030] text-[#f1f1f1] bg-[#111] hover:border-[#474747] transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                >
+                  {appliedPromo ? d.promo_applied : d.promo_apply}
+                </button>
+              </div>
+              {promoError === "invalid" && (
+                <p className="text-xs text-red-400 font-figtree tracking-tight">{d.promo_invalid}</p>
+              )}
+              {promoError === "error" && (
+                <p className="text-xs text-red-400 font-figtree tracking-tight">{d.promo_error}</p>
+              )}
+            </div>
+          )}
+
           <div className="border-t border-[#303030] pt-3 flex justify-between items-center">
             <p className="text-sm font-semibold text-[#f1f1f1] font-figtree tracking-widest uppercase">
               {d.total_de_plata}

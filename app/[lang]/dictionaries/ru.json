@@ -172,7 +172,14 @@
       "upgrade_package": "Улучшить пакет",
       "select_upgrade": "Выбрать",
       "order_locked_notice": "Ваш заказ уже создан. Вы можете повторить оплату или продолжить без оплаты сейчас.",
-      "start_new_order": "Новый заказ"
+      "start_new_order": "Новый заказ",
+      "promo_label": "Промокод",
+      "promo_placeholder": "Введите код",
+      "promo_apply": "Применить",
+      "promo_applied": "Применено",
+      "promo_invalid": "Недействительный или истёкший код",
+      "promo_error": "Не удалось проверить код. Попробуйте ещё раз.",
+      "promo_discount_label": "Скидка ({percent}%)"
     },
     "step7": {
       "title": "Бронирование в ожидании",
@@ -444,6 +451,7 @@
       "ref_sub": "Укажите этот код в любом общении с нашей командой.",
       "financial_label": "ФИНАНСОВЫЙ ОБЗОР",
       "financial_services": "Услуги",
+      "financial_discount": "Скидка",
       "financial_transportation": "Транспорт",
       "financial_total": "Итого за мероприятие",
       "financial_advance": "Аванс",
@@ -485,6 +493,10 @@
       "edit_event_save": "Сохранить",
       "edit_event_cancel": "Отмена",
       "edit_event_error": "Не удалось сохранить. Попробуйте снова.",
+      "cancel_event_confirm": "Вы уверены, что хотите отменить это мероприятие? Это действие необратимо.",
+      "cancel_event_yes": "Да, отменить мероприятие",
+      "cancel_event_no": "Оставить",
+      "cancel_event_error": "Не удалось отменить. Попробуйте снова.",
       "add_order": "Добавить заказ"
     },
     "contracts_page": {

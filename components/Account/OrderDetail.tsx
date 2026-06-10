@@ -278,7 +278,9 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
   }
 
   const orderState = deriveOrderState(order);
-  const serviceTotal = order.items?.reduce(
+
+  // Original price before any server-side discount (sum of unit prices)
+  const unitPriceSum = order.items?.reduce(
     (sum, item) => sum + pickAmount(item.unitPrice) * (item.quantity ?? 1),
     0,
   ) ?? 0;
@@ -286,10 +288,18 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
     (sum, item) => sum + pickAmount(item.roadPrice),
     0,
   ) ?? 0;
-  const totalPrice = serviceTotal + transportationTotal;
-  const advance =
-    pickAmount(order.advanceAmount) ||
-    (serviceTotal > 0 ? Math.round(serviceTotal * 0.1) : 0);
+
+  // Advance is always 10% of the discounted service total → multiply back to get it
+  const advance = pickAmount(order.advanceAmount);
+  const totalServiceAmount = advance > 0 ? advance * 10 : unitPriceSum;
+
+  // Discount in MDL (0 when no promo was applied)
+  const discountAmount = Math.max(0, unitPriceSum - totalServiceAmount);
+
+  // Use the API's totalAmount as the authoritative number; fall back to computed
+  const totalPrice =
+    pickAmount(order.totalAmount) || totalServiceAmount + transportationTotal;
+
   const rest = totalPrice - advance;
   const stateBadgeLabels: Record<EventState, string> = {
     pending: d.badge_pending,
@@ -692,18 +702,25 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                       <p className="text-[26px] sm:text-[28px] font-semibold text-[#f0f0f0] font-figtree tracking-tight leading-none mb-1">
                         {formatMDL(totalPrice)}
                       </p>
-                      {/* <p className="text-[12px] text-[#666] font-figtree tracking-tight mb-4">
-                        {d.taxes_label}
-                      </p> */}
                       <div className="flex flex-col gap-2 border-t border-[#1e1e1e] pt-3">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-[13px] text-[#888] font-figtree tracking-tight">
                             {d.financial_services}
                           </span>
                           <span className="text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight whitespace-nowrap">
-                            {formatMDL(serviceTotal)}
+                            {formatMDL(unitPriceSum)}
                           </span>
                         </div>
+                        {discountAmount > 0 && (
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[13px] text-[#4ade80] font-figtree tracking-tight">
+                              {d.financial_discount}
+                            </span>
+                            <span className="text-[13px] font-medium text-[#4ade80] font-figtree tracking-tight whitespace-nowrap">
+                              -{formatMDL(discountAmount)}
+                            </span>
+                          </div>
+                        )}
                         {transportationTotal > 0 && (
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-[13px] text-[#888] font-figtree tracking-tight">
@@ -720,18 +737,14 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                           </span>
                           <span
                             className={`text-[13px] font-medium font-figtree tracking-tight whitespace-nowrap ${
-                              orderState === "past" ||
-                              orderState === "confirmed"
+                              orderState === "past" || orderState === "confirmed"
                                 ? "text-[#4ade80]"
                                 : "text-[#fbbf24]"
                             }`}
                           >
                             {formatMDL(advance)}
-                            {(orderState === "past" ||
-                              orderState === "confirmed") && (
-                              <span className="text-[11px] ml-1">
-                                {d.paid_badge}
-                              </span>
+                            {(orderState === "past" || orderState === "confirmed") && (
+                              <span className="text-[11px] ml-1">{d.paid_badge}</span>
                             )}
                           </span>
                         </div>
@@ -741,16 +754,12 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                           </span>
                           <span
                             className={`text-[13px] font-medium font-figtree tracking-tight whitespace-nowrap ${
-                              orderState === "past"
-                                ? "text-[#4ade80]"
-                                : "text-[#f0f0f0]"
+                              orderState === "past" ? "text-[#4ade80]" : "text-[#f0f0f0]"
                             }`}
                           >
                             {formatMDL(rest)}
                             {orderState === "past" && (
-                              <span className="text-[11px] ml-1">
-                                {d.paid_badge}
-                              </span>
+                              <span className="text-[11px] ml-1">{d.paid_badge}</span>
                             )}
                           </span>
                         </div>
@@ -918,9 +927,19 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                           {d.financial_services}
                         </span>
                         <span className="text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight">
-                          {formatMDL(serviceTotal)}
+                          {formatMDL(unitPriceSum)}
                         </span>
                       </div>
+                      {discountAmount > 0 && (
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-[13px] text-[#4ade80] font-figtree tracking-tight">
+                            {d.financial_discount}
+                          </span>
+                          <span className="text-[13px] font-medium text-[#4ade80] font-figtree tracking-tight">
+                            -{formatMDL(discountAmount)}
+                          </span>
+                        </div>
+                      )}
                       {transportationTotal > 0 && (
                         <div className="flex justify-between items-baseline">
                           <span className="text-[13px] text-[#888] font-figtree tracking-tight">
@@ -951,11 +970,8 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                           }`}
                         >
                           {formatMDL(advance)}
-                          {(orderState === "past" ||
-                            orderState === "confirmed") && (
-                            <span className="text-[11px] ml-1">
-                              {d.paid_badge}
-                            </span>
+                          {(orderState === "past" || orderState === "confirmed") && (
+                            <span className="text-[11px] ml-1">{d.paid_badge}</span>
                           )}
                         </span>
                       </div>

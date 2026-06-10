@@ -6,7 +6,7 @@ import Link from "next/link";
 import BookingNavbar from "@/components/BookingFlow/shared/BookingNavbar";
 import OtpDigitInput from "@/components/BookingFlow/shared/OtpDigitInput";
 import PrimaryButton from "@/components/BookingFlow/shared/PrimaryButton";
-import { saveAuth, loadAuth, clearAuth } from "@/components/BookingFlow/utils/auth";
+import { saveAuth, loadAuth } from "@/components/BookingFlow/utils/auth";
 
 type ContactType = "person" | "company";
 type OtpState = "idle" | "sending" | "verifying" | "done";
@@ -123,26 +123,6 @@ export default function AccountLogin({ locale, dict }: Props) {
       .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    const result = loadAuth();
-    if (!result?.tokensValid) return;
-    // localStorage says auth is valid, but the HTTP-only cookie may be expired.
-    // Verify via refresh before redirecting — this also renews the access cookie.
-    fetch("/api/auth/refresh", { method: "POST" })
-      .then(async (r) => {
-        if (r.ok) {
-          router.replace(`/${locale}/account`);
-          return;
-        }
-        // Cookies are already cleared by the refresh route on failure.
-        // Keep localStorage so the email/phone is pre-filled for re-login.
-        fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
-      })
-      .catch(() => {
-        // Network error — redirect optimistically; account page will handle it.
-        router.replace(`/${locale}/account`);
-      });
-  }, [locale, router]);
 
   function authHeader(): Record<string, string> {
     return tokenRef.current ? { Authorization: `Bearer ${tokenRef.current}` } : {};

@@ -110,6 +110,7 @@ interface EventDetailDict {
   ref_sub: string;
   financial_label: string;
   financial_services: string;
+  financial_discount: string;
   financial_transportation: string;
   financial_total: string;
   financial_advance: string;
@@ -152,6 +153,10 @@ interface EventDetailDict {
   edit_event_save: string;
   edit_event_cancel: string;
   edit_event_error: string;
+  cancel_event_confirm: string;
+  cancel_event_yes: string;
+  cancel_event_no: string;
+  cancel_event_error: string;
 }
 
 interface NavDict {
@@ -215,6 +220,27 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
   const [orders, setOrders] = useState<OrderDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  // ── Cancel state ─────────────────────────────────────────────────────────
+  const [cancelConfirming, setCancelConfirming] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [cancelError, setCancelError] = useState(false);
+
+  async function handleCancel() {
+    if (!event) return;
+    setCancelLoading(true);
+    setCancelError(false);
+    try {
+      const res = await fetchWithRefresh(`/api/events/${event.id}/cancel`, { method: "PATCH" });
+      if (!res.ok) throw new Error(`${res.status}`);
+      setEvent((prev) => prev ? { ...prev, status: "Cancelled" } : prev);
+      setCancelConfirming(false);
+    } catch {
+      setCancelError(true);
+    } finally {
+      setCancelLoading(false);
+    }
+  }
 
   // ── Edit modal state ──────────────────────────────────────────────────────
   const [editOpen, setEditOpen] = useState(false);
@@ -622,49 +648,95 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
 
             {/* Event header */}
             <div className="mb-6 sm:mb-8">
+              {/* Title row — on desktop shows buttons on the right; on mobile buttons are below */}
               <div className="flex items-start justify-between gap-4 mb-2 sm:mb-3">
                 <h1 className="text-[28px] sm:text-[40px] font-semibold text-[#f0f0f0] font-figtree tracking-tight leading-none">
                   {event.venueTitle || "—"}
                 </h1>
-                {eventState !== "cancelled" ? (
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={openEdit}
-                      className="px-3 sm:px-4 py-2 sm:py-2.5 border border-[#3a3a3a] text-[13px] sm:text-sm font-medium text-[#f0f0f0] font-figtree tracking-tight hover:bg-[#1a1a1a] transition-colors cursor-pointer"
-                    >
-                      {d.edit_event}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleBookOrder}
-                      className="px-3 sm:px-4 py-2 sm:py-2.5 border border-[#3a3a3a] text-[13px] sm:text-sm font-medium text-[#f0f0f0] font-figtree tracking-tight hover:bg-[#1a1a1a] transition-colors cursor-pointer"
-                    >
-                      {d.add_order}
-                    </button>
-                  </div>
-                ) : (
-                  <span
-                    className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest border shrink-0 ${stateBadgeClasses[eventState]}`}
-                  >
+                {/* Desktop-only buttons / badge */}
+                {eventState === "cancelled" ? (
+                  <span className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest border shrink-0 ${stateBadgeClasses[eventState]}`}>
                     {stateLabel(eventState, d)}
                   </span>
+                ) : (
+                  <div className="hidden sm:flex items-center gap-2 shrink-0">
+                    <button type="button" onClick={openEdit} className="px-4 py-2.5 border border-[#3a3a3a] text-sm font-medium text-[#f0f0f0] font-figtree tracking-tight hover:bg-[#1a1a1a] transition-colors cursor-pointer">
+                      {d.edit_event}
+                    </button>
+                    <button type="button" onClick={handleBookOrder} className="px-4 py-2.5 border border-[#3a3a3a] text-sm font-medium text-[#f0f0f0] font-figtree tracking-tight hover:bg-[#1a1a1a] transition-colors cursor-pointer">
+                      {d.add_order}
+                    </button>
+                    {!cancelConfirming ? (
+                      <button type="button" onClick={() => setCancelConfirming(true)} className="px-4 py-2.5 border border-[#3a1010] text-sm font-medium text-[#f87171] font-figtree tracking-tight hover:bg-[#1a0505] transition-colors cursor-pointer">
+                        {d.cancel_event}
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={handleCancel} disabled={cancelLoading} className="px-4 py-2.5 border border-[#3a1010] bg-[#1a0505] text-sm font-medium text-[#f87171] font-figtree tracking-tight hover:bg-[#220808] transition-colors cursor-pointer disabled:opacity-50">
+                          {cancelLoading ? "…" : d.cancel_event_yes}
+                        </button>
+                        <button type="button" onClick={() => { setCancelConfirming(false); setCancelError(false); }} disabled={cancelLoading} className="px-4 py-2.5 border border-[#3a3a3a] text-sm font-medium text-[#888] font-figtree tracking-tight hover:text-[#f0f0f0] hover:border-[#555] transition-colors cursor-pointer disabled:opacity-50">
+                          {d.cancel_event_no}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
+
+              {/* Subtitle: date · time · city · guests */}
               <p className="text-[13px] sm:text-[15px] text-[#888] font-figtree tracking-tight">
                 {[
                   formatDateShort(event.eventDate),
-                  event.eventStartTime
-                    ? formatTime(event.eventStartTime)
-                    : null,
+                  event.eventStartTime ? formatTime(event.eventStartTime) : null,
                   event.city,
-                  event.guestCount
-                    ? `${event.guestCount} ${d.guests_unit}`
-                    : null,
+                  event.guestCount ? `${event.guestCount} ${d.guests_unit}` : null,
                 ]
                   .filter(Boolean)
                   .join(" · ")}
               </p>
+
+              {/* Mobile-only action buttons — below subtitle */}
+              {eventState !== "cancelled" && (
+                <div className="flex sm:hidden flex-col gap-2 mt-4">
+                  {!cancelConfirming ? (
+                    <div className="flex gap-2">
+                      <button type="button" onClick={openEdit} className="flex-1 px-3 py-2.5 border border-[#3a3a3a] text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight hover:bg-[#1a1a1a] transition-colors cursor-pointer">
+                        {d.edit_event}
+                      </button>
+                      <button type="button" onClick={handleBookOrder} className="flex-1 px-3 py-2.5 border border-[#3a3a3a] text-[13px] font-medium text-[#f0f0f0] font-figtree tracking-tight hover:bg-[#1a1a1a] transition-colors cursor-pointer">
+                        {d.add_order}
+                      </button>
+                      <button type="button" onClick={() => setCancelConfirming(true)} className="flex-1 px-3 py-2.5 border border-[#3a1010] text-[13px] font-medium text-[#f87171] font-figtree tracking-tight hover:bg-[#1a0505] transition-colors cursor-pointer">
+                        {d.cancel_event}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <p className="text-[13px] text-red-400 font-figtree tracking-tight">{d.cancel_event_confirm}</p>
+                      <div className="flex gap-2">
+                        <button type="button" onClick={handleCancel} disabled={cancelLoading} className="flex-1 px-3 py-2.5 border border-[#3a1010] bg-[#1a0505] text-[13px] font-medium text-[#f87171] font-figtree tracking-tight hover:bg-[#220808] transition-colors cursor-pointer disabled:opacity-50">
+                          {cancelLoading ? "…" : d.cancel_event_yes}
+                        </button>
+                        <button type="button" onClick={() => { setCancelConfirming(false); setCancelError(false); }} disabled={cancelLoading} className="flex-1 px-3 py-2.5 border border-[#3a3a3a] text-[13px] font-medium text-[#888] font-figtree tracking-tight hover:text-[#f0f0f0] transition-colors cursor-pointer disabled:opacity-50">
+                          {d.cancel_event_no}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {cancelError && (
+                    <p className="text-[12px] text-red-400 font-figtree tracking-tight">{d.cancel_event_error}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Desktop cancel confirmation message + error */}
+              {cancelConfirming && eventState !== "cancelled" && (
+                <p className="hidden sm:block text-[13px] text-red-400 font-figtree tracking-tight mt-2">{d.cancel_event_confirm}</p>
+              )}
+              {cancelError && eventState !== "cancelled" && (
+                <p className="hidden sm:block text-[12px] text-red-400 font-figtree tracking-tight mt-1">{d.cancel_event_error}</p>
+              )}
             </div>
 
             {/* Orders list */}

@@ -172,7 +172,14 @@
       "upgrade_package": "Îmbunătățește pachetul",
       "select_upgrade": "Selectează",
       "order_locked_notice": "Comanda ta a fost înregistrată. Poți relua plata sau continua fără a plăti acum.",
-      "start_new_order": "Comandă nouă"
+      "start_new_order": "Comandă nouă",
+      "promo_label": "Cod promoțional",
+      "promo_placeholder": "Introduceți codul",
+      "promo_apply": "Aplică",
+      "promo_applied": "Aplicat",
+      "promo_invalid": "Cod invalid sau expirat",
+      "promo_error": "Nu s-a putut verifica codul. Încearcă din nou.",
+      "promo_discount_label": "Reducere ({percent}%)"
     },
     "step7": {
       "title": "Rezervare în așteptare",
@@ -444,6 +451,7 @@
       "ref_sub": "Citează acest cod în orice comunicare cu echipa noastră.",
       "financial_label": "REZUMAT FINANCIAR",
       "financial_services": "Servicii",
+      "financial_discount": "Reducere",
       "financial_transportation": "Transport",
       "financial_total": "Total eveniment",
       "financial_advance": "Avans",
@@ -485,6 +493,10 @@
       "edit_event_save": "Salvează",
       "edit_event_cancel": "Anulează",
       "edit_event_error": "Nu s-a putut salva. Încearcă din nou.",
+      "cancel_event_confirm": "Ești sigur că vrei să anulezi acest eveniment? Acțiunea nu poate fi anulată.",
+      "cancel_event_yes": "Da, anulează evenimentul",
+      "cancel_event_no": "Păstrează-l",
+      "cancel_event_error": "Nu s-a putut anula. Încearcă din nou.",
       "add_order": "Adaugă comandă"
     },
     "contracts_page": {

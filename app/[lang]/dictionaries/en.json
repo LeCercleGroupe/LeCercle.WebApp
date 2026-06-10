@@ -172,7 +172,14 @@
       "upgrade_package": "Upgrade package",
       "select_upgrade": "Select",
       "order_locked_notice": "Your order has been saved. You can retry the payment or continue without paying now.",
-      "start_new_order": "New order"
+      "start_new_order": "New order",
+      "promo_label": "Promo code",
+      "promo_placeholder": "Enter code",
+      "promo_apply": "Apply",
+      "promo_applied": "Applied",
+      "promo_invalid": "Invalid or expired code",
+      "promo_error": "Could not verify code. Try again.",
+      "promo_discount_label": "Discount ({percent}%)"
     },
     "step7": {
       "title": "Booking pending",
@@ -444,6 +451,7 @@
       "ref_sub": "Quote this code in any communication with our team.",
       "financial_label": "FINANCIAL SUMMARY",
       "financial_services": "Services",
+      "financial_discount": "Discount",
       "financial_transportation": "Transport",
       "financial_total": "Total event",
       "financial_advance": "Advance",
@@ -485,6 +493,10 @@
       "edit_event_save": "Save",
       "edit_event_cancel": "Cancel",
       "edit_event_error": "Could not save. Please try again.",
+      "cancel_event_confirm": "Are you sure you want to cancel this event? This cannot be undone.",
+      "cancel_event_yes": "Yes, cancel event",
+      "cancel_event_no": "Keep it",
+      "cancel_event_error": "Failed to cancel. Please try again.",
       "add_order": "Add Order"
     },
     "contracts_page": {
