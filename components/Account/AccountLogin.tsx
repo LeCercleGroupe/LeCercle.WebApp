@@ -226,6 +226,7 @@ export default function AccountLogin({ locale, dict }: Props) {
         companyName: data.user?.companyName ?? existing?.companyName ?? "",
         idno: data.user?.idno ?? existing?.idno ?? "",
         isCompany: data.user?.isCompany ?? existing?.isCompany ?? false,
+        sessionExpiresAt: typeof data.sessionExpiresAt === "number" ? data.sessionExpiresAt : undefined,
       });
       setOtpState("done");
       router.push(`/${locale}/account`);
@@ -274,6 +275,7 @@ export default function AccountLogin({ locale, dict }: Props) {
         companyName: data.user?.companyName ?? (isCompany ? companyName : ""),
         idno: data.user?.idno ?? (isCompany ? idno : ""),
         isCompany: data.user?.isCompany ?? isCompany,
+        sessionExpiresAt: typeof data.sessionExpiresAt === "number" ? data.sessionExpiresAt : undefined,
       });
       setOtpState("done");
       router.push(`/${locale}/account`);

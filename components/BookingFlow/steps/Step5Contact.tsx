@@ -30,6 +30,7 @@ function resolveVerifyResponse(
   formIsCompany: boolean,
 ) {
   const root = (data.user ?? data) as Record<string, unknown>;
+  const sessionExpiresAt = typeof data.sessionExpiresAt === "number" ? data.sessionExpiresAt : undefined;
 
   const userId     = (root.userId     ?? root.userID     ?? "") as string;
   const customerId = (root.customerId ?? root.customerID ?? "") as string;
@@ -66,6 +67,7 @@ function resolveVerifyResponse(
       companyName,
       idno,
       isCompany,
+      sessionExpiresAt,
     },
   };
 }

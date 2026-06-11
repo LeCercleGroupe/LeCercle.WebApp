@@ -1,5 +1,5 @@
 const AUTH_KEY = "lecercle_auth";
-const PROFILE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const PROFILE_TTL_MS = 60 * 60 * 1000;
 
 export interface StoredAuth {
   profileExpiresAt: number;
@@ -31,10 +31,11 @@ export function saveAuth(params: {
   companyName: string;
   idno: string;
   isCompany: boolean;
+  sessionExpiresAt?: number;
 }): void {
   try {
     const auth: StoredAuth = {
-      profileExpiresAt: Date.now() + PROFILE_TTL_MS,
+      profileExpiresAt: params.sessionExpiresAt ?? Date.now() + PROFILE_TTL_MS,
       user: {
         userId:      params.userId,
         customerId:  params.customerId,
@@ -87,7 +88,6 @@ export function updateAuthProfile(updates: Partial<StoredAuth["user"]>): void {
     if (!raw) return;
     const stored: StoredAuth = JSON.parse(raw);
     stored.user = { ...stored.user, ...updates };
-    stored.profileExpiresAt = Date.now() + PROFILE_TTL_MS;
     localStorage.setItem(AUTH_KEY, JSON.stringify(stored));
   } catch {}
 }
