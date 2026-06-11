@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   if (!customerId) return Response.json({ error: "Missing customerId" }, { status: 400 });
 
   const res = await upstreamFetch(
-    `${BOOKING_API_BASE}/api/events/customer/${encodeURIComponent(customerId)}`,
+    `${BOOKING_API_BASE}/api/events?customerID=${encodeURIComponent(customerId)}`,
     { cache: "no-store" },
   );
 
