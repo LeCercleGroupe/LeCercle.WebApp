@@ -21,18 +21,22 @@ export async function POST(request: Request) {
 
   const data = await res.json();
 
-  // Move tokens to HttpOnly cookies — never expose them to the browser.
-  // refreshToken is optional: some upstream configs (client-credentials OTP) only
-  // issue an access token. We still set lc_access so the account page works.
-  if (data.accessToken) {
-    await setAuthCookies(
-      data.accessToken,
-      data.refreshToken ?? null,
-      data.expiresIn ?? 3600,
-    );
+  // Upstream may return either camelCase or snake_case — normalise both.
+  const accessToken  = data.accessToken  ?? data.access_token  ?? null;
+  const refreshToken = data.refreshToken ?? data.refresh_token ?? null;
+  const expiresIn    = data.expiresIn    ?? data.expires_in    ?? 3600;
+
+  if (accessToken) {
+    await setAuthCookies(accessToken, refreshToken, expiresIn);
   }
 
-  // Strip token fields from the response body
-  const { accessToken: _a, refreshToken: _r, expiresIn: _e, ...safeData } = data;
+  // Strip all token fields (both casings) before sending the response to the browser.
+  const {
+    accessToken:  _a,  access_token:  _at,
+    refreshToken: _r,  refresh_token: _rt,
+    expiresIn:    _e,  expires_in:    _ei,
+    ...safeData
+  } = data;
+
   return Response.json(safeData);
 }
