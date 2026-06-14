@@ -50,11 +50,20 @@ export async function POST(request: Request) {
     ...safeData
   } = data;
 
-  const accessMaxAge = accessToken ? jwtMaxAge(accessToken, expiresIn) : expiresIn;
+  const accessMaxAge  = accessToken  ? jwtMaxAge(accessToken,  expiresIn)         : expiresIn;
+  const refreshMaxAge = refreshToken ? jwtMaxAge(refreshToken, 30 * 24 * 60 * 60) : 0;
 
-  // Expose the real expiry as a plain timestamp so the client can align
-  // localStorage's profileExpiresAt with the actual token lifetime.
-  const responseBody = { ...safeData, sessionExpiresAt: Date.now() + accessMaxAge * 1000 };
+  // The session lasts as long as we can keep refreshing — i.e. the refresh
+  // token's lifetime, NOT the ~1h access token. upstreamFetch transparently
+  // renews lc_access from lc_refresh, so the client profile (profileExpiresAt)
+  // must span the whole refresh window; otherwise the user is bounced to login
+  // every hour despite still holding a valid refresh token. Falls back to the
+  // access lifetime when no refresh token is issued.
+  const sessionMaxAge = refreshMaxAge || accessMaxAge;
+
+  // Expose the real expiry as a plain timestamp so the client can align its
+  // profile cookie (profileExpiresAt) with the session lifetime.
+  const responseBody = { ...safeData, sessionExpiresAt: Date.now() + sessionMaxAge * 1000 };
   const response = NextResponse.json(responseBody);
 
   if (accessToken) {
@@ -62,7 +71,7 @@ export async function POST(request: Request) {
     const base = { httpOnly: true, secure, sameSite: "lax" as const, path: "/" };
     response.cookies.set(COOKIE_ACCESS,  accessToken,  { ...base, maxAge: accessMaxAge });
     if (refreshToken) {
-      response.cookies.set(COOKIE_REFRESH, refreshToken, { ...base, maxAge: jwtMaxAge(refreshToken, 30 * 24 * 60 * 60) });
+      response.cookies.set(COOKIE_REFRESH, refreshToken, { ...base, maxAge: refreshMaxAge });
     }
   }
 
