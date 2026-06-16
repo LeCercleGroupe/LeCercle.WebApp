@@ -20,6 +20,7 @@ import {
   formatMDL,
   pickAmount,
 } from "./shared/format";
+import { useHydrated } from "./shared/useHydrated";
 import {
   Contract,
   deriveOrderState,
@@ -85,12 +86,20 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
   const d = dict.event_detail;
 
   const [auth] = useState<StoredAuth | null>(() => loadAuth()?.auth ?? null);
+  // Auth comes from client-only storage; defer auth-derived UI until hydrated
+  // so the first client render matches the auth-less server render (no hydration mismatch).
+  const mounted = useHydrated();
   const [order, setOrder] = useState<OrderDetailType | null>(null);
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [payingOnline, setPayingOnline] = useState(false);
   const [payOnlineError, setPayOnlineError] = useState(false);
+
+  // ── Cancel order state ─────────────────────────────────────────────────────
+  const [cancelConfirming, setCancelConfirming] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [cancelError, setCancelError] = useState(false);
   const [packagesMap, setPackagesMap] = useState<
     Map<string, { id: string; name: string; tier: string; basePrice: number }[]>
   >(new Map());
@@ -234,14 +243,36 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
     }
   }
 
-  const initials = auth
-    ? `${auth.user.firstName?.[0] ?? ""}${auth.user.lastName?.[0] ?? ""}`.toUpperCase() ||
-      "?"
-    : "?";
-  const displayName = auth
-    ? `${auth.user.firstName ?? ""} ${auth.user.lastName ?? ""}`.trim() ||
-      (auth.user.phoneNumber ?? "—")
-    : "—";
+  async function handleCancel() {
+    if (!order) return;
+    setCancelLoading(true);
+    setCancelError(false);
+    try {
+      const res = await fetchWithRefresh(`/api/orders/${order.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: order.id, status: "Cancelled" }),
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+      setOrder((prev) => (prev ? { ...prev, status: "Cancelled" } : prev));
+      setCancelConfirming(false);
+    } catch {
+      setCancelError(true);
+    } finally {
+      setCancelLoading(false);
+    }
+  }
+
+  const initials =
+    mounted && auth
+      ? `${auth.user.firstName?.[0] ?? ""}${auth.user.lastName?.[0] ?? ""}`.toUpperCase() ||
+        "?"
+      : "?";
+  const displayName =
+    mounted && auth
+      ? `${auth.user.firstName ?? ""} ${auth.user.lastName ?? ""}`.trim() ||
+        (auth.user.phoneNumber ?? "—")
+      : "—";
 
   if (loading) {
     return (
@@ -278,6 +309,11 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
   }
 
   const orderState = deriveOrderState(order);
+  // A running order can be cancelled; past/completed/already-cancelled cannot.
+  const canCancelOrder =
+    orderState === "pending" ||
+    orderState === "confirmed" ||
+    orderState === "draft";
 
   // Original price before any server-side discount (sum of unit prices)
   const unitPriceSum = order.items?.reduce(
@@ -352,20 +388,64 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                   </p>
                 )}
               </div>
-              <div className="flex items-center flex-wrap gap-2 shrink-0">
-                <span
-                  className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest border ${stateClasses[orderState]}`}
-                >
-                  {stateBadgeLabels[orderState]}
-                </span>
-                <a
-                  href={whatsapp}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-3 py-1 border border-[#2a2a2a] text-[13px] font-medium text-[#c0c0c0] font-figtree tracking-tight hover:border-[#4a4a4a] hover:text-[#f0f0f0] transition-colors"
-                >
-                  {d.contact_us}
-                </a>
+              <div className="flex flex-col items-start sm:items-end gap-2 shrink-0">
+                <div className="flex items-center flex-wrap gap-2">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest border ${stateClasses[orderState]}`}
+                  >
+                    {stateBadgeLabels[orderState]}
+                  </span>
+                  <a
+                    href={whatsapp}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-3 py-1 border border-[#2a2a2a] text-[13px] font-medium text-[#c0c0c0] font-figtree tracking-tight hover:border-[#4a4a4a] hover:text-[#f0f0f0] transition-colors"
+                  >
+                    {d.contact_us}
+                  </a>
+                  {canCancelOrder &&
+                    (!cancelConfirming ? (
+                      <button
+                        type="button"
+                        onClick={() => setCancelConfirming(true)}
+                        className="inline-flex items-center px-3 py-1 border border-[#3a1010] text-[13px] font-medium text-[#f87171] font-figtree tracking-tight hover:bg-[#1a0505] transition-colors cursor-pointer"
+                      >
+                        {d.cancel_order}
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleCancel}
+                          disabled={cancelLoading}
+                          className="inline-flex items-center px-3 py-1 border border-[#3a1010] bg-[#1a0505] text-[13px] font-medium text-[#f87171] font-figtree tracking-tight hover:bg-[#220808] transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                          {cancelLoading ? "…" : d.cancel_order_yes}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCancelConfirming(false);
+                            setCancelError(false);
+                          }}
+                          disabled={cancelLoading}
+                          className="inline-flex items-center px-3 py-1 border border-[#2a2a2a] text-[13px] font-medium text-[#888] font-figtree tracking-tight hover:text-[#f0f0f0] hover:border-[#555] transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                          {d.cancel_order_no}
+                        </button>
+                      </div>
+                    ))}
+                </div>
+                {canCancelOrder && cancelConfirming && (
+                  <p className="text-[12px] text-red-400 font-figtree tracking-tight sm:text-right">
+                    {d.cancel_order_confirm}
+                  </p>
+                )}
+                {canCancelOrder && cancelError && (
+                  <p className="text-[12px] text-red-400 font-figtree tracking-tight sm:text-right">
+                    {d.cancel_order_error}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -376,7 +456,7 @@ export default function OrderDetail({ locale, eventId, orderId, dict }: Props) {
                 {orderState === "pending" && (
                   <div className="border border-[#3a2a00] bg-[#110c00] p-6 mb-0">
                     <p className="text-[11px] font-medium text-[#fbbf24] font-figtree tracking-[0.12em] uppercase mb-2">
-                      {d.pending_action_label.replace("{time}", "")}
+                      {d.pending_action_label}
                     </p>
                     <p className="text-[20px] font-semibold text-[#f0f0f0] font-figtree tracking-tight mb-2">
                       {d.pending_action_title.replace(

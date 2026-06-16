@@ -1,13 +1,27 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import type { EntraTokens } from "./entra";
+import {
+  COOKIE_EMP_ACCESS,
+  COOKIE_EMP_OAUTH,
+  COOKIE_EMP_REFRESH,
+  decodeJwt,
+} from "./entraSession";
 
-// Employee (Entra) session cookies — kept separate from the customer auth
-// cookies (lc_access / lc_refresh) so the two login systems never collide.
-export const COOKIE_EMP_ACCESS  = "lc_emp_access";
-export const COOKIE_EMP_REFRESH = "lc_emp_refresh";
-// Short-lived cookie holding the in-flight OAuth handshake (state + PKCE verifier).
-export const COOKIE_EMP_OAUTH   = "lc_emp_oauth";
+// Response-writing employee session helpers. These import NextResponse and so
+// must only be used from route handlers — never from a page / Server Component.
+// Read-only counterparts (decodeJwt, getEmployeeSession, cookie names, etc.)
+// live in ./entraSession and are re-exported here for backwards compatibility.
+export {
+  COOKIE_EMP_ACCESS,
+  COOKIE_EMP_REFRESH,
+  COOKIE_EMP_OAUTH,
+  decodeJwt,
+  getEmployeeAccessToken,
+  getEmployeeRefreshToken,
+  getEmployeeSession,
+} from "./entraSession";
+export type { EntraClaims } from "./entraSession";
 
 const BASE = {
   httpOnly: true,
@@ -18,30 +32,6 @@ const BASE = {
 
 const HANDSHAKE_TTL_SECONDS = 10 * 60;            // time allowed to complete login
 const REFRESH_FALLBACK_SECONDS = 30 * 24 * 60 * 60; // 30 days
-
-// ── JWT claims (read-only; not signature-verified) ───────────────────────────
-// We trust tokens at issuance because they are fetched directly from Entra over
-// TLS in the callback. Decoding here is only used to read claims and expiry.
-
-export interface EntraClaims {
-  oid?: string;
-  name?: string;
-  preferred_username?: string;
-  email?: string;
-  roles?: string[];
-  exp?: number;
-  [key: string]: unknown;
-}
-
-export function decodeJwt(token: string): EntraClaims | null {
-  try {
-    const payload = token.split(".")[1];
-    if (!payload) return null;
-    return JSON.parse(Buffer.from(payload, "base64url").toString());
-  } catch {
-    return null;
-  }
-}
 
 // Seconds until the token's `exp`, or a fallback if it can't be read.
 function tokenMaxAge(token: string, fallbackSeconds: number): number {
@@ -72,26 +62,6 @@ export function setEmployeeCookies(response: NextResponse, tokens: EntraTokens):
 export function clearEmployeeCookies(response: NextResponse): void {
   response.cookies.set(COOKIE_EMP_ACCESS,  "", { ...BASE, maxAge: 0 });
   response.cookies.set(COOKIE_EMP_REFRESH, "", { ...BASE, maxAge: 0 });
-}
-
-export async function getEmployeeAccessToken(): Promise<string | null> {
-  const jar = await cookies();
-  return jar.get(COOKIE_EMP_ACCESS)?.value ?? null;
-}
-
-export async function getEmployeeRefreshToken(): Promise<string | null> {
-  const jar = await cookies();
-  return jar.get(COOKIE_EMP_REFRESH)?.value ?? null;
-}
-
-// Returns the current employee's claims, or null if there is no valid,
-// unexpired session cookie.
-export async function getEmployeeSession(): Promise<EntraClaims | null> {
-  const token = await getEmployeeAccessToken();
-  if (!token) return null;
-  const claims = decodeJwt(token);
-  if (!claims?.exp || claims.exp <= Math.floor(Date.now() / 1000)) return null;
-  return claims;
 }
 
 // ── OAuth handshake cookie ───────────────────────────────────────────────────

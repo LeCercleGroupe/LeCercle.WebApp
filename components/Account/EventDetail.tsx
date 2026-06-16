@@ -25,6 +25,7 @@ import {
   OrderDetail,
   type EventState,
 } from "./shared/types";
+import { useHydrated } from "./shared/useHydrated";
 
 interface EventDetailDict {
   back: string;
@@ -157,6 +158,11 @@ interface EventDetailDict {
   cancel_event_yes: string;
   cancel_event_no: string;
   cancel_event_error: string;
+  cancel_order: string;
+  cancel_order_confirm: string;
+  cancel_order_yes: string;
+  cancel_order_no: string;
+  cancel_order_error: string;
 }
 
 interface NavDict {
@@ -216,6 +222,9 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
   const d = dict.event_detail;
 
   const [auth] = useState<StoredAuth | null>(() => loadAuth()?.auth ?? null);
+  // Auth comes from client-only storage; defer auth-derived UI until hydrated
+  // so the first client render matches the auth-less server render (no hydration mismatch).
+  const mounted = useHydrated();
   const [event, setEvent] = useState<EventBooking | null>(null);
   const [orders, setOrders] = useState<OrderDetail[]>([]);
   const [loading, setLoading] = useState(true);
@@ -488,14 +497,16 @@ export default function EventDetail({ locale, eventId, dict }: Props) {
     load();
   }, [auth, locale, eventId, router]);
 
-  const initials = auth
-    ? `${auth.user.firstName?.[0] ?? ""}${auth.user.lastName?.[0] ?? ""}`.toUpperCase() ||
-      "?"
-    : "?";
-  const displayName = auth
-    ? `${auth.user.firstName ?? ""} ${auth.user.lastName ?? ""}`.trim() ||
-      (auth.user.phoneNumber ?? "—")
-    : "—";
+  const initials =
+    mounted && auth
+      ? `${auth.user.firstName?.[0] ?? ""}${auth.user.lastName?.[0] ?? ""}`.toUpperCase() ||
+        "?"
+      : "?";
+  const displayName =
+    mounted && auth
+      ? `${auth.user.firstName ?? ""} ${auth.user.lastName ?? ""}`.trim() ||
+        (auth.user.phoneNumber ?? "—")
+      : "—";
 
   const ordersWithState = useMemo(
     () => orders.map((order) => ({ order, state: deriveOrderState(order) })),
