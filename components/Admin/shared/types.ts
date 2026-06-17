@@ -36,6 +36,14 @@ export interface AdminDict {
   label_location: string;
   label_guests: string;
   label_total: string;
+  detail_order: string;
+  order_loading: string;
+  order_error: string;
+  order_empty: string;
+  checklist_title: string;
+  checklist_progress: string;
+  checklist_selections: string;
+  checklist_transport: string;
 }
 
 // The signed-in employee, as decoded from the Entra JWT.
@@ -50,14 +58,24 @@ export interface AdminUser {
 // the event itself. Field names are read defensively (see eventClient* helpers).
 export interface AdminEvent extends EventBooking {
   serviceId?: string;
+  // The order this event was loaded under. The employee events API carries the
+  // id directly on the event (the `orders` array is not embedded here), so the
+  // detail view loads it via GET /api/orders/{orderId} without a list lookup.
+  orderId?: string;
   customerName?: string;
   contactFirstName?: string;
   contactLastName?: string;
   contactEmail?: string;
   contactPhone?: string;
+  customerEmail?: string;
+  customerPhone?: string;
   email?: string;
   phone?: string;
   totalAmount?: number;
+  // Amount booked for the single service this event was loaded under (set by the
+  // employee events API when filtering by serviceId). Unlike totalAmount/orders,
+  // this excludes other services on the same event.
+  serviceTotal?: number;
 }
 
 // An event tagged with the service it was loaded under (used by the calendar,
@@ -81,11 +99,11 @@ export function eventClientName(event: AdminEvent): string {
 }
 
 export function eventClientEmail(event: AdminEvent): string {
-  return event.contactEmail || event.email || "—";
+  return event.customerEmail || event.contactEmail || event.email || "—";
 }
 
 export function eventClientPhone(event: AdminEvent): string {
-  return event.contactPhone || event.phone || "—";
+  return event.customerPhone || event.contactPhone || event.phone || "—";
 }
 
 // Which panel is currently shown in the content area. Either the full-page
@@ -104,6 +122,13 @@ export function eventAmount(event: EventBooking): number {
   if (fromOrders) return fromOrders;
   const direct = (event as AdminEvent).totalAmount;
   return typeof direct === "number" ? direct : 0;
+}
+
+// Amount booked for the single service an event is shown under in the per-service
+// view. Prefers the API-provided serviceTotal, falling back to the whole-event
+// amount when it is absent.
+export function serviceAmount(event: AdminEvent): number {
+  return typeof event.serviceTotal === "number" ? event.serviceTotal : eventAmount(event);
 }
 
 // Maps our short locale code to a full BCP-47 tag for Intl formatting.

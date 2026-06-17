@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { VENUE_INFO, type ServiceId } from "@/components/BookingFlow/types";
 import { formatDay, formatMDL, formatYear } from "@/components/Account/shared/format";
 import { fetchAdminEvents } from "./shared/adminApi";
-import { eventAmount, type AdminDict, type AdminEvent, type StatusFilter } from "./shared/types";
+import { serviceAmount, type AdminDict, type AdminEvent, type StatusFilter } from "./shared/types";
 import { matchesStatusFilter, statusBadgeClass, statusLabel } from "./shared/status";
 import { todayKey } from "./shared/calendar";
 import DatePicker from "./shared/DatePicker";
@@ -36,17 +36,20 @@ export default function ServiceEvents({ locale, serviceId, dict, canViewSensitiv
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    setError(false);
-    fetchAdminEvents({ serviceId })
-      .then((list) => {
-        if (!active) return;
-        // Soonest events first, furthest last.
-        list.sort((a, b) => (a.eventDate || "").localeCompare(b.eventDate || ""));
-        setEvents(list);
-      })
-      .catch(() => active && setError(true))
-      .finally(() => active && setLoading(false));
+    Promise.resolve().then(() => {
+      if (!active) return;
+      setLoading(true);
+      setError(false);
+      fetchAdminEvents({ serviceId })
+        .then((list) => {
+          if (!active) return;
+          // Soonest events first, furthest last.
+          list.sort((a, b) => (a.eventDate || "").localeCompare(b.eventDate || ""));
+          setEvents(list);
+        })
+        .catch(() => active && setError(true))
+        .finally(() => active && setLoading(false));
+    });
     return () => {
       active = false;
     };
@@ -86,7 +89,7 @@ export default function ServiceEvents({ locale, serviceId, dict, canViewSensitiv
   }, [events, filter, search, dateFrom, dateTo, city]);
 
   const totalSum = useMemo(
-    () => filtered.reduce((sum, ev) => sum + eventAmount(ev), 0),
+    () => filtered.reduce((sum, ev) => sum + serviceAmount(ev), 0),
     [filtered],
   );
 
@@ -121,6 +124,7 @@ export default function ServiceEvents({ locale, serviceId, dict, canViewSensitiv
     return (
       <EventDetail
         event={selected}
+        serviceId={serviceId}
         dict={dict}
         canViewSensitive={canViewSensitive}
         onBack={() => setSelected(null)}
@@ -302,7 +306,7 @@ function EventRow({
       {/* Amount — sensitive, hidden from employees */}
       {canViewSensitive && (
         <span className="shrink-0 text-[14px] font-semibold text-[#f0f0f0] font-figtree tracking-tight text-right w-28 sm:w-32">
-          {formatMDL(eventAmount(event))}
+          {formatMDL(serviceAmount(event))}
         </span>
       )}
     </button>

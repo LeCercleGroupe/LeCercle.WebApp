@@ -607,6 +607,14 @@
     "label_date": "Дата",
     "label_location": "Адрес",
     "label_guests": "Гости",
-    "label_total": "Итого"
+    "label_total": "Итого",
+    "detail_order": "Заказ",
+    "order_loading": "Загрузка заказа…",
+    "order_error": "Не удалось загрузить заказ.",
+    "order_empty": "К этому событию не привязан заказ.",
+    "checklist_title": "Чек-лист подготовки",
+    "checklist_progress": "{done}/{total} готово",
+    "checklist_selections": "Выбор опций",
+    "checklist_transport": "Транспорт"
   }
 }

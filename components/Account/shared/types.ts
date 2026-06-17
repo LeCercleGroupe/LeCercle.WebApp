@@ -54,6 +54,7 @@ export interface OrderItem {
   unitPrice: number;
   roadPrice: number;
   quantity: number;
+  guestCount?: number;
   createdAt?: string;
   fixedFeatures?: OrderItemFixedFeature[];
   selections?: OrderItemSelection[];
@@ -65,6 +66,7 @@ export interface OrderDetail {
   customerId: string;
   orderNumber: string;
   status: string;
+  guestCount?: number;
   totalAmount: number;
   advanceAmount?: number;
   advancePaidAt?: string;

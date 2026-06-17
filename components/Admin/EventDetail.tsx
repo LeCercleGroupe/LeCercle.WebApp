@@ -10,21 +10,43 @@ import {
   type AdminEvent,
 } from "./shared/types";
 import { statusBadgeClass, statusLabel } from "./shared/status";
+import { useOrderDetails } from "./shared/useOrderDetails";
+import OrderChecklist from "./OrderChecklist";
 
 interface Props {
   event: AdminEvent;
+  serviceId?: string;
   dict: AdminDict;
   canViewSensitive: boolean;
   onBack: () => void;
 }
 
-export default function EventDetail({ event, dict, canViewSensitive, onBack }: Props) {
+export default function EventDetail({ event, serviceId, dict, canViewSensitive, onBack }: Props) {
   const fullLocation = [event.venueTitle, event.venueAddress, event.city, event.postalCode]
     .filter(Boolean)
     .join(", ");
   const dateLine = [formatDateShort(event.eventDate), event.eventStartTime ? formatTime(event.eventStartTime) : ""]
     .filter(Boolean)
     .join(" · ");
+
+  // The employee events API carries the order id directly on the event; the
+  // `orders` array may also be present. Collect both, de-duplicated, so the
+  // checklist loads each order via GET /api/orders/{orderId}.
+  const orderIds = [...new Set([event.orderId, ...(event.orders ?? []).map((o) => o.id)].filter(Boolean))] as string[];
+
+  // Guest count and per-line prices live on the order, not the admin event, so
+  // the detail fields and the checklist both read from this single fetch.
+  const { orders, loading: orderLoading, error: orderError } = useOrderDetails(orderIds, serviceId);
+  const items = orders ? orders.flatMap((o) => o.items ?? []) : null;
+  // Guest count is recorded per order item (one item per service); fall back to
+  // any order-level value if present.
+  const guestCount =
+    items?.find((i) => typeof i.guestCount === "number")?.guestCount ??
+    orders?.find((o) => typeof o.guestCount === "number")?.guestCount;
+  // Total from the order's unit prices (summed across items × quantity); falls
+  // back to the event amount until the order has loaded.
+  const orderTotal = items?.reduce((sum, i) => sum + i.unitPrice * (i.quantity || 1), 0);
+  const totalValue = typeof orderTotal === "number" ? orderTotal : eventAmount(event);
 
   return (
     <div className="flex flex-col h-full">
@@ -66,9 +88,22 @@ export default function EventDetail({ event, dict, canViewSensitive, onBack }: P
           <dl className="divide-y divide-[#141414] border border-[#1e1e1e]">
             <Field label={dict.label_date} value={dateLine || "—"} />
             <Field label={dict.label_location} value={fullLocation || "—"} />
-            <Field label={dict.label_guests} value={event.guestCount ? `${event.guestCount} ${dict.guests}` : "—"} />
-            {canViewSensitive && <Field label={dict.label_total} value={formatMDL(eventAmount(event))} />}
+            <Field label={dict.label_guests} value={guestCount ? `${guestCount} ${dict.guests}` : "—"} />
+            {canViewSensitive && <Field label={dict.label_total} value={formatMDL(totalValue)} />}
           </dl>
+        </section>
+
+        {/* Order — features & selections, with per-employee preparation tracking */}
+        <section>
+          <h2 className="text-[12px] font-medium font-figtree tracking-widest uppercase text-[#666] mb-3">
+            {dict.checklist_title}
+          </h2>
+          <OrderChecklist
+            items={items}
+            loading={orderLoading}
+            error={orderError}
+            dict={dict}
+          />
         </section>
       </div>
     </div>

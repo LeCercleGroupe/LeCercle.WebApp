@@ -45,7 +45,7 @@ export default function AdminPanel({ locale, user, dict }: Props) {
   }
 
   return (
-    <div className="h-svh flex flex-col bg-[#080808]">
+    <div className="fixed inset-0 flex flex-col bg-[#080808]">
       <AdminNavbar locale={locale} user={user} dict={dict} />
 
       <div className="flex-1 min-h-0 flex flex-col md:flex-row">

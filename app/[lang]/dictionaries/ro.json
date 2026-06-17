@@ -607,6 +607,14 @@
     "label_date": "Data",
     "label_location": "Locație",
     "label_guests": "Invitați",
-    "label_total": "Total"
+    "label_total": "Total",
+    "detail_order": "Comandă",
+    "order_loading": "Se încarcă comanda…",
+    "order_error": "Comanda nu a putut fi încărcată.",
+    "order_empty": "Nicio comandă asociată acestui eveniment.",
+    "checklist_title": "Listă de pregătire",
+    "checklist_progress": "{done}/{total} gata",
+    "checklist_selections": "Selecții",
+    "checklist_transport": "Transport"
   }
 }

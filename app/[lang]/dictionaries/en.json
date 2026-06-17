@@ -607,6 +607,14 @@
     "label_date": "Date",
     "label_location": "Location",
     "label_guests": "Guests",
-    "label_total": "Total"
+    "label_total": "Total",
+    "detail_order": "Order",
+    "order_loading": "Loading order…",
+    "order_error": "Could not load order.",
+    "order_empty": "No order linked to this event.",
+    "checklist_title": "Preparation checklist",
+    "checklist_progress": "{done}/{total} ready",
+    "checklist_selections": "Selections",
+    "checklist_transport": "Transport"
   }
 }
