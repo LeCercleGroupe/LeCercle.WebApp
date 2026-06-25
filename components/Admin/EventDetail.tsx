@@ -114,7 +114,7 @@ function Field({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:gap-4 bg-[#0c0c0c]">
       <dt className="w-32 shrink-0 text-[13px] text-[#666] font-figtree tracking-tight">{label}</dt>
-      <dd className="text-[14px] text-[#f0f0f0] font-figtree tracking-tight break-words">{value}</dd>
+      <dd className="text-[14px] text-[#f0f0f0] font-figtree tracking-tight wrap-break-word">{value}</dd>
     </div>
   );
 }

@@ -44,6 +44,44 @@ export interface AdminDict {
   checklist_progress: string;
   checklist_selections: string;
   checklist_transport: string;
+  employees: EmployeesDict;
+}
+
+// Localized strings for the employees management view (manager roster + staff
+// self-service availability). Mirrors the `admin.employees` dictionary block.
+export interface EmployeesDict {
+  nav: string;
+  roster_title: string;
+  roster_subtitle: string;
+  self_title: string;
+  self_subtitle: string;
+  add_employee: string;
+  field_userid: string;
+  field_specialization: string;
+  field_available: string;
+  available_yes: string;
+  available_no: string;
+  hired: string;
+  save: string;
+  saving: string;
+  cancel: string;
+  edit: string;
+  back: string;
+  empty: string;
+  loading: string;
+  error: string;
+  unavail_title: string;
+  unavail_add: string;
+  unavail_start: string;
+  unavail_end: string;
+  unavail_reason: string;
+  unavail_reason_ph: string;
+  unavail_empty: string;
+  unavail_remove: string;
+  unavail_range_error: string;
+  default_title: string;
+  default_subtitle: string;
+  coming_soon: string;
 }
 
 // The signed-in employee, as decoded from the Entra JWT.
@@ -93,6 +131,13 @@ export function canViewSensitive(roles: string[]): boolean {
   return roles.some((role) => SENSITIVE_ROLES.includes(role));
 }
 
+// Roles allowed to manage the employee roster (RequireManager upstream). These
+// are the same Manager/Owner roles that may see sensitive fields; plain
+// employees get only the self-service availability view.
+export function canManageEmployees(roles: string[]): boolean {
+  return canViewSensitive(roles);
+}
+
 export function eventClientName(event: AdminEvent): string {
   const full = [event.contactFirstName, event.contactLastName].filter(Boolean).join(" ").trim();
   return event.customerName || full || "—";
@@ -110,7 +155,8 @@ export function eventClientPhone(event: AdminEvent): string {
 // calendar or the event list for one service.
 export type AdminView =
   | { type: "calendar" }
-  | { type: "service"; serviceId: ServiceId };
+  | { type: "service"; serviceId: ServiceId }
+  | { type: "employees" };
 
 // The status filter tabs, identical in spirit to the account events overview.
 export type StatusFilter = "all" | "confirmed" | "pending" | "cancelled" | "completed";
