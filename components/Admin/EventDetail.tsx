@@ -12,16 +12,19 @@ import {
 import { statusBadgeClass, statusLabel } from "./shared/status";
 import { useOrderDetails } from "./shared/useOrderDetails";
 import OrderChecklist from "./OrderChecklist";
+import OrderAssignments from "./OrderAssignments";
 
 interface Props {
   event: AdminEvent;
   serviceId?: string;
   dict: AdminDict;
   canViewSensitive: boolean;
+  // Manager / Owner only — gates the staff-assignment panel.
+  canManage: boolean;
   onBack: () => void;
 }
 
-export default function EventDetail({ event, serviceId, dict, canViewSensitive, onBack }: Props) {
+export default function EventDetail({ event, serviceId, dict, canViewSensitive, canManage, onBack }: Props) {
   const fullLocation = [event.venueTitle, event.venueAddress, event.city, event.postalCode]
     .filter(Boolean)
     .join(", ");
@@ -105,6 +108,24 @@ export default function EventDetail({ event, serviceId, dict, canViewSensitive, 
             dict={dict}
           />
         </section>
+
+        {/* Staff assignments — Manager / Owner only, managed per order item */}
+        {canManage && (
+          <section>
+            <h2 className="text-[12px] font-medium font-figtree tracking-widest uppercase text-[#666] mb-1">
+              {dict.assignments.title}
+            </h2>
+            <p className="text-[12px] text-[#666] font-figtree tracking-tight mb-3">
+              {dict.assignments.subtitle}
+            </p>
+            <OrderAssignments
+              items={items}
+              loading={orderLoading}
+              error={orderError}
+              dict={dict}
+            />
+          </section>
+        )}
       </div>
     </div>
   );

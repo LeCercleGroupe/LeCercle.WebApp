@@ -616,6 +616,20 @@
     "checklist_progress": "{done}/{total} ready",
     "checklist_selections": "Selections",
     "checklist_transport": "Transport",
+    "assignments": {
+      "title": "Team assignments",
+      "subtitle": "Assign staff to each service on this order.",
+      "select_employee": "Select employee",
+      "notes_placeholder": "Role or notes (optional)",
+      "assign": "Assign",
+      "assigning": "Assigning…",
+      "remove": "Remove",
+      "empty": "No one assigned yet.",
+      "loading": "Loading…",
+      "error": "Could not load assignments.",
+      "no_employees": "No employees available.",
+      "assigned_by": "by {name}"
+    },
     "employees": {
       "nav": "Employees",
       "roster_title": "Employees",

@@ -17,9 +17,11 @@ interface Props {
   serviceId: ServiceId;
   dict: AdminDict;
   canViewSensitive: boolean;
+  // Manager / Owner only — gates staff assignment in the event detail.
+  canManage: boolean;
 }
 
-export default function ServiceEvents({ locale, serviceId, dict, canViewSensitive }: Props) {
+export default function ServiceEvents({ locale, serviceId, dict, canViewSensitive, canManage }: Props) {
   const info = VENUE_INFO[serviceId];
   const defaultFrom = todayKey();
 
@@ -127,6 +129,7 @@ export default function ServiceEvents({ locale, serviceId, dict, canViewSensitiv
         serviceId={serviceId}
         dict={dict}
         canViewSensitive={canViewSensitive}
+        canManage={canManage}
         onBack={() => setSelected(null)}
       />
     );

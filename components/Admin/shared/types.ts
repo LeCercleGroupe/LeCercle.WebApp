@@ -44,7 +44,25 @@ export interface AdminDict {
   checklist_progress: string;
   checklist_selections: string;
   checklist_transport: string;
+  assignments: AssignmentsDict;
   employees: EmployeesDict;
+}
+
+// Localized strings for the order-item employee assignment panel (Manager /
+// Owner only). Mirrors the `admin.assignments` dictionary block.
+export interface AssignmentsDict {
+  title: string;
+  subtitle: string;
+  select_employee: string;
+  notes_placeholder: string;
+  assign: string;
+  assigning: string;
+  remove: string;
+  empty: string;
+  loading: string;
+  error: string;
+  no_employees: string;
+  assigned_by: string;
 }
 
 // Localized strings for the employees management view (manager roster + staff

@@ -616,6 +616,20 @@
     "checklist_progress": "{done}/{total} gata",
     "checklist_selections": "Selecții",
     "checklist_transport": "Transport",
+    "assignments": {
+      "title": "Echipa alocată",
+      "subtitle": "Alocă personal pentru fiecare serviciu din această comandă.",
+      "select_employee": "Selectează angajat",
+      "notes_placeholder": "Rol sau note (opțional)",
+      "assign": "Alocă",
+      "assigning": "Se alocă…",
+      "remove": "Elimină",
+      "empty": "Nimeni alocat încă.",
+      "loading": "Se încarcă…",
+      "error": "Nu am putut încărca alocările.",
+      "no_employees": "Niciun angajat disponibil.",
+      "assigned_by": "de {name}"
+    },
     "employees": {
       "nav": "Angajați",
       "roster_title": "Angajați",

@@ -616,6 +616,20 @@
     "checklist_progress": "{done}/{total} готово",
     "checklist_selections": "Выбор опций",
     "checklist_transport": "Транспорт",
+    "assignments": {
+      "title": "Назначения команды",
+      "subtitle": "Назначьте сотрудников на каждую услугу в этом заказе.",
+      "select_employee": "Выберите сотрудника",
+      "notes_placeholder": "Роль или заметки (необязательно)",
+      "assign": "Назначить",
+      "assigning": "Назначение…",
+      "remove": "Удалить",
+      "empty": "Пока никто не назначен.",
+      "loading": "Загрузка…",
+      "error": "Не удалось загрузить назначения.",
+      "no_employees": "Нет доступных сотрудников.",
+      "assigned_by": "от {name}"
+    },
     "employees": {
       "nav": "Сотрудники",
       "roster_title": "Сотрудники",

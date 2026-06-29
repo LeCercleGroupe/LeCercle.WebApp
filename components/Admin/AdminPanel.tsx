@@ -8,7 +8,7 @@ import AdminSidebar from "./AdminSidebar";
 import AdminCalendar from "./AdminCalendar";
 import ServiceEvents from "./ServiceEvents";
 import EmployeesPanel from "./Employees/EmployeesPanel";
-import { canViewSensitive, type AdminDict, type AdminUser, type AdminView } from "./shared/types";
+import { canManageEmployees, canViewSensitive, type AdminDict, type AdminUser, type AdminView } from "./shared/types";
 
 interface Props {
   locale: string;
@@ -38,6 +38,8 @@ export default function AdminPanel({ locale, user, dict }: Props) {
   const searchParams = useSearchParams();
   const [view, setView] = useState<AdminView>(() => viewFromParam(searchParams.get("view")));
   const sensitive = canViewSensitive(user.roles);
+  // Manager / Owner gate for staff assignment (RequireManager upstream).
+  const manage = canManageEmployees(user.roles);
 
   function changeView(next: AdminView) {
     setView(next);
@@ -68,6 +70,7 @@ export default function AdminPanel({ locale, user, dict }: Props) {
               serviceId={view.serviceId}
               dict={dict}
               canViewSensitive={sensitive}
+              canManage={manage}
             />
           )}
         </main>
