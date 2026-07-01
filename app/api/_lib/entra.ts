@@ -74,6 +74,10 @@ export function buildAuthorizeUrl(params: { state: string; codeChallenge: string
     state:                 params.state,
     code_challenge:        params.codeChallenge,
     code_challenge_method: "S256",
+    // Always show the account chooser instead of silently reusing the existing
+    // Microsoft SSO session — lets a user pick a different account and prevents
+    // an auto-rejoin into the previous account after logout (shared machines).
+    prompt:                "select_account",
   }).toString();
   return url.toString();
 }

@@ -36,10 +36,12 @@ export default function AdminNavbar({ locale, user, dict }: Props) {
     router.push(segments.join("/") + window.location.search);
   }
 
-  async function handleLogout() {
-    await fetch("/api/auth/entra/logout", { method: "POST" });
+  function handleLogout() {
     setOpen(false);
-    router.push(`/${locale}`);
+    // Top-level navigation (not fetch): the endpoint clears the session cookies
+    // and redirects through Microsoft's single sign-out, ending the SSO session
+    // so the next login can't silently re-join the previous account.
+    window.location.href = `/api/auth/entra/logout?returnTo=/${locale}`;
   }
 
   const initials =
