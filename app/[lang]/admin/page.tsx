@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
-import { getEmployeeSession } from "@/app/api/_lib/entraSession";
+import { syncEmployeeProfile } from "@/app/api/_lib/employeeProfile";
+import { getEmployeeAccessToken, getEmployeeSession } from "@/app/api/_lib/entraSession";
 import DynamicAdminPanel from "@/components/Admin/DynamicAdminPanel";
 import type { AdminDict } from "@/components/Admin/shared/types";
 import { getDictionary, hasLocale } from "../dictionaries";
@@ -45,6 +46,11 @@ export default async function AdminPage({ params }: PageProps<"/[lang]/admin">) 
       </main>
     );
   }
+
+  // Provision / update this staff member's record in the booking backend on
+  // every admin load. Best-effort: never blocks rendering the panel.
+  const accessToken = await getEmployeeAccessToken();
+  if (accessToken) await syncEmployeeProfile(accessToken);
 
   return (
     <DynamicAdminPanel

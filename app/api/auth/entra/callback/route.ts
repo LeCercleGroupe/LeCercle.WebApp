@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { exchangeCodeForTokens } from "@/app/api/_lib/entra";
-import { syncEmployeeProfile } from "@/app/api/_lib/employeeProfile";
 import {
   clearOAuthHandshakeCookie,
   readOAuthHandshakeCookie,
@@ -33,10 +32,6 @@ export async function GET(request: NextRequest) {
 
   try {
     const tokens = await exchangeCodeForTokens(code, handshake.codeVerifier);
-
-    // Provision / update the staff record in the backend now that we hold a
-    // fresh Entra access token. Best-effort — never blocks completing login.
-    await syncEmployeeProfile(tokens.accessToken);
 
     const response = NextResponse.redirect(`${origin}${handshake.returnTo}`);
     setEmployeeCookies(response, tokens);

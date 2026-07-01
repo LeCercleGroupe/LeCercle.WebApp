@@ -28,9 +28,20 @@ export async function syncEmployeeProfile(accessToken: string): Promise<Employee
       headers: { Authorization: `Bearer ${accessToken}` },
       cache:   "no-store",
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      // The token itself is valid (correct audience/scope/roles, unexpired) and
+      // is accepted by other backend endpoints — a failure here is server-side.
+      // Log the body (carries the ProblemDetails traceId) to correlate with the
+      // backend logs. Best-effort: never blocks rendering.
+      console.error(
+        `syncEmployeeProfile: backend responded ${res.status} ${res.statusText}`,
+        await res.text().catch(() => ""),
+      );
+      return null;
+    }
     return (await res.json()) as EmployeeProfile;
-  } catch {
+  } catch (err) {
+    console.error("syncEmployeeProfile: request failed", err);
     return null;
   }
 }
