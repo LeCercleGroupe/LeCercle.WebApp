@@ -632,6 +632,7 @@
     },
     "employees": {
       "nav": "Employees",
+      "self_nav": "My availability",
       "roster_title": "Employees",
       "roster_subtitle": "Manage your team and their availability.",
       "self_title": "My availability",

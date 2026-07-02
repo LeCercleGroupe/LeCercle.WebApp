@@ -14,8 +14,11 @@ import {
 
 // Lists blocked date ranges and — in "self" mode — lets the signed-in staff
 // member add and remove their own. In "view" mode it is read-only (a manager
-// inspecting a roster member; the backend only exposes add/remove on /api/me).
-type Source = { mode: "self" } | { mode: "view"; employeeId: string };
+// inspecting another roster member; the backend only exposes add/remove on
+// /api/me). Reads always go through GET /api/employees/{id}/unavailabilities
+// (RequireStaff) when the id is known — the /api/me GET is not implemented
+// upstream — so "self" carries the signed-in member's own employee id.
+type Source = { mode: "self"; employeeId?: string } | { mode: "view"; employeeId: string };
 
 interface Props {
   dict: EmployeesDict;
@@ -39,9 +42,11 @@ export default function UnavailabilityManager({ dict, locale, source }: Props) {
   const [saving, setSaving] = useState(false);
 
   // `source` is a fresh object each render; key the effect on its identifying
-  // fields so it only re-runs when the target actually changes.
+  // fields so it only re-runs when the target actually changes. Reads prefer the
+  // per-employee endpoint (works for both managers and the member themselves);
+  // the /api/me GET is only a fallback for when the own id is unknown.
   const mode = source.mode;
-  const viewId = source.mode === "view" ? source.employeeId : "";
+  const fetchId = source.employeeId ?? "";
 
   useEffect(() => {
     let active = true;
@@ -51,7 +56,7 @@ export default function UnavailabilityManager({ dict, locale, source }: Props) {
       if (!active) return;
       setItems(null);
       setError(false);
-      const load = mode === "self" ? fetchMyUnavailabilities() : fetchEmployeeUnavailabilities(viewId);
+      const load = fetchId ? fetchEmployeeUnavailabilities(fetchId) : fetchMyUnavailabilities();
       load
         .then((list) => active && setItems(sortByStart(list)))
         .catch(() => active && setError(true));
@@ -59,7 +64,7 @@ export default function UnavailabilityManager({ dict, locale, source }: Props) {
     return () => {
       active = false;
     };
-  }, [mode, viewId]);
+  }, [mode, fetchId]);
 
   async function add() {
     if (!start || !end) return;

@@ -56,7 +56,7 @@ export default function AdminPanel({ locale, user, dict }: Props) {
       <AdminNavbar locale={locale} user={user} dict={dict} />
 
       <div className="flex-1 min-h-0 flex flex-col md:flex-row">
-        <AdminSidebar view={view} onChange={changeView} dict={dict} />
+        <AdminSidebar view={view} onChange={changeView} dict={dict} canManage={manage} />
 
         <main className="flex-1 min-w-0 min-h-0 overflow-hidden">
           {view.type === "calendar" && <AdminCalendar locale={locale} dict={dict} />}

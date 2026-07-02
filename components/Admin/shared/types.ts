@@ -69,6 +69,7 @@ export interface AssignmentsDict {
 // self-service availability). Mirrors the `admin.employees` dictionary block.
 export interface EmployeesDict {
   nav: string;
+  self_nav: string;
   roster_title: string;
   roster_subtitle: string;
   self_title: string;
@@ -102,11 +103,15 @@ export interface EmployeesDict {
   coming_soon: string;
 }
 
-// The signed-in employee, as decoded from the Entra JWT.
+// The signed-in employee, as decoded from the Entra JWT. `employeeId` is the
+// booking-backend staff record id (from sync-profile), used to load the signed-in
+// member's own unavailabilities and to detect when a manager is viewing their own
+// roster entry.
 export interface AdminUser {
   name: string;
   email: string;
   roles: string[];
+  employeeId?: string;
 }
 
 // An event as surfaced in the admin panel. Extends the customer EventBooking

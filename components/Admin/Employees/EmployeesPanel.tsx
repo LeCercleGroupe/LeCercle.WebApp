@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { canManageEmployees, type AdminDict, type AdminUser } from "../shared/types";
-import { createEmployee, fetchEmployees, type Employee } from "./employeesApi";
+import {
+  createEmployee,
+  fetchEmployees,
+  fetchEmployeeUnavailabilities,
+  isBlockedOn,
+  todayISO,
+  type Employee,
+} from "./employeesApi";
 import EmployeeDetail from "./EmployeeDetail";
 import UnavailabilityManager from "./UnavailabilityManager";
 
@@ -16,14 +23,14 @@ interface Props {
 // roster with add/edit; plain employees get only their own availability.
 export default function EmployeesPanel({ locale, user, dict }: Props) {
   if (!canManageEmployees(user.roles)) {
-    return <SelfService locale={locale} dict={dict} />;
+    return <SelfService locale={locale} dict={dict} employeeId={user.employeeId} />;
   }
-  return <Roster locale={locale} dict={dict} />;
+  return <Roster locale={locale} dict={dict} myEmployeeId={user.employeeId} />;
 }
 
 // ── Plain-employee self-service ──────────────────────────────────────────────
 
-function SelfService({ locale, dict }: { locale: string; dict: AdminDict }) {
+function SelfService({ locale, dict, employeeId }: { locale: string; dict: AdminDict; employeeId?: string }) {
   const t = dict.employees;
   return (
     <div className="flex flex-col h-full overflow-auto">
@@ -34,7 +41,7 @@ function SelfService({ locale, dict }: { locale: string; dict: AdminDict }) {
         <p className="text-[12px] text-[#666] font-figtree tracking-tight mt-1.5">{t.self_subtitle}</p>
       </header>
       <div className="px-5 sm:px-8 py-6 max-w-2xl">
-        <UnavailabilityManager dict={t} locale={locale} source={{ mode: "self" }} />
+        <UnavailabilityManager dict={t} locale={locale} source={{ mode: "self", employeeId }} />
       </div>
     </div>
   );
@@ -45,13 +52,16 @@ function SelfService({ locale, dict }: { locale: string; dict: AdminDict }) {
 const inputClass =
   "bg-[#0c0c0c] border border-[#2a2a2a] text-[13px] text-[#f0f0f0] font-figtree tracking-tight px-3 py-2 focus:outline-none focus:border-[#4a4a4a] placeholder:text-[#555]";
 
-function Roster({ locale, dict }: { locale: string; dict: AdminDict }) {
+function Roster({ locale, dict, myEmployeeId }: { locale: string; dict: AdminDict; myEmployeeId?: string }) {
   const t = dict.employees;
   const [employees, setEmployees] = useState<Employee[] | null>(null);
   const [error, setError] = useState(false);
   const [selected, setSelected] = useState<Employee | null>(null);
   const [adding, setAdding] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  // Ids of employees whose blocked dates cover today: shown as unavailable in the
+  // roster regardless of the manually-set `isAvailable` flag.
+  const [blockedToday, setBlockedToday] = useState<Set<string>>(new Set());
 
   function reload() {
     setEmployees(null);
@@ -65,6 +75,7 @@ function Roster({ locale, dict }: { locale: string; dict: AdminDict }) {
     Promise.resolve().then(() => {
       if (!active) return;
       setError(false);
+      setBlockedToday(new Set());
       fetchEmployees()
         .then((list) => active && setEmployees(sortByName(list)))
         .catch(() => active && setError(true));
@@ -73,6 +84,28 @@ function Roster({ locale, dict }: { locale: string; dict: AdminDict }) {
       active = false;
     };
   }, [reloadKey]);
+
+  // Once the roster is loaded, resolve each member's current availability from
+  // their blocked date ranges. Failures for a single member are ignored (that
+  // member simply falls back to their `isAvailable` flag).
+  useEffect(() => {
+    if (!employees || employees.length === 0) return;
+    let active = true;
+    const today = todayISO();
+    Promise.all(
+      employees.map((emp) =>
+        fetchEmployeeUnavailabilities(emp.id)
+          .then((list) => (isBlockedOn(list, today) ? emp.id : null))
+          .catch(() => null),
+      ),
+    ).then((ids) => {
+      if (!active) return;
+      setBlockedToday(new Set(ids.filter((id): id is string => id !== null)));
+    });
+    return () => {
+      active = false;
+    };
+  }, [employees]);
 
   function applyUpdate(updated: Employee) {
     setEmployees((prev) => (prev ? sortByName(prev.map((e) => (e.id === updated.id ? updated : e))) : prev));
@@ -85,6 +118,7 @@ function Roster({ locale, dict }: { locale: string; dict: AdminDict }) {
         employee={selected}
         dict={t}
         locale={locale}
+        isSelf={!!myEmployeeId && selected.id === myEmployeeId}
         onBack={() => setSelected(null)}
         onSaved={applyUpdate}
       />
@@ -132,7 +166,13 @@ function Roster({ locale, dict }: { locale: string; dict: AdminDict }) {
         {!error && employees && employees.length > 0 && (
           <div className="flex flex-col border border-[#1e1e1e]">
             {employees.map((emp) => (
-              <EmployeeRow key={emp.id} employee={emp} dict={t} onSelect={() => setSelected(emp)} />
+              <EmployeeRow
+                key={emp.id}
+                employee={emp}
+                dict={t}
+                available={emp.isAvailable && !blockedToday.has(emp.id)}
+                onSelect={() => setSelected(emp)}
+              />
             ))}
           </div>
         )}
@@ -141,7 +181,17 @@ function Roster({ locale, dict }: { locale: string; dict: AdminDict }) {
   );
 }
 
-function EmployeeRow({ employee, dict, onSelect }: { employee: Employee; dict: AdminDict["employees"]; onSelect: () => void }) {
+function EmployeeRow({
+  employee,
+  dict,
+  available,
+  onSelect,
+}: {
+  employee: Employee;
+  dict: AdminDict["employees"];
+  available: boolean;
+  onSelect: () => void;
+}) {
   return (
     <button
       type="button"
@@ -158,12 +208,12 @@ function EmployeeRow({ employee, dict, onSelect }: { employee: Employee; dict: A
       </div>
       <span
         className={`shrink-0 inline-flex items-center px-2.5 py-1 text-[11px] font-medium font-figtree tracking-widest uppercase border ${
-          employee.isAvailable
+          available
             ? "border-emerald-900 text-emerald-400"
             : "border-[#2a2a2a] text-[#888]"
         }`}
       >
-        {employee.isAvailable ? dict.available_yes : dict.available_no}
+        {available ? dict.available_yes : dict.available_no}
       </span>
     </button>
   );

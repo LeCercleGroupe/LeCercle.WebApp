@@ -632,6 +632,7 @@
     },
     "employees": {
       "nav": "Angajați",
+      "self_nav": "Disponibilitatea mea",
       "roster_title": "Angajați",
       "roster_subtitle": "Gestionează echipa și disponibilitatea acesteia.",
       "self_title": "Disponibilitatea mea",

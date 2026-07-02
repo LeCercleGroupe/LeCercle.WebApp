@@ -48,9 +48,11 @@ export default async function AdminPage({ params }: PageProps<"/[lang]/admin">) 
   }
 
   // Provision / update this staff member's record in the booking backend on
-  // every admin load. Best-effort: never blocks rendering the panel.
+  // every admin load. Best-effort: never blocks rendering the panel. We keep the
+  // returned profile id so the panel can load the signed-in member's own
+  // unavailabilities (RequireStaff) and detect their own roster entry.
   const accessToken = await getEmployeeAccessToken();
-  if (accessToken) await syncEmployeeProfile(accessToken);
+  const profile = accessToken ? await syncEmployeeProfile(accessToken) : null;
 
   return (
     <DynamicAdminPanel
@@ -59,6 +61,7 @@ export default async function AdminPage({ params }: PageProps<"/[lang]/admin">) 
         name: session.name ?? "—",
         email: session.email ?? session.preferred_username ?? "",
         roles,
+        employeeId: profile?.id,
       }}
       dict={t}
     />

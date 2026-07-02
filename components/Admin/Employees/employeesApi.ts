@@ -104,3 +104,20 @@ export async function deleteMyUnavailability(unavailabilityId: string): Promise<
   const res = await fetch(`/api/me/unavailabilities/${unavailabilityId}`, { method: "DELETE" });
   await ok(res);
 }
+
+// ── Availability helpers ─────────────────────────────────────────────────────
+
+// Today as a local YYYY-MM-DD string, matching the date-only shape the backend
+// uses for unavailability ranges (avoids the UTC shift of toISOString()).
+export function todayISO(): string {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
+// Whether any blocked range covers the given day (inclusive). Dates are compared
+// as YYYY-MM-DD strings, which sort chronologically.
+export function isBlockedOn(list: Unavailability[], dayISO: string): boolean {
+  return list.some((u) => u.startDate <= dayISO && dayISO <= u.endDate);
+}

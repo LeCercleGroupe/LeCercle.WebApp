@@ -8,9 +8,12 @@ interface Props {
   view: AdminView;
   onChange: (view: AdminView) => void;
   dict: AdminDict;
+  // Managers/Owners see the roster ("Employees"); plain employees only get their
+  // own availability, so the nav item is labelled for that self-service view.
+  canManage: boolean;
 }
 
-export default function AdminSidebar({ view, onChange, dict }: Props) {
+export default function AdminSidebar({ view, onChange, dict, canManage }: Props) {
   const isActive = (candidate: AdminView) => {
     if (candidate.type === "calendar") return view.type === "calendar";
     if (candidate.type === "employees") return view.type === "employees";
@@ -36,14 +39,14 @@ export default function AdminSidebar({ view, onChange, dict }: Props) {
         <span className="whitespace-nowrap">{dict.calendar}</span>
       </button>
 
-      {/* Employees */}
+      {/* Employees (managers/owners) or My availability (plain employees) */}
       <button
         type="button"
         onClick={() => onChange({ type: "employees" })}
         className={itemClass(isActive({ type: "employees" }))}
       >
         <TeamIcon />
-        <span className="whitespace-nowrap">{dict.employees.nav}</span>
+        <span className="whitespace-nowrap">{canManage ? dict.employees.nav : dict.employees.self_nav}</span>
       </button>
 
       <div className="hidden md:block h-px bg-[#141414] my-2" />

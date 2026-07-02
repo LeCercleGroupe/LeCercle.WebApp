@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useState } from "react";
 import { ALL_VENUES, VENUE_INFO } from "@/components/BookingFlow/types";
 import { formatDate } from "@/components/Account/shared/format";
-import SelectMenu from "../shared/SelectMenu";
 import type { EmployeesDict } from "../shared/types";
 import { updateEmployee, type Employee } from "./employeesApi";
 import UnavailabilityManager from "./UnavailabilityManager";
@@ -13,6 +12,10 @@ interface Props {
   employee: Employee;
   dict: EmployeesDict;
   locale: string;
+  // True when the signed-in manager/owner is viewing their own roster entry: the
+  // backend only exposes add/remove of unavailability on /api/me, so a manager can
+  // edit their own blocked dates but only read another member's.
+  isSelf: boolean;
   onBack: () => void;
   onSaved: (employee: Employee) => void;
 }
@@ -20,18 +23,19 @@ interface Props {
 const inputClass =
   "bg-[#0c0c0c] border border-[#2a2a2a] text-[13px] text-[#f0f0f0] font-figtree tracking-tight px-3 py-2 focus:outline-none focus:border-[#4a4a4a] placeholder:text-[#555]";
 
-export default function EmployeeDetail({ employee, dict, locale, onBack, onSaved }: Props) {
+export default function EmployeeDetail({ employee, dict, locale, isSelf, onBack, onSaved }: Props) {
   const [specialization, setSpecialization] = useState(employee.specialization ?? "");
-  const [isAvailable, setIsAvailable] = useState(employee.isAvailable);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(false);
 
-  const dirty = specialization !== (employee.specialization ?? "") || isAvailable !== employee.isAvailable;
+  const dirty = specialization !== (employee.specialization ?? "");
 
   async function save() {
     setSaving(true);
     setError(false);
-    const updated: Employee = { ...employee, specialization: specialization.trim(), isAvailable };
+    // Availability is not editable yet (see the "coming soon" field below), so
+    // the flag is carried through unchanged.
+    const updated: Employee = { ...employee, specialization: specialization.trim() };
     try {
       await updateEmployee(updated);
       onSaved(updated);
@@ -41,11 +45,6 @@ export default function EmployeeDetail({ employee, dict, locale, onBack, onSaved
       setSaving(false);
     }
   }
-
-  const availabilityOptions = [
-    { value: "yes", label: dict.available_yes },
-    { value: "no", label: dict.available_no },
-  ];
 
   return (
     <div className="flex flex-col h-full overflow-auto">
@@ -81,15 +80,17 @@ export default function EmployeeDetail({ employee, dict, locale, onBack, onSaved
               className={`${inputClass} max-w-xs`}
             />
           </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[12px] text-[#888] font-figtree tracking-tight">{dict.field_available}</label>
-            <SelectMenu
-              value={isAvailable ? "yes" : "no"}
-              onChange={(v) => setIsAvailable(v === "yes")}
-              options={availabilityOptions}
-              placeholder={dict.field_available}
-              ariaLabel={dict.field_available}
-            />
+          {/* Availability is manager-controlled but not wired to the backend yet. */}
+          <div className="flex flex-col gap-1.5 opacity-60">
+            <div className="flex items-center gap-2">
+              <label className="text-[12px] text-[#888] font-figtree tracking-tight">{dict.field_available}</label>
+              <span className="px-2 py-0.5 text-[10px] font-medium font-figtree tracking-widest uppercase text-[#888] border border-[#2a2a2a]">
+                {dict.coming_soon}
+              </span>
+            </div>
+            <div className="flex items-center bg-[#0c0c0c] border border-[#2a2a2a] text-[13px] font-figtree tracking-tight text-[#888] px-3 py-2 max-w-xs cursor-not-allowed select-none">
+              {employee.isAvailable ? dict.available_yes : dict.available_no}
+            </div>
           </div>
 
           {error && <p className="text-[12px] text-red-400 font-figtree tracking-tight">{dict.error}</p>}
@@ -106,8 +107,13 @@ export default function EmployeeDetail({ employee, dict, locale, onBack, onSaved
           </div>
         </section>
 
-        {/* Read-only unavailabilities */}
-        <UnavailabilityManager dict={dict} locale={locale} source={{ mode: "view", employeeId: employee.id }} />
+        {/* Unavailabilities — editable only for the signed-in member's own record
+            (writes go to /api/me); read-only when inspecting another member. */}
+        <UnavailabilityManager
+          dict={dict}
+          locale={locale}
+          source={isSelf ? { mode: "self", employeeId: employee.id } : { mode: "view", employeeId: employee.id }}
+        />
 
         {/* Default service assignment — backend not available yet */}
         <DefaultAssignmentStub dict={dict} />
